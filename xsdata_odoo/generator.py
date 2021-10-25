@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 from typing import Iterator
 from typing import List
@@ -26,7 +27,7 @@ class OdooGenerator(AbstractGenerator):
 
         for module, cluster in self.group_by_module(classes).items():
             yield GeneratorResult(
-                path=module.with_suffix(".pu"),
+                path=module.with_suffix(".py"),
                 title=cluster[0].target_module,
                 source=self.render_module(resolver, cluster),
             )
@@ -45,11 +46,17 @@ class OdooGenerator(AbstractGenerator):
         """Render the source code of the classes."""
         load = self.env.get_template
         classes = sorted(classes, key=lambda x: x.name)
+        schema = os.environ.get("SCHEMA", "")
+        # print("SCHEMA", schema)
+        version = os.environ.get("VERSION", "")
+        # print("VERSION", version)
+        field_prefix = f"{schema}{version}_"
+        # print("field_prefix", field_prefix)
 
         def render_class(obj: Class) -> str:
             """Render class or enumeration."""
             template = "enum.jinja2" if obj.is_enumeration else "class.jinja2"
-            return load(template).render(obj=obj).strip()
+            return load(template).render(obj=obj, field_prefix=field_prefix).strip()
 
-        output = "\n".join(map(render_class, classes))
+        output = "\n\n".join(map(render_class, classes))
         return f"\n{output}\n"

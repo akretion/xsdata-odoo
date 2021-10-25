@@ -1,9 +1,15 @@
-class {{ obj.name }} {
+class {{ obj.name }}(models.AbstractModel):
+    "CIDE Combustíveis"
+    _description = textwrap.dedent("    %s" % (__doc__,))
+    _name = 'nfe.40.cide'
+    _inherit = 'spec.mixin.nfe'
+    _generateds_type = 'CIDEType'
+
 {%- for attr in obj.attrs %}
-    +{{ attr.name }} : {{   attr.types|join(", ", attribute="name") }}{{ "[]" if attr.is_list else "" }}
+    {{ field_prefix }}{{ attr.name }} = fields.{{   attr.types|join(", ", attribute="name") }}{{ "[]" if attr.is_list else "" }}
 {%- endfor %}
-}
-{%- for ext in obj.extensions %}
+
+{% for ext in obj.extensions %}
 {{ obj.name }} *- {{ ext.type.name }}
 {%- endfor %}
 {%- for inner in obj.inner %}
@@ -11,4 +17,4 @@ class {{ obj.name }} {
 {% with obj=inner -%}
     {%- include "class.jinja2" %}
 {%- endwith -%}
-{%- endfor %}
+{% endfor %}
