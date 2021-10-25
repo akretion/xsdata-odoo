@@ -1,20 +1,28 @@
-class {{ obj.name }}(models.AbstractModel):
-    "CIDE Combustíveis"
+{% set level = level|default(0) -%}
+{% set parents = parents|default([obj.name]) -%}
+
+class {{ obj.name|class_name }}(models.AbstractModel):
+    {{ '"""{}"""'.format(obj.help or 'TODO'|clean_docstring) }}
     _description = textwrap.dedent("    %s" % (__doc__,))
     _name = 'nfe.40.cide'
     _inherit = 'spec.mixin.nfe'
-    _generateds_type = 'CIDEType'
+    _binding_type = "{{ obj|binding_type(parents) }}"
 
 {%- for attr in obj.attrs %}
-    {{ field_prefix }}{{ attr.name }} = fields.{{   attr.types|join(", ", attribute="name") }}{{ "[]" if attr.is_list else "" }}
+    {%- set field_definition = attr|field_definition(parents) %}
+    {{ attr.name|field_name }} = fields.{{   attr.types|join(", ", attribute="name") }}{{ "[]" if attr.is_list else "" }}
 {%- endfor %}
 
 {% for ext in obj.extensions %}
 {{ obj.name }} *- {{ ext.type.name }}
 {%- endfor %}
+
+
+
 {%- for inner in obj.inner %}
-{{ obj.name }} +-- {{ inner.name }}
-{% with obj=inner -%}
-    {%- include "class.jinja2" %}
-{%- endwith -%}
-{% endfor %}
+    {%- set tpl = "enum.jinja2" if inner.is_enumeration else "class.jinja2" -%}
+    {%- set inner_parents = parents + [inner.name] -%}
+    {%- with obj=inner, parents=inner_parents, level=(level + 1) -%}
+        {% include tpl %}
+    {%- endwith -%}
+{%- endfor -%}
