@@ -10,32 +10,51 @@ from typing import Optional
 
 from jinja2 import Environment
 from jinja2 import FileSystemLoader
-from wrap_text import wrap_text
+from .wrap_text import wrap_text
 from xsdata.codegen.models import Attr
+from xsdata.codegen.models import AttrType
 from xsdata.codegen.models import Class
 from xsdata.codegen.resolver import DependenciesResolver
+from xsdata.formats.dataclass.filters import Filters
 from xsdata.formats.mixins import AbstractGenerator
 from xsdata.formats.mixins import GeneratorResult
 from xsdata.models.config import GeneratorConfig
+from xsdata.utils import collections
 from xsdata.utils import text
 
-# from typing import Dict
-# from typing import Iterable
-# from typing import List
-# from typing import Tuple
-# from typing import Type
 
+INTEGER_TYPES = ("integer", "positiveInteger")
+FLOAT_TYPES = (float,)
+DECIMAL_TYPES = ("decimal",)
+CHAR_TYPES = ("string", "NMTOKEN")
+DATE_TYPES = ("date",)
+
+
+# TODO order enums 1st
+# TODO collect the m2o of the o2m
+# TODO collect xsd_type using lxml
+# TODO use the simple type to convert to fields.Monetary
+# TODO extract float digits when possible
+# TODO extract field string attrs
+# TODO extract enums and fields docstring using lxml
 
 class OdooGenerator(AbstractGenerator):
     """Odoo generator."""
+
+    @classmethod
+    def init_filters(cls, config: GeneratorConfig) -> Filters:
+        return Filters(config)
 
     def __init__(self, config: GeneratorConfig):
         super().__init__(config)
         tpl_dir = Path(__file__).parent.joinpath("templates")
         self.env = Environment(loader=FileSystemLoader(str(tpl_dir)), autoescape=False)
+        self.filters = self.init_filters(config)
+        self.filters.register(self.env)
         self.env.filters.update(
             {
                 "class_name": self.class_name,
+                "registry_name": self.registry_name,
                 "clean_docstring": self.clean_docstring,
                 "binding_type": self.binding_type,
                 "field_definition": self.field_definition,
@@ -72,6 +91,8 @@ class OdooGenerator(AbstractGenerator):
         load = self.env.get_template
         classes = sorted(classes, key=lambda x: x.name)
         # TODO filter signature classes like generateds_odoo
+        # TODO collect enum docstrings and labels by reading class fields
+        # where they are used.
 
         def render_class(obj: Class) -> str:
             """Render class or enumeration."""
@@ -83,11 +104,26 @@ class OdooGenerator(AbstractGenerator):
 
     # jinja2 filters:
 
-    def class_name(self, name: str) -> str:
+    def class_name(self, name: str, replace_type: bool = True) -> str:
         """Convert the given string to a class name according to the selected
         conventions or use an existing alias."""
         # print(name, self.class_safe_prefix, self.class_case)
-        return self.safe_name(name, self.class_safe_prefix, self.class_case)
+        class_name = self.filters.safe_name(name, self.class_safe_prefix, self.class_case)
+        if replace_type:
+            return class_name.rpartition("Type")[0] or class_name
+        else:
+            return class_name
+
+    def registry_name(self, name: str) -> str:
+        schema = os.environ.get("SCHEMA", "spec")
+        version = os.environ.get("VERSION", "10")
+        name = self.class_name(name)
+        return f"{schema}.{version}.{name.lower()}"
+
+    def registry_comodel(self, type_names: List[str]):
+        # NOTE: we take only the last part of inner Types with .split(".")[-1]
+        # but if that were to create Type duplicates we could change that.
+        return self.registry_name(type_names[-1].split(".")[-1])
 
     @classmethod
     def clean_docstring(cls, string: Optional[str], escape: bool = True) -> str:
@@ -105,7 +141,7 @@ class OdooGenerator(AbstractGenerator):
             return ""
 
         # taken from https://github.com/akretion/generateds-odoo
-        return "    {}".format(wrap_text(cls.__doc__, 4, 79))
+        return "\n    {}".format(wrap_text(string, 4, 79))
 
         # def _clean(txt: str) -> str:
         #     if escape:
@@ -120,37 +156,14 @@ class OdooGenerator(AbstractGenerator):
         obj: Class,
         parents: List[str],
     ) -> str:
-        print(parents)
-        return ".".join([self.class_name(p) for p in parents])
-
-    def field_definition(
-        self,
-        attr: Attr,
-        parents: List[str],
-    ) -> str:
-        """Return the field definition with any extra metadata."""
-        return ""
-        # default_value = self.field_default_value(attr, ns_map)
-        # metadata = self.field_metadata(attr, parent_namespace, parents)
-
-        # kwargs: Dict[str, Any] = {}
-        # if attr.fixed:
-        #     kwargs["init"] = False
-
-        # if default_value is not False:
-        #     key = self.FACTORY_KEY if attr.is_factory else self.DEFAULT_KEY
-        #     kwargs[key] = default_value
-
-        # if metadata:
-        #     kwargs["metadata"] = metadata
-
-        # return f"field({self.format_arguments(kwargs, 4)})"
+        """Return the name of the xsdata class for a given Odoo model"""
+        return ".".join([self.class_name(p, False) for p in parents])
 
     def field_name(self, name: str) -> str:
         """
         field_name with schema and version prefix.
 
-        we could have used a 'safe_name' like xsdata does for the Python
+        We could have used a 'safe_name' like xsdata does for the Python
         bindings. But having this prefix it's already safe. It's also
         backward compatible with the models we generated with
         GenerateDS. And finally it's good to use some digits of the
@@ -159,36 +172,81 @@ class OdooGenerator(AbstractGenerator):
         it while major schema updates get different fields and possibly
         different classes/tables.
         """
-        schema = os.environ.get("SCHEMA", "")
-        if schema:
-            version = os.environ.get("VERSION", "")
-            field_prefix = f"{schema}{version}_"
-        else:
-            field_prefix = ""
+        schema = os.environ.get("SCHEMA", "spec")
+        version = os.environ.get("VERSION", "10")
+        field_prefix = f"{schema}{version}_"
+        if name.startswith("@"):
+            name = name[1:100]
         return f"{field_prefix}{name}"
 
-    def safe_name(
-        self, name: str, prefix: str, name_case: Callable, **kwargs: Any
+    def field_definition(
+        self,
+        attr: Attr,
+        parents: List[str],
     ) -> str:
-        """
-        Sanitize names for safe generation.
+        """Return the Odoo field definition."""
 
-        copied from xsdata/formats/dataclass/filters.py
-        """
-        if not name:
-            return self.safe_name(prefix, prefix, name_case, **kwargs)
 
-        if re.match(r"^-\d*\.?\d+$", name):
-            return self.safe_name(f"{prefix}_minus_{name}", prefix, name_case, **kwargs)
+        # 1st some checks inspired from Filters.field_type:
+        type_names = collections.unique_sequence(
+            self.filters.field_type_name(x, parents) for x in attr.types
+        )
 
-        slug = text.alnum(name)
-        print("\nslug", name, slug)
-        if not slug or not slug[0].isalpha():
-            return self.safe_name(f"{prefix}_{name}", prefix, name_case, **kwargs)
+        if len(type_names) > 1:
+            raise TypeError("Union of type not implemented yet!")
 
-        result = name_case(name, **kwargs)
-        print("name_case", result, name_case, kwargs)
-        if text.is_reserved(result):
-            return self.safe_name(f"{name}_{prefix}", prefix, name_case, **kwargs)
+        if attr.is_tokens:
+            raise TypeError("is_tokens not implemented yet!")
 
-        return result
+        if attr.is_dict:
+            raise TypeError("Dict case not implemented yet!")
+
+        # if attr.is_nillable or (
+        #     attr.default is None and (attr.is_optional or not self.format.kw_only)
+        # ):
+        #     return f"Optional[{result}]"
+
+
+        default_value = self.filters.field_default_value(attr, {})
+        metadata = self.filters.field_metadata(attr, {}, parents)
+        kwargs = {}
+        # xsd_type = TODO
+
+        if metadata.get("required"):
+            # we choose not to put required=True to avoid
+            # messing with existing Odoo modules.
+            kwargs["xsd_required"] = True
+
+        if attr.help:
+            kwargs["help"] = attr.help
+
+        if attr.is_list:
+            kwargs = {"comodel": self.registry_comodel(type_names)}
+            return f"fields.One2many({self.filters.format_arguments(kwargs, 4)})"
+        elif attr.types[0].datatype:
+            python_type = attr.types[0].datatype.code
+            #print("----", attr.name, type(attr.types[0].datatype.code), type(attr.types[0].datatype.type))
+            if python_type in INTEGER_TYPES:
+                return f"fields.Integer()"
+            if python_type in FLOAT_TYPES:
+                return f"fields.Float()"
+            elif python_type in DECIMAL_TYPES:
+                return f"fields.Monetary()"
+            elif python_type in CHAR_TYPES:
+                # return f"fields.Char()"
+                return f"fields.Char({self.filters.format_arguments(kwargs, 4)})"
+            elif python_type in DATE_TYPES:
+                return f"fields.Date()"
+            else:
+                return f"fields.{python_type}()"
+        else: # Many2one
+            print("--", attr.name, type_names, self.registry_comodel(type_names))
+            kwargs = {"comodel": self.registry_comodel(type_names)}
+            # TODO it can be a fields.Selection! then see the type name
+            # cause it's different from obj.name|upper we print for enums now
+            return f"fields.Many2one({self.filters.format_arguments(kwargs, 4)})"
+
+
+        # TODO get xsd simpleType with xpath on original etree like:
+        # >>> t.getroot().xpath("//xs:element[@name='ICMSTot']//xs:element[@name='vProd']", namespaces={'xs': 'http://www.w3.org/2001/XMLSchema',})[0].get('type')
+        # 'TDec_1302'

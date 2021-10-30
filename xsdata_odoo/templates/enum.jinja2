@@ -1,4 +1,4 @@
-{{ obj.name }} = [
+{{ obj.name|upper }} = [
 {%- for attr in obj.attrs %}
   ("{{ attr.default }}", "{{ attr.default }}"),
 {%- endfor %}
