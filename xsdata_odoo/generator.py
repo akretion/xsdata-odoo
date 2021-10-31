@@ -30,7 +30,6 @@ CHAR_TYPES = ("string", "NMTOKEN")
 DATE_TYPES = ("date",)
 
 
-# TODO order enums 1st
 # TODO collect the m2o of the o2m
 # TODO collect xsd_type using lxml
 # TODO use the simple type to convert to fields.Monetary
@@ -89,7 +88,7 @@ class OdooGenerator(AbstractGenerator):
     def render_classes(self, classes: List[Class]) -> str:
         """Render the source code of the classes."""
         load = self.env.get_template
-        classes = sorted(classes, key=lambda x: x.name)
+        classes = sorted(classes, key=lambda x: (not x.is_enumeration, x.name))
         # TODO filter signature classes like generateds_odoo
         # TODO collect enum docstrings and labels by reading class fields
         # where they are used.
