@@ -31,10 +31,10 @@ DATE_TYPES = ("date",)
 
 
 # TODO collect the m2o of the o2m
-# TODO collect xsd_type using lxml
+# TODO collect xsd_type using lxml using obj.location
 # TODO use the simple type to convert to fields.Monetary
 # TODO extract float digits when possible
-# TODO extract field string attrs
+# TODO extract field string attrs (and remove help if help == string)
 # TODO extract enums and fields docstring using lxml
 
 class OdooGenerator(AbstractGenerator):
@@ -56,7 +56,7 @@ class OdooGenerator(AbstractGenerator):
                 "registry_name": self.registry_name,
                 "clean_docstring": self.clean_docstring,
                 "binding_type": self.binding_type,
-                "field_definition": self.field_definition,
+                "odoo_field_definition": self.odoo_field_definition,
                 "field_name": self.field_name,
             }
         )
@@ -153,10 +153,10 @@ class OdooGenerator(AbstractGenerator):
     def binding_type(
         self,
         obj: Class,
-        parents: List[str],
+        parents: List[Class],
     ) -> str:
         """Return the name of the xsdata class for a given Odoo model"""
-        return ".".join([self.class_name(p, False) for p in parents])
+        return ".".join([self.class_name(p.name, False) for p in parents])
 
     def field_name(self, name: str) -> str:
         """
@@ -178,17 +178,17 @@ class OdooGenerator(AbstractGenerator):
             name = name[1:100]
         return f"{field_prefix}{name}"
 
-    def field_definition(
+    def odoo_field_definition(
         self,
         attr: Attr,
-        parents: List[str],
+        parents: List[Class],
     ) -> str:
         """Return the Odoo field definition."""
 
 
         # 1st some checks inspired from Filters.field_type:
         type_names = collections.unique_sequence(
-            self.filters.field_type_name(x, parents) for x in attr.types
+            self.filters.field_type_name(x, [p.name for p in parents]) for x in attr.types
         )
 
         if len(type_names) > 1:
@@ -207,7 +207,7 @@ class OdooGenerator(AbstractGenerator):
 
 
         default_value = self.filters.field_default_value(attr, {})
-        metadata = self.filters.field_metadata(attr, {}, parents)
+        metadata = self.filters.field_metadata(attr, {}, [p.name for p in parents])
         kwargs = {}
         # xsd_type = TODO
 

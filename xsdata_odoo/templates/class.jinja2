@@ -1,5 +1,5 @@
 {% set level = level|default(0) -%}
-{% set parents = parents|default([obj.name]) -%}
+{% set parents = parents|default([obj]) -%}
 
 class {{ obj.name|class_name }}(models.AbstractModel):
     {{- obj.help|clean_docstring }}
@@ -8,9 +8,22 @@ class {{ obj.name|class_name }}(models.AbstractModel):
     _inherit = 'spec.mixin.nfe'
     _binding_type = "{{ obj|binding_type(parents) }}"
 
+
+
+{%- for inner in obj.inner if inner.is_enumeration %}
+    {%- set tpl = "enum.jinja2" -%}
+    {%- set inner_parents = parents + [inner] -%}
+    {%- with obj=inner, parents=inner_parents, level=(level + 1) -%}
+        XXXXX TODO FIXME no such case?
+        {% include tpl %}
+    {%- endwith -%}
+{%- endfor -%}
+
+
+
 {%- for attr in obj.attrs %}
-    {%- set field_definition = attr|field_definition(parents) %}
-    {{ attr.name|field_name }} = {{ field_definition }}
+    {%- set odoo_field_definition = attr|odoo_field_definition(parents) %}
+    {{ attr.name|field_name }} = {{odoo_field_definition }}
 {%- endfor %}
 
 {% for ext in obj.extensions %}
@@ -21,7 +34,7 @@ class {{ obj.name|class_name }}(models.AbstractModel):
 
 {%- for inner in obj.inner %}
     {%- set tpl = "enum.jinja2" if inner.is_enumeration else "class.jinja2" -%}
-    {%- set inner_parents = parents + [inner.name] -%}
+    {%- set inner_parents = parents + [inner] -%}
     {%- with obj=inner, parents=inner_parents, level=(level + 1) -%}
         {% include tpl %}
     {%- endwith -%}
