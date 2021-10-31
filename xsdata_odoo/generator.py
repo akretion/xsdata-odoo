@@ -30,7 +30,6 @@ CHAR_TYPES = ("string", "NMTOKEN")
 DATE_TYPES = ("date",)
 
 
-# TODO collect the m2o of the o2m
 # TODO collect xsd_type using lxml using obj.location
 # TODO use the simple type to convert to fields.Monetary
 # TODO extract float digits when possible
@@ -56,6 +55,7 @@ class OdooGenerator(AbstractGenerator):
                 "registry_name": self.registry_name,
                 "clean_docstring": self.clean_docstring,
                 "binding_type": self.binding_type,
+                "parent_many2one": self.parent_many2one,
                 "odoo_field_definition": self.odoo_field_definition,
                 "field_name": self.field_name,
             }
@@ -178,6 +178,29 @@ class OdooGenerator(AbstractGenerator):
             name = name[1:100]
         return f"{field_prefix}{name}"
 
+    def parent_many2one(
+        self,
+        obj: Class,
+        parents: List[Class]
+    ) -> str:
+        """
+        Nested XML tags become one2many or one2one in Odoo. So inner classes
+        need a many2one relationship to their parent.
+        (these inner classes can eventually be denormalized in their parent
+        when using spec_driven_model.models.StackedModel).
+        """
+        if len(parents) > 1:
+            parent = parents[-2]
+            fname = self.field_name(parent.name)
+            kwargs = {
+                "comodel": self.registry_comodel([parent.name]),
+                "required": True,
+                "ondelete": "cascade",
+            }
+            return f"{fname}_id = fields.Many2one({self.filters.format_arguments(kwargs, 4)})"
+        else:
+            return ""
+
     def odoo_field_definition(
         self,
         attr: Attr,
@@ -220,7 +243,7 @@ class OdooGenerator(AbstractGenerator):
             kwargs["help"] = attr.help
 
         if attr.is_list:
-            kwargs = {"comodel": self.registry_comodel(type_names)}
+            kwargs["comodel"] = self.registry_comodel(type_names)
             return f"fields.One2many({self.filters.format_arguments(kwargs, 4)})"
         elif attr.types[0].datatype:
             python_type = attr.types[0].datatype.code
