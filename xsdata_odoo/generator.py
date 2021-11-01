@@ -26,10 +26,20 @@ from .wrap_text import wrap_text
 
 
 INTEGER_TYPES = ("integer", "positiveInteger")
-FLOAT_TYPES = (float,)
+FLOAT_TYPES = ("float",)
 DECIMAL_TYPES = ("decimal",)
-CHAR_TYPES = ("string", "NMTOKEN", "ID", "IDREF", "IDREFS", "anyURI", "base64Binary")
+CHAR_TYPES = (
+    "string",
+    "NMTOKEN",
+    "ID",
+    "IDREF",
+    "IDREFS",
+    "anyURI",
+    "base64Binary",
+    "normalizedString",
+)
 DATE_TYPES = ("date",)
+BOOLEAN_TYPES = "boolean"
 
 # generally it's not interresting to generate mixins for signature
 SIGNATURE_CLASS_SKIP = [
@@ -313,7 +323,6 @@ class OdooGenerator(AbstractGenerator):
             return f"fields.One2many({self.filters.format_arguments(kwargs, 4)})"
         elif attr.types[0].datatype:
             python_type = attr.types[0].datatype.code
-            # print("----", attr.name, type(attr.types[0].datatype.code), type(attr.types[0].datatype.type))
             if python_type in INTEGER_TYPES:
                 return f"fields.Integer()"
             if python_type in FLOAT_TYPES:
@@ -321,10 +330,11 @@ class OdooGenerator(AbstractGenerator):
             elif python_type in DECIMAL_TYPES:
                 return f"fields.Monetary()"
             elif python_type in CHAR_TYPES:
-                # return f"fields.Char()"
                 return f"fields.Char({self.filters.format_arguments(kwargs, 4)})"
             elif python_type in DATE_TYPES:
                 return f"fields.Date()"
+            elif python_type in BOOLEAN_TYPES:
+                return f"fields.Boolean({self.filters.format_arguments(kwargs, 4)})"
             else:
                 logger.warning(
                     f"{python_type} {attr.types[0].datatype} not implemented yet! class: {parents[-1].name} attr: {attr}"
@@ -332,10 +342,7 @@ class OdooGenerator(AbstractGenerator):
                 return ""
         else:  # Many2one
             kwargs = {"comodel": self.registry_comodel(type_names)}
+            # print(f"--- {parents[-1].name} {attr.name} {self.registry_comodel(type_names)}")
             # TODO it can be a fields.Selection! then see the type name
             # cause it's different from obj.name|upper we print for enums now
             return f"fields.Many2one({self.filters.format_arguments(kwargs, 4)})"
-
-        # TODO get xsd simpleType with xpath on original etree like:
-        # >>> t.getroot().xpath("//xs:element[@name='ICMSTot']//xs:element[@name='vProd']", namespaces={'xs': 'http://www.w3.org/2001/XMLSchema',})[0].get('type')
-        # 'TDec_1302'
