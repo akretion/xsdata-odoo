@@ -1,17 +1,17 @@
 import os
 import re
-import textwrap
 from pathlib import Path
 from typing import Any
 from typing import Callable
+from typing import Dict
 from typing import Iterator
 from typing import List
 from typing import Optional
 
 from jinja2 import Environment
 from jinja2 import FileSystemLoader
+from lxml import etree
 from xsdata.codegen.models import Attr
-from xsdata.codegen.models import AttrType
 from xsdata.codegen.models import Class
 from xsdata.codegen.resolver import DependenciesResolver
 from xsdata.formats.dataclass.filters import Filters
@@ -21,7 +21,6 @@ from xsdata.logger import logger
 from xsdata.models.config import GeneratorConfig
 from xsdata.utils import collections
 from xsdata.utils import namespaces
-from xsdata.utils import text
 
 from .wrap_text import wrap_text
 
@@ -48,7 +47,6 @@ SIGNATURE_CLASS_SKIP = [
 ]
 
 
-# TODO collect xsd_type using lxml using obj.location
 # TODO use the simple type to convert to fields.Monetary
 # TODO extract float digits when possible
 # TODO extract field string attrs (and remove help if help == string)
@@ -82,6 +80,7 @@ class OdooGenerator(AbstractGenerator):
         )
         self.class_case: Callable = config.conventions.class_name.case
         self.class_safe_prefix: str = config.conventions.class_name.safe_prefix
+        self.files_to_etree: Dict[str, Any] = {}
 
     def render(self, classes: List[Class]) -> Iterator[GeneratorResult]:
         """Return a iterator of the generated results."""
@@ -271,10 +270,35 @@ class OdooGenerator(AbstractGenerator):
         # ):
         #     return f"Optional[{result}]"
 
-        default_value = self.filters.field_default_value(attr, {})
+        # default_value = self.filters.field_default_value(attr, {})
         metadata = self.filters.field_metadata(attr, {}, [p.name for p in parents])
+        if not self.files_to_etree.get(parents[-1].location):
+            xsd_tree = etree.parse(parents[-1].location)
+            self.files_to_etree[parents[-1].location] = xsd_tree
+        else:
+            xsd_tree = self.files_to_etree[parents[-1].location]
+
+        type_lookups = (
+            f"//xs:element[@name='{parents[-1].name}']//xs:element[@name='{attr.name}']",
+            f"//xs:element[@name='{parents[-1].name}']//xs:attribute[@name='{attr.name}']",
+            f"//xs:complexType[@name='{parents[-1].name}']//xs:element[@name='{attr.name}']",
+            f"//xs:complexType[@name='{parents[-1].name}']//xs:attribute[@name='{attr.name}']",
+        )
+        xsd_type = None
+        for lookup in type_lookups:
+            xpath_matches = xsd_tree.getroot().xpath(
+                lookup,
+                namespaces={
+                    "xs": "http://www.w3.org/2001/XMLSchema",
+                },
+            )
+            if xpath_matches:
+                xsd_type = xpath_matches[0].get("type")
+                break
+
         kwargs = {}
-        # xsd_type = TODO
+        if xsd_type:
+            kwargs["xsd_type"] = xsd_type
 
         if metadata.get("required"):
             # we choose not to put required=True to avoid
