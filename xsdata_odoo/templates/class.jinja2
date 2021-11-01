@@ -1,6 +1,7 @@
 {% set level = level|default(0) -%}
 {% set parents = parents|default([obj]) -%}
 
+{%- if not obj.name|pattern_skip(parents) %}
 class {{ obj.name|class_name }}(models.AbstractModel):
     {{- obj.help|clean_docstring }}
     _description = textwrap.dedent("    %s" % (__doc__,))
@@ -12,8 +13,10 @@ class {{ obj.name|class_name }}(models.AbstractModel):
     {{ obj|parent_many2one(parents) }}
     {%- endif %}
     {%- for attr in obj.attrs %}
+    {%- if not attr.name|pattern_skip(parents) %}
     {%- set odoo_field_definition = attr|odoo_field_definition(parents) %}
     {{ attr.name|field_name }} = {{odoo_field_definition }}
+    {%- endif %}
     {%- endfor %}
 
 {% for ext in obj.extensions %}
@@ -29,3 +32,5 @@ class {{ obj.name|class_name }}(models.AbstractModel):
         {% include tpl %}
     {%- endwith -%}
 {%- endfor -%}
+
+{%- endif %}

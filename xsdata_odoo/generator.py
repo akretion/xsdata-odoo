@@ -10,7 +10,6 @@ from typing import Optional
 
 from jinja2 import Environment
 from jinja2 import FileSystemLoader
-from .wrap_text import wrap_text
 from xsdata.codegen.models import Attr
 from xsdata.codegen.models import AttrType
 from xsdata.codegen.models import Class
@@ -18,16 +17,35 @@ from xsdata.codegen.resolver import DependenciesResolver
 from xsdata.formats.dataclass.filters import Filters
 from xsdata.formats.mixins import AbstractGenerator
 from xsdata.formats.mixins import GeneratorResult
+from xsdata.logger import logger
 from xsdata.models.config import GeneratorConfig
 from xsdata.utils import collections
+from xsdata.utils import namespaces
 from xsdata.utils import text
+
+from .wrap_text import wrap_text
 
 
 INTEGER_TYPES = ("integer", "positiveInteger")
 FLOAT_TYPES = (float,)
 DECIMAL_TYPES = ("decimal",)
-CHAR_TYPES = ("string", "NMTOKEN")
+CHAR_TYPES = ("string", "NMTOKEN", "ID", "IDREF", "IDREFS", "anyURI", "base64Binary")
 DATE_TYPES = ("date",)
+
+# generally it's not interresting to generate mixins for signature
+SIGNATURE_CLASS_SKIP = [
+    "^Signature$",
+    "^SignatureValue$",
+    "^SignedInfo$",
+    "^Reference$",
+    "^DigestMethod$",
+    "^Transforms$",
+    "^Transform$",
+    "^KeyInfo$",
+    "^X509Data$",
+    "^CanonicalizationMethod$",
+    "^SignatureMethod$",
+]
 
 
 # TODO collect xsd_type using lxml using obj.location
@@ -35,6 +53,7 @@ DATE_TYPES = ("date",)
 # TODO extract float digits when possible
 # TODO extract field string attrs (and remove help if help == string)
 # TODO extract enums and fields docstring using lxml
+
 
 class OdooGenerator(AbstractGenerator):
     """Odoo generator."""
@@ -51,6 +70,7 @@ class OdooGenerator(AbstractGenerator):
         self.filters.register(self.env)
         self.env.filters.update(
             {
+                "pattern_skip": self.pattern_skip,
                 "class_name": self.class_name,
                 "registry_name": self.registry_name,
                 "clean_docstring": self.clean_docstring,
@@ -103,11 +123,39 @@ class OdooGenerator(AbstractGenerator):
 
     # jinja2 filters:
 
+    def pattern_skip(self, name: str, parents: List[Class]) -> bool:
+        class_skip = SIGNATURE_CLASS_SKIP
+        if os.environ.get("SKIP"):
+            class_skip += os.environ["SKIP"].split("|")
+        for pattern in class_skip:
+            # do we have a simple match? (no scoping can be risky)
+            if re.search(pattern, name):
+                return True
+            part_count = pattern.count(".") + 1
+            if part_count > 1:
+                # eventually we search for the class with its parents scope
+                parent_pattern = ".".join(
+                    [namespaces.local_name(c.qname) for c in parents[-part_count:]]
+                )
+                if re.search(pattern, parent_pattern):
+                    return True
+                # we now search for the field_name with its parents scope
+                field_parent_pattern = ".".join(
+                    [namespaces.local_name(c.qname) for c in parents[-part_count + 1 :]]
+                    + [name]
+                )
+                if re.search(pattern, field_parent_pattern):
+                    return True
+
+        return False
+
     def class_name(self, name: str, replace_type: bool = True) -> str:
         """Convert the given string to a class name according to the selected
         conventions or use an existing alias."""
         # print(name, self.class_safe_prefix, self.class_case)
-        class_name = self.filters.safe_name(name, self.class_safe_prefix, self.class_case)
+        class_name = self.filters.safe_name(
+            name, self.class_safe_prefix, self.class_case
+        )
         if replace_type:
             return class_name.rpartition("Type")[0] or class_name
         else:
@@ -142,20 +190,12 @@ class OdooGenerator(AbstractGenerator):
         # taken from https://github.com/akretion/generateds-odoo
         return "\n    {}".format(wrap_text(string, 4, 79))
 
-        # def _clean(txt: str) -> str:
-        #     if escape:
-        #         txt = txt.replace("\\", "\\\\")
-
-        #     return txt.replace('"""', "'''").strip()
-
-        # return "\n".join(_clean(line) for line in string.splitlines() if line.strip())
-
     def binding_type(
         self,
         obj: Class,
         parents: List[Class],
     ) -> str:
-        """Return the name of the xsdata class for a given Odoo model"""
+        """Return the name of the xsdata class for a given Odoo model."""
         return ".".join([self.class_name(p.name, False) for p in parents])
 
     def field_name(self, name: str) -> str:
@@ -178,16 +218,13 @@ class OdooGenerator(AbstractGenerator):
             name = name[1:100]
         return f"{field_prefix}{name}"
 
-    def parent_many2one(
-        self,
-        obj: Class,
-        parents: List[Class]
-    ) -> str:
+    def parent_many2one(self, obj: Class, parents: List[Class]) -> str:
         """
-        Nested XML tags become one2many or one2one in Odoo. So inner classes
-        need a many2one relationship to their parent.
-        (these inner classes can eventually be denormalized in their parent
-        when using spec_driven_model.models.StackedModel).
+        Nested XML tags become one2many or one2one in Odoo.
+
+        So inner classes need a many2one relationship to their parent.
+        (these inner classes can eventually be denormalized in their
+        parent when using spec_driven_model.models.StackedModel).
         """
         if len(parents) > 1:
             parent = parents[-2]
@@ -208,26 +245,31 @@ class OdooGenerator(AbstractGenerator):
     ) -> str:
         """Return the Odoo field definition."""
 
-
         # 1st some checks inspired from Filters.field_type:
         type_names = collections.unique_sequence(
-            self.filters.field_type_name(x, [p.name for p in parents]) for x in attr.types
+            self.filters.field_type_name(x, [p.name for p in parents])
+            for x in attr.types
         )
 
         if len(type_names) > 1:
-            raise TypeError("Union of type not implemented yet!")
+            logger.warning(
+                f"len(type_names) > 1 (Union) not implemented yet! class: {parents[-1].name} attr: {attr}"
+            )
 
         if attr.is_tokens:
-            raise TypeError("is_tokens not implemented yet!")
+            logger.warning(
+                f"attr.is_tokens not implemented yet! class: {parents[-1].name} attr: {attr}"
+            )
 
         if attr.is_dict:
-            raise TypeError("Dict case not implemented yet!")
+            logger.warning(
+                f"attr.is_dict not implemented yet! class: {parents[-1].name} attr: {attr}"
+            )
 
         # if attr.is_nillable or (
         #     attr.default is None and (attr.is_optional or not self.format.kw_only)
         # ):
         #     return f"Optional[{result}]"
-
 
         default_value = self.filters.field_default_value(attr, {})
         metadata = self.filters.field_metadata(attr, {}, [p.name for p in parents])
@@ -247,7 +289,7 @@ class OdooGenerator(AbstractGenerator):
             return f"fields.One2many({self.filters.format_arguments(kwargs, 4)})"
         elif attr.types[0].datatype:
             python_type = attr.types[0].datatype.code
-            #print("----", attr.name, type(attr.types[0].datatype.code), type(attr.types[0].datatype.type))
+            # print("----", attr.name, type(attr.types[0].datatype.code), type(attr.types[0].datatype.type))
             if python_type in INTEGER_TYPES:
                 return f"fields.Integer()"
             if python_type in FLOAT_TYPES:
@@ -260,14 +302,15 @@ class OdooGenerator(AbstractGenerator):
             elif python_type in DATE_TYPES:
                 return f"fields.Date()"
             else:
-                return f"fields.{python_type}()"
-        else: # Many2one
-            print("--", attr.name, type_names, self.registry_comodel(type_names))
+                logger.warning(
+                    f"{python_type} {attr.types[0].datatype} not implemented yet! class: {parents[-1].name} attr: {attr}"
+                )
+                return ""
+        else:  # Many2one
             kwargs = {"comodel": self.registry_comodel(type_names)}
             # TODO it can be a fields.Selection! then see the type name
             # cause it's different from obj.name|upper we print for enums now
             return f"fields.Many2one({self.filters.format_arguments(kwargs, 4)})"
-
 
         # TODO get xsd simpleType with xpath on original etree like:
         # >>> t.getroot().xpath("//xs:element[@name='ICMSTot']//xs:element[@name='vProd']", namespaces={'xs': 'http://www.w3.org/2001/XMLSchema',})[0].get('type')
