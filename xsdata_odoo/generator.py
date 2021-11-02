@@ -22,6 +22,7 @@ from xsdata.models.config import GeneratorConfig
 from xsdata.utils import collections
 from xsdata.utils import namespaces
 
+from .wrap_text import extract_string_and_help
 from .wrap_text import wrap_text
 
 
@@ -57,9 +58,12 @@ SIGNATURE_CLASS_SKIP = [
 ]
 
 
+# TODO why enums like tAmb are not written?
+# TODO define m2o of the o2m fields. see #1 of https://github.com/akretion/generateds-odoo/issues/10
+# in fact it seems what we do sort of work but we can have only 1 o2m to a given class in a class
+# and also it the keys changed compared to generateDS and we also need to write the key in the o2m.
 # TODO use the simple type to convert to fields.Monetary
 # TODO extract float digits when possible
-# TODO extract field string attrs (and remove help if help == string)
 # TODO extract enums and fields docstring using lxml
 
 
@@ -91,6 +95,7 @@ class OdooGenerator(AbstractGenerator):
         self.class_case: Callable = config.conventions.class_name.case
         self.class_safe_prefix: str = config.conventions.class_name.safe_prefix
         self.files_to_etree: Dict[str, Any] = {}
+        self.unique_labels: Dict[str, set] = {}
 
     def render(self, classes: List[Class]) -> Iterator[GeneratorResult]:
         """Return a iterator of the generated results."""
@@ -133,6 +138,7 @@ class OdooGenerator(AbstractGenerator):
     # jinja2 filters:
 
     def pattern_skip(self, name: str, parents: List[Class]) -> bool:
+        """Should class or field be skipped?"""
         class_skip = SIGNATURE_CLASS_SKIP
         if os.environ.get("SKIP"):
             class_skip += os.environ["SKIP"].split("|")
@@ -183,18 +189,9 @@ class OdooGenerator(AbstractGenerator):
 
     @classmethod
     def clean_docstring(cls, string: Optional[str], escape: bool = True) -> str:
-        """
-        Prepare string for docstring generation.
-
-        - Strip whitespace from each line
-        - Replace triple double quotes with single quotes
-        - Escape backslashes
-        :param string: input value
-        :param escape: skip backslashes escape, if string is going to
-            pass through formatting.
-        """
+        """Prepare string for docstring generation."""
         if not string:
-            return ""
+            return ""  # TODO read from parent field if any
 
         # taken from https://github.com/akretion/generateds-odoo
         return "\n    {}".format(wrap_text(string, 4, 79))
@@ -315,8 +312,16 @@ class OdooGenerator(AbstractGenerator):
             # messing with existing Odoo modules.
             kwargs["xsd_required"] = True
 
-        if attr.help:
-            kwargs["help"] = attr.help
+        unique_labels_key = ".".join([p.name for p in parents])
+        if not self.unique_labels.get(unique_labels_key):
+            self.unique_labels[unique_labels_key] = set()
+        string, help_attr = extract_string_and_help(
+            attr.name, attr.help, self.unique_labels[unique_labels_key]
+        )
+        if string != attr.name:
+            kwargs["string"] = string
+        if help_attr and help_attr != string:
+            kwargs["help"] = help_attr
 
         if attr.is_list:
             kwargs["comodel"] = self.registry_comodel(type_names)

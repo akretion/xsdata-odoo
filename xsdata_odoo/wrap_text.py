@@ -1,5 +1,41 @@
 import textwrap
 
+STRING_MIN_LEN = 36
+STRING_MAX_LEN = 64
+
+
+def extract_string_and_help(
+    field_name: str, doc: str, unique_labels: set
+) -> (str, str):
+    string = field_name
+    if doc:
+        string = " ".join(doc.strip().splitlines()[0].split())
+        if len(string) > STRING_MIN_LEN and len(string.split(". ")[0]) < STRING_MAX_LEN:
+            string = string.split(". ")[0].strip()
+        if len(string) > STRING_MIN_LEN and len(string.split(", ")[0]) < STRING_MAX_LEN:
+            string = string.split(", ")[0].strip()
+        if len(string) > STRING_MIN_LEN and len(string.split(" (")[0]) < STRING_MAX_LEN:
+            string = string.split(" (")[0].strip()
+        if (
+            len(string) > STRING_MIN_LEN and len(string.split("-")[0]) < STRING_MAX_LEN
+        ):  # TODO sure?
+            string = string.split("-")[0].strip()
+        if len(string) > STRING_MIN_LEN and len(string.split(".")[0]) < STRING_MAX_LEN:
+            string = string.split(".")[0].strip()
+        if len(string) > STRING_MIN_LEN and len(string.split(",")[0]) < STRING_MAX_LEN:
+            string = string.split(",")[0].strip()
+        string = string.replace('"', "'")
+        if string.endswith(":"):
+            string = string[:-1]
+        if len(string) > 58:
+            string = field_name.split("_")[-1]
+    if string in unique_labels:
+        string = f"{string} ({field_name})"
+        if len(string) > 58:
+            string = field_name.split("_")[-1]
+    unique_labels.add(string)
+    return string, doc
+
 
 def wrap_text(
     text,
