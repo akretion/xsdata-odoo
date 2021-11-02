@@ -58,13 +58,15 @@ SIGNATURE_CLASS_SKIP = [
 ]
 
 
-# TODO why enums like tAmb are not written?
+# TODO enums from included files like TAMB are generated in other files (tiposBasico_v4/00.py)
+# see in render method for option to repeat these enums (or import)
+# TODO extract enums and fields docstring using lxml
 # TODO define m2o of the o2m fields. see #1 of https://github.com/akretion/generateds-odoo/issues/10
 # in fact it seems what we do sort of work but we can have only 1 o2m to a given class in a class
 # and also it the keys changed compared to generateDS and we also need to write the key in the o2m.
 # TODO use the simple type to convert to fields.Monetary
 # TODO extract float digits when possible
-# TODO extract enums and fields docstring using lxml
+
 
 
 class OdooGenerator(AbstractGenerator):
@@ -123,9 +125,6 @@ class OdooGenerator(AbstractGenerator):
         """Render the source code of the classes."""
         load = self.env.get_template
         classes = sorted(classes, key=lambda x: (not x.is_enumeration, x.name))
-        # TODO filter signature classes like generateds_odoo
-        # TODO collect enum docstrings and labels by reading class fields
-        # where they are used.
 
         def render_class(obj: Class) -> str:
             """Render class or enumeration."""
