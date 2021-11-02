@@ -97,7 +97,6 @@ class OdooGenerator(AbstractGenerator):
         self.class_case: Callable = config.conventions.class_name.case
         self.class_safe_prefix: str = config.conventions.class_name.safe_prefix
         self.files_to_etree: Dict[str, Any] = {}
-        self.unique_labels: Dict[str, set] = {}
 
     def render(self, classes: List[Class]) -> Iterator[GeneratorResult]:
         """Return a iterator of the generated results."""
@@ -311,11 +310,10 @@ class OdooGenerator(AbstractGenerator):
             # messing with existing Odoo modules.
             kwargs["xsd_required"] = True
 
-        unique_labels_key = ".".join([p.name for p in parents])
-        if not self.unique_labels.get(unique_labels_key):
-            self.unique_labels[unique_labels_key] = set()
+        if not hasattr(parents[-1], "unique_labels"):
+            parents[-1].unique_labels = set()  # will avoid repeating field labels
         string, help_attr = extract_string_and_help(
-            attr.name, attr.help, self.unique_labels[unique_labels_key]
+            attr.name, attr.help, parents[-1].unique_labels
         )
         if string != attr.name:
             kwargs["string"] = string
@@ -328,15 +326,15 @@ class OdooGenerator(AbstractGenerator):
         elif attr.types[0].datatype:
             python_type = attr.types[0].datatype.code
             if python_type in INTEGER_TYPES:
-                return f"fields.Integer()"
+                return f"fields.Integer({self.filters.format_arguments(kwargs, 4)})"
             if python_type in FLOAT_TYPES:
-                return f"fields.Float()"
+                return f"fields.Float({self.filters.format_arguments(kwargs, 4)})"
             elif python_type in DECIMAL_TYPES:
-                return f"fields.Monetary()"
+                return f"fields.Monetary({self.filters.format_arguments(kwargs, 4)})"
             elif python_type in CHAR_TYPES:
                 return f"fields.Char({self.filters.format_arguments(kwargs, 4)})"
             elif python_type in DATE_TYPES:
-                return f"fields.Date()"
+                return f"fields.Date({self.filters.format_arguments(kwargs, 4)})"
             elif python_type in BOOLEAN_TYPES:
                 return f"fields.Boolean({self.filters.format_arguments(kwargs, 4)})"
             else:
@@ -345,7 +343,7 @@ class OdooGenerator(AbstractGenerator):
                 )
                 return ""
         else:  # Many2one
-            kwargs = {"comodel": self.registry_comodel(type_names)}
+            kwargs["comodel"] = self.registry_comodel(type_names)
             # print(f"--- {parents[-1].name} {attr.name} {self.registry_comodel(type_names)}")
             # TODO it can be a fields.Selection! then see the type name
             # cause it's different from obj.name|upper we print for enums now
