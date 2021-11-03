@@ -4,5 +4,11 @@
 #
 import textwrap
 from odoo import fields, models
+{{ output|default_imports }}
+{% include "imports.jinja2" -%}
+{%- if namespace %}
+__NAMESPACE__ = "{{ namespace }}"
+{% endif %}
+
 
 {{ output }}

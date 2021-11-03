@@ -1,0 +1,15 @@
+{%- for source, items in imports|groupby("source") -%}
+{%- if items|length == 1 -%}
+{%- if not items[0].name|pattern_skip() %}
+from {{ source | import_module(module)  }} import {{ items[0].name | import_contant(alias=items[0].alias) }}
+{%- endif %}
+{% else -%}
+from {{ source | import_module(module) }} import (
+{%- for item in items %}
+{%- if not item.name|pattern_skip() %}
+    {{ item.name | import_contant(alias=item.alias) }},
+{%- endif %}
+{%- endfor %}
+)
+{% endif -%}
+{%- endfor %}

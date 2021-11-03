@@ -1,4 +1,6 @@
+# taken from https://github.com/akretion/generateds-odoo
 import textwrap
+from typing import Tuple
 
 STRING_MIN_LEN = 36
 STRING_MAX_LEN = 64
@@ -6,7 +8,7 @@ STRING_MAX_LEN = 64
 
 def extract_string_and_help(
     field_name: str, doc: str, unique_labels: set
-) -> (str, str):
+) -> Tuple[str, str]:
     string = field_name
     if doc:
         string = " ".join(doc.strip().splitlines()[0].split())
