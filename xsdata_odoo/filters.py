@@ -166,7 +166,8 @@ class OdooFilters(Filters):
 
     def parent_many2one(self, obj: Class, parents: List[Class]) -> str:
         """
-        Nested XML tags become one2many or one2one in Odoo.
+        TODO THIS IS ALL FUCKED UP. Nested XML tags become one2many or one2one
+        in Odoo.
 
         So inner classes need a many2one relationship to their parent.
         (these inner classes can eventually be denormalized in their
@@ -195,20 +196,22 @@ class OdooFilters(Filters):
         type_names = collections.unique_sequence(
             self.field_type_name(x, [p.name for p in parents]) for x in attr.types
         )
+        kwargs = {}
+        obj = parents[-1]
 
         if len(type_names) > 1:
             logger.warning(
-                f"len(type_names) > 1 (Union) not implemented yet! class: {parents[-1].name} attr: {attr}"
+                f"len(type_names) > 1 (Union) not implemented yet! class: {obj.name} attr: {attr}"
             )
 
         if attr.is_tokens:
             logger.warning(
-                f"attr.is_tokens not implemented yet! class: {parents[-1].name} attr: {attr}"
+                f"attr.is_tokens not implemented yet! class: {obj.name} attr: {attr}"
             )
 
         if attr.is_dict:
             logger.warning(
-                f"attr.is_dict not implemented yet! class: {parents[-1].name} attr: {attr}"
+                f"attr.is_dict not implemented yet! class: {obj.name} attr: {attr}"
             )
 
         # if attr.is_nillable or (
@@ -217,44 +220,21 @@ class OdooFilters(Filters):
         #     return f"Optional[{result}]"
 
         # default_value = self.field_default_value(attr, {})
-        metadata = self.field_metadata(attr, {}, [p.name for p in parents])
-        if not self.files_to_etree.get(parents[-1].location):
-            xsd_tree = etree.parse(parents[-1].location)
-            self.files_to_etree[parents[-1].location] = xsd_tree
-        else:
-            xsd_tree = self.files_to_etree[parents[-1].location]
 
-        type_lookups = (
-            f"//xs:element[@name='{parents[-1].name}']//xs:element[@name='{attr.name}']",
-            f"//xs:element[@name='{parents[-1].name}']//xs:attribute[@name='{attr.name}']",
-            f"//xs:complexType[@name='{parents[-1].name}']//xs:element[@name='{attr.name}']",
-            f"//xs:complexType[@name='{parents[-1].name}']//xs:attribute[@name='{attr.name}']",
-        )
-        xsd_type = None
-        for lookup in type_lookups:
-            xpath_matches = xsd_tree.getroot().xpath(
-                lookup,
-                namespaces={
-                    "xs": "http://www.w3.org/2001/XMLSchema",
-                },
-            )
-            if xpath_matches:
-                xsd_type = xpath_matches[0].get("type")
-                break
-
-        kwargs = {}
+        xsd_type = self.simple_type_from_xsd(obj, attr.name)
         if xsd_type:
             kwargs["xsd_type"] = xsd_type
 
+        metadata = self.field_metadata(attr, {}, [p.name for p in parents])
         if metadata.get("required"):
             # we choose not to put required=True to avoid
             # messing with existing Odoo modules.
             kwargs["xsd_required"] = True
 
-        if not hasattr(parents[-1], "unique_labels"):
-            parents[-1].unique_labels = set()  # will avoid repeating field labels
+        if not hasattr(obj, "unique_labels"):
+            obj.unique_labels = set()  # will avoid repeating field labels
         string, help_attr = extract_string_and_help(
-            attr.name, attr.help, parents[-1].unique_labels
+            attr.name, attr.help, obj.unique_labels
         )
         if string != attr.name:
             kwargs["string"] = string
@@ -282,7 +262,7 @@ class OdooFilters(Filters):
                 return f"fields.Boolean({self.format_arguments(kwargs, 4)})"
             else:
                 logger.warning(
-                    f"{python_type} {attr.types[0].datatype} not implemented yet! class: {parents[-1].name} attr: {attr}"
+                    f"{python_type} {attr.types[0].datatype} not implemented yet! class: {obj.name} attr: {attr}"
                 )
                 return ""
         else:
@@ -294,13 +274,13 @@ class OdooFilters(Filters):
                     # return f"fields.Selection({self.format_arguments(kwargs, 4)})"
             for klass in self.all_complex_types:
                 if type(attr.types[0]) == str:
-                    print(f"\nAAAAAA class: {parents[-1].name} attr: {attr}")
+                    print(f"\nAAAAAA class: {obj.name} attr: {attr}")
                 if attr.types[0].qname == klass.qname:
                     # Many2one
                     kwargs["comodel"] = self.registry_comodel(type_names)
                     return f"fields.Many2one({self.format_arguments(kwargs, 4)})"
             logger.warning(
-                f"Missing class {attr.types[0]}! class: {parents[-1].name} attr: {attr}"
+                f"Missing class {attr.types[0]}! class: {obj.name} attr: {attr}"
             )
             return ""
 
@@ -310,3 +290,27 @@ class OdooFilters(Filters):
             return f"{self.class_name(name).upper()} as {self.class_name(alias)}"
 
         return self.class_name(name).upper()
+
+    def simple_type_from_xsd(self, obj: Class, attr_name: str):
+        if not self.files_to_etree.get(obj.location):
+            xsd_tree = etree.parse(obj.location)
+            self.files_to_etree[obj.location] = xsd_tree
+        else:
+            xsd_tree = self.files_to_etree[obj.location]
+
+        type_lookups = (
+            f"//xs:element[@name='{obj.name}']//xs:element[@name='{attr_name}']",
+            f"//xs:element[@name='{obj.name}']//xs:attribute[@name='{attr_name}']",
+            f"//xs:complexType[@name='{obj.name}']//xs:element[@name='{attr_name}']",
+            f"//xs:complexType[@name='{obj.name}']//xs:attribute[@name='{attr_name}']",
+        )
+        for lookup in type_lookups:
+            xpath_matches = xsd_tree.getroot().xpath(
+                lookup,
+                namespaces={
+                    "xs": "http://www.w3.org/2001/XMLSchema",
+                },
+            )
+            if xpath_matches:
+                return xpath_matches[0].get("type")
+        return None
