@@ -22,6 +22,7 @@ from .wrap_text import wrap_text
 INTEGER_TYPES = ("integer", "positiveInteger")
 FLOAT_TYPES = ("float",)
 DECIMAL_TYPES = ("decimal",)
+MONETARY_DIGITS = 2
 CHAR_TYPES = (
     "string",
     "NMTOKEN",
@@ -224,6 +225,11 @@ class OdooFilters(Filters):
         xsd_type = self.simple_type_from_xsd(obj, attr.name)
         if xsd_type:
             kwargs["xsd_type"] = xsd_type
+            # Monetary field detection for Brazil fiscal docs, TODO make pluggable
+            if xsd_type.startswith("TDec_"):
+                kwargs["currency_field"] = "brl_currency_id"
+                if int(xsd_type[7:9]) != MONETARY_DIGITS:
+                    kwargs["digits"] = (int(xsd_type[5:7]), int(xsd_type[7:9]))
 
         metadata = self.field_metadata(attr, {}, [p.name for p in parents])
         if metadata.get("required"):
@@ -248,9 +254,10 @@ class OdooFilters(Filters):
             python_type = attr.types[0].datatype.code
             if python_type in INTEGER_TYPES:
                 return f"fields.Integer({self.format_arguments(kwargs, 4)})"
-            if python_type in FLOAT_TYPES:
+            if (python_type in FLOAT_TYPES or CHAR_TYPES) and kwargs.get("digits", (0, 2))[1] != MONETARY_DIGITS:
+                kwargs["digits"] = kwargs["digits"][1]
                 return f"fields.Float({self.format_arguments(kwargs, 4)})"
-            elif python_type in DECIMAL_TYPES:
+            elif python_type in DECIMAL_TYPES or kwargs.get("currency_field"):
                 return f"fields.Monetary({self.format_arguments(kwargs, 4)})"
             elif python_type in CHAR_TYPES:
                 return f"fields.Char({self.format_arguments(kwargs, 4)})"

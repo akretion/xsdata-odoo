@@ -19,8 +19,6 @@ from .codegen.resolver import OdooDependenciesResolver
 # TODO define m2o of the o2m fields. see #1 of https://github.com/akretion/generateds-odoo/issues/10
 # in fact it seems what we do sort of work but we can have only 1 o2m to a given class in a class
 # and also it the keys changed compared to generateDS and we also need to write the key in the o2m.
-# TODO use the simple type to convert to fields.Monetary
-# TODO extract float digits when possible
 
 
 class OdooGenerator(DataclassGenerator):
