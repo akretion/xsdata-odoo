@@ -5,14 +5,17 @@ from typing import List
 from jinja2 import Environment
 from jinja2 import FileSystemLoader
 from xsdata.codegen.models import Class
-from xsdata.codegen.resolver import DependenciesResolver
 from xsdata.formats.dataclass.generator import DataclassGenerator
 from xsdata.formats.mixins import GeneratorResult
 from xsdata.models.config import GeneratorConfig
 
 from .filters import OdooFilters
+from .codegen.resolver import OdooDependenciesResolver
 
 
+# TODO FIX nfe40_protNFe field in TnfeProc class
+# TODO base model as a filter
+# pluggable filters (test with UBL and cbc: => simpleType + UBL simple types mapping)
 # TODO define m2o of the o2m fields. see #1 of https://github.com/akretion/generateds-odoo/issues/10
 # in fact it seems what we do sort of work but we can have only 1 o2m to a given class in a class
 # and also it the keys changed compared to generateDS and we also need to write the key in the o2m.
@@ -37,7 +40,7 @@ class OdooGenerator(DataclassGenerator):
     def render(self, classes: List[Class]) -> Iterator[GeneratorResult]:
         """Return a iterator of the generated results."""
         packages = {obj.qname: obj.target_module for obj in classes}
-        resolver = DependenciesResolver(packages=packages)
+        resolver = OdooDependenciesResolver(packages=packages)
 
         # Generate packages
         for path, cluster in self.group_by_package(classes).items():
@@ -87,7 +90,6 @@ class OdooGenerator(DataclassGenerator):
                 #                     # TODO FIMXE
                 #                     #cluster.append(k)
 
-            cluster = sorted(cluster, key=lambda x: (not x.is_enumeration, x.name))
             yield GeneratorResult(
                 path=path.with_suffix(".py"),
                 title=cluster[0].target_module,
