@@ -13,6 +13,9 @@ from .filters import OdooFilters
 from .codegen.resolver import OdooDependenciesResolver
 
 
+# TODO why is nfe40_IPI in Imposto class a One2many. Should be Many2one. May be because of <xs:element name="IPI" type="TIpi" minOccurs="0"/>
+# for now it works thanks to my patch https://github.com/tefra/xsdata/pull/667
+# TODO Enum labels
 # TODO FIX nfe40_protNFe field in TnfeProc class
 # TODO base model as a filter
 # pluggable filters (test with UBL and cbc: => simpleType + UBL simple types mapping)

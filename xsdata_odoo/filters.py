@@ -164,6 +164,14 @@ class OdooFilters(Filters):
             name = name[1:100]
         return f"{field_prefix}{name}"
 
+    def odoo_extract_monetary_attrs(self, kwargs: Dict[str, Dict]):
+        """Monetary field detection. Here adapted for Brazil fiscal schemas"""
+        xsd_type = kwargs.get("xsd_type")
+        if xsd_type.startswith("TDec_"):
+            kwargs["currency_field"] = "brl_currency_id"  # TODO make pluggable. ENV?
+            if int(xsd_type[7:9]) != MONETARY_DIGITS:
+                kwargs["digits"] = (int(xsd_type[5:7]), int(xsd_type[7:9]))
+
     def odoo_field_definition(
         self,
         attr: Attr,
@@ -206,11 +214,7 @@ class OdooFilters(Filters):
         xsd_type = self.simple_type_from_xsd(obj, attr.name)
         if xsd_type:
             kwargs["xsd_type"] = xsd_type
-            # Monetary field detection for Brazil fiscal docs, TODO make pluggable
-            if xsd_type.startswith("TDec_"):
-                kwargs["currency_field"] = "brl_currency_id"
-                if int(xsd_type[7:9]) != MONETARY_DIGITS:
-                    kwargs["digits"] = (int(xsd_type[5:7]), int(xsd_type[7:9]))
+            self.odoo_extract_monetary_attrs(kwargs)
 
         metadata = self.field_metadata(attr, {}, [p.name for p in parents])
         if metadata.get("required"):
