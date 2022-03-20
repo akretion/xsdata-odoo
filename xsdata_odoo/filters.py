@@ -222,6 +222,9 @@ class OdooFilters(Filters):
 
         # default_value = self.field_default_value(attr, {})
 
+        schema = os.environ.get("SCHEMA", "spec")
+        version = os.environ.get("VERSION", "10")
+
         xsd_type = self.simple_type_from_xsd(obj, attr.name)
         if xsd_type:
             kwargs["xsd_type"] = xsd_type
@@ -233,7 +236,7 @@ class OdooFilters(Filters):
 
         metadata = self.field_metadata(attr, {}, [p.name for p in parents])
         if metadata.get("required"):
-            # we choose not to put required=True to avoid
+            # we choose not to put required=True (required in database) to avoid
             # messing with existing Odoo modules.
             kwargs["xsd_required"] = True
 
@@ -242,15 +245,10 @@ class OdooFilters(Filters):
         string, help_attr = extract_string_and_help(
             attr.name, attr.help, obj.unique_labels
         )
-        if string != attr.name:
-            kwargs["string"] = string
+        kwargs["string"] = string
         if help_attr and help_attr != string:
             kwargs["help"] = help_attr
-
-        if attr.is_list:
-            kwargs["comodel"] = self.registry_comodel(type_names)
-            return f"fields.One2many({self.format_arguments(kwargs, 4)})"
-        elif attr.types[0].datatype:
+        if attr.types[0].datatype:
             python_type = attr.types[0].datatype.code
             if python_type in INTEGER_TYPES:
                 return f"fields.Integer({self.format_arguments(kwargs, 4)})"
@@ -273,23 +271,28 @@ class OdooFilters(Filters):
                 )
                 return ""
         else:
-            for klass in self.all_simple_types:
-                if attr.types[0].qname == klass.qname:
-                    # Selection
-                    return f"fields.Selection({klass.name.upper()},{self.format_arguments(kwargs, 4)})"
-                    # kwargs["selection"] = klass.name.upper()
-                    # return f"fields.Selection({self.format_arguments(kwargs, 4)})"
-            for klass in self.all_complex_types:
-                if type(attr.types[0]) == str:
-                    print(f"\nAAAAAA class: {obj.name} attr: {attr}")
-                if attr.types[0].qname == klass.qname:
-                    # Many2one
-                    kwargs["comodel"] = self.registry_comodel(type_names)
-                    return f"fields.Many2one({self.format_arguments(kwargs, 4)})"
-            logger.warning(
-                f"Missing class {attr.types[0]}! class: {obj.name} attr: {attr}"
-            )
-            return ""
+            if attr.is_list:
+                return f"""fields.One2many("{self.registry_comodel(type_names)}", "{schema}{version}_{attr.name}_{obj.name}_id", {self.format_arguments(kwargs, 4)})"""
+            else:
+
+                for klass in self.all_simple_types:
+                    if attr.types[0].qname == klass.qname:
+                        # Selection
+                        return f"fields.Selection({klass.name.upper()}, {self.format_arguments(kwargs, 4)})"
+                        # kwargs["selection"] = klass.name.upper()
+                        # return f"fields.Selection({self.format_arguments(kwargs, 4)})"
+                for klass in self.all_complex_types:
+                    if type(attr.types[0]) == str:
+                        print(f"\nAAAAAA class: {obj.name} attr: {attr}")
+                    if attr.types[0].qname == klass.qname:
+                        # Many2one
+                        kwargs["comodel"] = self.registry_comodel(type_names)
+                        return f"fields.Many2one({self.format_arguments(kwargs, 4)})"
+
+                message = f"Missing class {attr.types[0]}! class: {obj.name} attr: {attr}"
+                logger.warning(message)
+                return message
+
 
     def import_contant(self, name: str, alias: Optional[str]) -> str:
         """Convert import class name with alias support."""
