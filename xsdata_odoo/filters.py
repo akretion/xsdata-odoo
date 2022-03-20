@@ -82,7 +82,6 @@ class OdooFilters(Filters):
                 "registry_name": self.registry_name,
                 "clean_docstring": self.clean_docstring,
                 "binding_type": self.binding_type,
-                "parent_many2one": self.parent_many2one,
                 "odoo_field_definition": self.odoo_field_definition,
                 "odoo_field_name": self.odoo_field_name,
                 "import_contant": self.import_contant,
@@ -164,27 +163,6 @@ class OdooFilters(Filters):
         if name.startswith("@"):
             name = name[1:100]
         return f"{field_prefix}{name}"
-
-    def parent_many2one(self, obj: Class, parents: List[Class]) -> str:
-        """
-        TODO THIS IS ALL FUCKED UP. Nested XML tags become one2many or one2one
-        in Odoo.
-
-        So inner classes need a many2one relationship to their parent.
-        (these inner classes can eventually be denormalized in their
-        parent when using spec_driven_model.models.StackedModel).
-        """
-        if len(parents) > 1:
-            parent = parents[-2]
-            fname = self.odoo_field_name(parent.name)
-            kwargs = {
-                "comodel": self.registry_comodel([parent.name]),
-                "required": True,
-                "ondelete": "cascade",
-            }
-            return f"{fname}_id = fields.Many2one({self.format_arguments(kwargs, 4)})"
-        else:
-            return ""
 
     def odoo_field_definition(
         self,

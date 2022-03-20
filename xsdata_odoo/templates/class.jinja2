@@ -9,9 +9,6 @@ class {{ obj.name|class_name }}(models.AbstractModel):
     _inherit = 'spec.mixin.nfe'
     _binding_type = "{{ obj|binding_type(parents) }}"
 
-    {%- if parents|length > 1 %}
-    {{ obj|parent_many2one(parents) }}
-    {%- endif %}
     {%- for attr in obj.attrs %}
     {%- if not attr.name|pattern_skip(parents) %}
     {%- set odoo_field_definition = attr|odoo_field_definition(parents) %}
