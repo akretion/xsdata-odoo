@@ -85,6 +85,7 @@ class OdooFilters(Filters):
                 "odoo_field_definition": self.odoo_field_definition,
                 "odoo_field_name": self.odoo_field_name,
                 "import_contant": self.import_contant,
+                "enum_docstring": self.enum_docstring,
             }
         )
 
@@ -116,6 +117,38 @@ class OdooFilters(Filters):
                     return True
 
         return False
+
+    def enum_docstring(self, obj: Class) -> str:
+        """ Works well for Brazilian fiscal xsd, may need adaptations for your xsd """
+
+        if "_" in obj.name:
+            type_qname = obj.qname.split("_")[0]
+            field_name = obj.name.split("_")[1]
+
+            for klass in self.all_complex_types:
+                if klass.qname == type_qname:
+                    for idx, item in enumerate(obj.attrs):
+                        for field in klass.attrs:
+                            if field.name == field_name and field.help:
+                                split = field.help.split(f"{item.default} - ")
+                                help = False
+                                if len(split) > 1:
+                                    # TODO sometimes the line may continue
+                                    # until the next value or may end at next value...
+                                    help = split[1].splitlines()[0].split(";")[0]
+                                else:
+                                    split = field.help.split(f"{item.default}-")
+                                    if len(split) > 1:
+                                        help = split[1].splitlines()[0].split(";")[0]
+                                if help:
+                                    item.help = help
+                                    # FIXME it doesn't always work
+                                    if idx == 0 and len(split) > 1:
+                                        obj.help = split[0]
+                                else:
+                                    item.help = item.default
+
+        return self.clean_docstring(obj.help)
 
     def registry_name(self, name: str, replace_type: bool = True) -> str:
         schema = os.environ.get("SCHEMA", "spec")
@@ -211,7 +244,7 @@ class OdooFilters(Filters):
         schema = os.environ.get("SCHEMA", "spec")
         version = os.environ.get("VERSION", "10")
 
-        xsd_type = self.simple_type_from_xsd(obj, attr.name)
+        xsd_type = self.field_simple_type_from_xsd(obj, attr.name)
         if xsd_type:
             kwargs["xsd_type"] = xsd_type
             self.odoo_extract_monetary_attrs(kwargs)
@@ -283,7 +316,7 @@ class OdooFilters(Filters):
 
         return self.class_name(name).upper()
 
-    def simple_type_from_xsd(self, obj: Class, attr_name: str):
+    def field_simple_type_from_xsd(self, obj: Class, attr_name: str):
         if not self.files_to_etree.get(obj.location):
             xsd_tree = etree.parse(obj.location)
             self.files_to_etree[obj.location] = xsd_tree

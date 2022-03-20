@@ -13,15 +13,14 @@ from .filters import OdooFilters
 from .codegen.resolver import OdooDependenciesResolver
 
 
-# TODO why is nfe40_IPI in Imposto class a One2many. Should be Many2one. May be because of <xs:element name="IPI" type="TIpi" minOccurs="0"/>
-# for now it works thanks to my patch https://github.com/tefra/xsdata/pull/667
-# TODO Enum labels
 # TODO FIX nfe40_protNFe field in TnfeProc class
-# TODO base model as a filter
-# pluggable filters (test with UBL and cbc: => simpleType + UBL simple types mapping)
 # TODO define m2o of the o2m fields. see #1 of https://github.com/akretion/generateds-odoo/issues/10
 # in fact it seems what we do sort of work but we can have only 1 o2m to a given class in a class
 # and also it the keys changed compared to generateDS and we also need to write the key in the o2m.
+# NOTE nfe40_IPI in Imposto class a One2many. Should be Many2one. This is an xsdata bug
+# for now it works thanks to my patch https://github.com/tefra/xsdata/pull/667
+# WISHLIST base model as a filter
+# WISHLIST pluggable filters (test with UBL and cbc: => simpleType + UBL simple types mapping)
 
 
 class OdooGenerator(DataclassGenerator):

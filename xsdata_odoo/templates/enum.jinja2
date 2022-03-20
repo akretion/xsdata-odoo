@@ -1,5 +1,6 @@
+{{- obj|enum_docstring }}
 {{ obj.name|upper }} = [
 {%- for attr in obj.attrs %}
-  ("{{ attr.default }}", "{{ attr.default }}"),
+  ("{{ attr.default }}", "{{ attr.help or attr.default }}"),
 {%- endfor %}
 ]
