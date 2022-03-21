@@ -60,6 +60,7 @@ class OdooFilters(Filters):
         "files_to_etree",
         "all_simple_types",
         "all_complex_types",
+        "implicit_many2ones",
     )
 
     def __init__(
@@ -67,10 +68,12 @@ class OdooFilters(Filters):
         config: GeneratorConfig,
         all_simple_types: List[Class],
         all_complex_types: List[Class],
+        implicit_many2ones: Dict,
     ):
         super().__init__(config)
         self.all_simple_types = all_simple_types
         self.all_complex_types = all_complex_types
+        self.implicit_many2ones = implicit_many2ones
         self.files_to_etree: Dict[str, Any] = {}
         self.relative_imports = True
 
@@ -84,6 +87,7 @@ class OdooFilters(Filters):
                 "binding_type": self.binding_type,
                 "odoo_field_definition": self.odoo_field_definition,
                 "odoo_field_name": self.odoo_field_name,
+                "odoo_implicit_many2ones" :self.odoo_implicit_many2ones,
                 "import_contant": self.import_contant,
                 "enum_docstring": self.enum_docstring,
             }
@@ -120,6 +124,8 @@ class OdooFilters(Filters):
 
     def enum_docstring(self, obj: Class) -> str:
         """ Works well for Brazilian fiscal xsd, may need adaptations for your xsd """
+        # see https://github.com/akretion/generateds-odoo/blob/465539b46e4216a5b94f1b0dabf39b34e7f4624c/gends_extract_simple_types.py#L385
+        # for possible improvement
 
         if "_" in obj.name:
             type_qname = obj.qname.split("_")[0]
@@ -143,7 +149,7 @@ class OdooFilters(Filters):
                                 if help:
                                     item.help = help
                                     # FIXME it doesn't always work
-                                    if idx == 0 and len(split) > 1:
+                                    if idx == 0 and not obj.help and len(split) > 1:
                                         obj.help = split[0]
                                 else:
                                     item.help = item.default
@@ -176,6 +182,19 @@ class OdooFilters(Filters):
     ) -> str:
         """Return the name of the xsdata class for a given Odoo model."""
         return ".".join([self.class_name(p.name) for p in parents])
+
+    def odoo_implicit_many2ones(self, obj: Class) -> str:
+        fields = []
+        implicit_many2ones = self.implicit_many2ones.get(self.registry_name(obj.name), [])
+        for implicit_many2one_data in implicit_many2ones:
+            kwargs = {}
+            kwargs["comodel"] = implicit_many2one_data[0]
+            kwargs["xsd_implicit"] = True
+            kwargs["required"] = True
+            kwargs["ondelete"] = "cascade"
+            target_field = implicit_many2one_data[1]
+            fields.append(f"{target_field} = fields.Many2one({self.format_arguments(kwargs, 4)})")
+        return ("\n").join(fields)
 
     def odoo_field_name(self, name: str) -> str:
         """
@@ -297,12 +316,11 @@ class OdooFilters(Filters):
                         # kwargs["selection"] = klass.name.upper()
                         # return f"fields.Selection({self.format_arguments(kwargs, 4)})"
                 for klass in self.all_complex_types:
-                    if type(attr.types[0]) == str:
-                        print(f"\nAAAAAA class: {obj.name} attr: {attr}")
                     if attr.types[0].qname == klass.qname:
                         # Many2one
                         kwargs["comodel"] = self.registry_comodel(type_names)
                         return f"fields.Many2one({self.format_arguments(kwargs, 4)})"
+
 
                 message = f"Missing class {attr.types[0]}! class: {obj.name} attr: {attr}"
                 logger.warning(message)

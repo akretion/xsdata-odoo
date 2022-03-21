@@ -1,3 +1,5 @@
+import os
+from collections import defaultdict
 from pathlib import Path
 from typing import Iterator
 from typing import List
@@ -8,6 +10,7 @@ from xsdata.codegen.models import Class
 from xsdata.formats.dataclass.generator import DataclassGenerator
 from xsdata.formats.mixins import GeneratorResult
 from xsdata.models.config import GeneratorConfig
+from xsdata.utils import collections
 
 from .filters import OdooFilters
 from .codegen.resolver import OdooDependenciesResolver
@@ -15,10 +18,16 @@ from .codegen.resolver import OdooDependenciesResolver
 
 # TODO FIX nfe40_protNFe field in TnfeProc class
 # TODO define m2o of the o2m fields. see #1 of https://github.com/akretion/generateds-odoo/issues/10
+# example nfe40_protNFe = fields.One2many("nfe.40.tprotnfe", "nfe40_protNFe_TRetConsReciNFe_id",...
 # in fact it seems what we do sort of work but we can have only 1 o2m to a given class in a class
 # and also it the keys changed compared to generateDS and we also need to write the key in the o2m.
+
+# only put this header in files with complex types (not in tipos_basico_v4_00.py for instance)
+#import textwrap
+#from odoo import fields, models
+
 # NOTE nfe40_IPI in Imposto class a One2many. Should be Many2one. This is an xsdata bug
-# for now it works thanks to my patch https://github.com/tefra/xsdata/pull/667
+# for now it works thanks to my patch https://github.com/tefra/xsdata/pull/667]
 # WISHLIST base model as a filter
 # WISHLIST pluggable filters (test with UBL and cbc: => simpleType + UBL simple types mapping)
 
@@ -30,10 +39,11 @@ class OdooGenerator(DataclassGenerator):
         super().__init__(config)
         self.all_simple_types: List[Class] = []
         self.all_complex_types: List[Class] = []
+        self.implicit_many2ones: Dict = defaultdict(list)
         tpl_dir = Path(__file__).parent.joinpath("templates")
         self.env = Environment(loader=FileSystemLoader(str(tpl_dir)), autoescape=False)
         self.filters = OdooFilters(
-            config, self.all_simple_types, self.all_complex_types
+            config, self.all_simple_types, self.all_complex_types, self.implicit_many2ones
         )
         self.filters.register(self.env)
 
@@ -41,14 +51,13 @@ class OdooGenerator(DataclassGenerator):
         """Return a iterator of the generated results."""
         packages = {obj.qname: obj.target_module for obj in classes}
         resolver = OdooDependenciesResolver(packages=packages)
+        schema = os.environ.get("SCHEMA", "spec")
+        version = os.environ.get("VERSION", "10")
 
         # Generate packages
         for path, cluster in self.group_by_package(classes).items():
             module = ".".join(path.relative_to(Path.cwd()).parts)
             yield from self.ensure_packages(path.parent)
-
-        # Generate modules
-        for path, cluster in self.group_by_module(classes).items():
 
             def dfs(visited, graph, node):
                 if node not in visited:
@@ -69,8 +78,22 @@ class OdooGenerator(DataclassGenerator):
                     )  # TODO add module name/path for import?
                 elif (
                     klass not in self.all_complex_types
-                ):  # FIXME uselss cause hierarchy
+                ):
+                    for field in klass.attrs:
+                        if not field.types[0].datatype and field.is_list:
+                            type_names = collections.unique_sequence(
+                                self.filters.field_type_name(x, []) for x in field.types
+                            )
+                            #self.filters.registry_comodel
+                            comodel = self.filters.registry_comodel(type_names)
+                            target_field = f"{schema}{version}_{field.name}_{klass.name}_id" # TODO type_names sure?
+                            #print("OOOOOOOO2MMM", klass.name, field.name, type_names, comodel, target_field)
+                            self.implicit_many2ones[comodel].append((self.filters.registry_name(klass.name), target_field))
+
                     self.all_complex_types.append(klass)
+
+        # Generate modules
+        for path, cluster in self.group_by_module(classes).items():
 
                 # TODO would be an option to repeat missing types from included xsd files
                 # instead of using imports, specially for simple_types.
