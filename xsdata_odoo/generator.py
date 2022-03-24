@@ -12,19 +12,14 @@ from xsdata.formats.mixins import GeneratorResult
 from xsdata.models.config import GeneratorConfig
 from xsdata.utils import collections
 
-from .filters import OdooFilters
 from .codegen.resolver import OdooDependenciesResolver
+from .filters import OdooFilters
 
 
-# TODO FIX nfe40_protNFe field in TnfeProc class
-# TODO define m2o of the o2m fields. see #1 of https://github.com/akretion/generateds-odoo/issues/10
-# example nfe40_protNFe = fields.One2many("nfe.40.tprotnfe", "nfe40_protNFe_TRetConsReciNFe_id",...
-# in fact it seems what we do sort of work but we can have only 1 o2m to a given class in a class
-# and also it the keys changed compared to generateDS and we also need to write the key in the o2m.
-
+# use pattern_skip in generator.py (to avoid empty files?)
 # only put this header in files with complex types (not in tipos_basico_v4_00.py for instance)
-#import textwrap
-#from odoo import fields, models
+# import textwrap
+# from odoo import fields, models
 
 # NOTE nfe40_IPI in Imposto class a One2many. Should be Many2one. This is an xsdata bug
 # for now it works thanks to my patch https://github.com/tefra/xsdata/pull/667]
@@ -43,7 +38,10 @@ class OdooGenerator(DataclassGenerator):
         tpl_dir = Path(__file__).parent.joinpath("templates")
         self.env = Environment(loader=FileSystemLoader(str(tpl_dir)), autoescape=False)
         self.filters = OdooFilters(
-            config, self.all_simple_types, self.all_complex_types, self.implicit_many2ones
+            config,
+            self.all_simple_types,
+            self.all_complex_types,
+            self.implicit_many2ones,
         )
         self.filters.register(self.env)
 
@@ -76,42 +74,42 @@ class OdooGenerator(DataclassGenerator):
                     self.all_simple_types.append(
                         klass
                     )  # TODO add module name/path for import?
-                elif (
-                    klass not in self.all_complex_types
-                ):
+                elif klass not in self.all_complex_types:
                     for field in klass.attrs:
                         if not field.types[0].datatype and field.is_list:
                             type_names = collections.unique_sequence(
                                 self.filters.field_type_name(x, []) for x in field.types
                             )
-                            #self.filters.registry_comodel
+                            # self.filters.registry_comodel
                             comodel = self.filters.registry_comodel(type_names)
-                            target_field = f"{schema}{version}_{field.name}_{klass.name}_id" # TODO type_names sure?
-                            #print("OOOOOOOO2MMM", klass.name, field.name, type_names, comodel, target_field)
-                            self.implicit_many2ones[comodel].append((self.filters.registry_name(klass.name), target_field))
+                            target_field = f"{schema}{version}_{field.name}_{klass.name}_id"  # TODO type_names sure?
+                            # print("OOOOOOOO2MMM", klass.name, field.name, type_names, comodel, target_field)
+                            self.implicit_many2ones[comodel].append(
+                                (self.filters.registry_name(klass.name), target_field)
+                            )
 
                     self.all_complex_types.append(klass)
 
         # Generate modules
         for path, cluster in self.group_by_module(classes).items():
 
-                # TODO would be an option to repeat missing types from included xsd files
-                # instead of using imports, specially for simple_types.
-                # activating this crashes the title=cluster[0].target_module (file_name)
-                # and it also conflicts with the initial import statements
-                # for attr in klass.attrs:
-                #     if attr.types and not attr.types[0].datatype:
-                #         if attr.types[0].qname not in [k.qname for k in all_file_classes]:
-                #             for k in self.all_simple_types:
-                #                 if (attr.types[0].qname == k.qname) and (k.qname not in [k.qname for k in cluster]):
-                #                     pass
-                #                     # TODO FIXME
-                #                     #cluster.append(k)
-                #             for k in self.all_complex_types:
-                #                 if (attr.types[0].qname == k.qname) and (k.qname not in [k.qname for k in cluster]):
-                #                     pass
-                #                     # TODO FIMXE
-                #                     #cluster.append(k)
+            # TODO would be an option to repeat missing types from included xsd files
+            # instead of using imports, specially for simple_types.
+            # activating this crashes the title=cluster[0].target_module (file_name)
+            # and it also conflicts with the initial import statements
+            # for attr in klass.attrs:
+            #     if attr.types and not attr.types[0].datatype:
+            #         if attr.types[0].qname not in [k.qname for k in all_file_classes]:
+            #             for k in self.all_simple_types:
+            #                 if (attr.types[0].qname == k.qname) and (k.qname not in [k.qname for k in cluster]):
+            #                     pass
+            #                     # TODO FIXME
+            #                     #cluster.append(k)
+            #             for k in self.all_complex_types:
+            #                 if (attr.types[0].qname == k.qname) and (k.qname not in [k.qname for k in cluster]):
+            #                     pass
+            #                     # TODO FIMXE
+            #                     #cluster.append(k)
 
             yield GeneratorResult(
                 path=path.with_suffix(".py"),

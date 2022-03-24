@@ -87,7 +87,7 @@ class OdooFilters(Filters):
                 "binding_type": self.binding_type,
                 "odoo_field_definition": self.odoo_field_definition,
                 "odoo_field_name": self.odoo_field_name,
-                "odoo_implicit_many2ones" :self.odoo_implicit_many2ones,
+                "odoo_implicit_many2ones": self.odoo_implicit_many2ones,
                 "import_contant": self.import_contant,
                 "enum_docstring": self.enum_docstring,
             }
@@ -123,7 +123,8 @@ class OdooFilters(Filters):
         return False
 
     def enum_docstring(self, obj: Class) -> str:
-        """ Works well for Brazilian fiscal xsd, may need adaptations for your xsd """
+        """Works well for Brazilian fiscal xsd, may need adaptations for your
+        xsd."""
         # see https://github.com/akretion/generateds-odoo/blob/465539b46e4216a5b94f1b0dabf39b34e7f4624c/gends_extract_simple_types.py#L385
         # for possible improvement
 
@@ -185,7 +186,9 @@ class OdooFilters(Filters):
 
     def odoo_implicit_many2ones(self, obj: Class) -> str:
         fields = []
-        implicit_many2ones = self.implicit_many2ones.get(self.registry_name(obj.name), [])
+        implicit_many2ones = self.implicit_many2ones.get(
+            self.registry_name(obj.name), []
+        )
         for implicit_many2one_data in implicit_many2ones:
             kwargs = {}
             kwargs["comodel"] = implicit_many2one_data[0]
@@ -193,7 +196,9 @@ class OdooFilters(Filters):
             kwargs["required"] = True
             kwargs["ondelete"] = "cascade"
             target_field = implicit_many2one_data[1]
-            fields.append(f"{target_field} = fields.Many2one({self.format_arguments(kwargs, 4)})")
+            fields.append(
+                f"{target_field} = fields.Many2one({self.format_arguments(kwargs, 4)})"
+            )
         return ("\n").join(fields)
 
     def odoo_field_name(self, name: str) -> str:
@@ -217,7 +222,11 @@ class OdooFilters(Filters):
         return f"{field_prefix}{name}"
 
     def odoo_extract_monetary_attrs(self, kwargs: Dict[str, Dict]):
-        """Monetary field detection. Here adapted for Brazil fiscal schemas"""
+        """
+        Monetary field detection.
+
+        Here adapted for Brazil fiscal schemas
+        """
         xsd_type = kwargs.get("xsd_type")
         if xsd_type.startswith("TDec_"):
             kwargs["currency_field"] = "brl_currency_id"  # TODO make pluggable. ENV?
@@ -286,7 +295,9 @@ class OdooFilters(Filters):
             python_type = attr.types[0].datatype.code
             if python_type in INTEGER_TYPES:
                 return f"fields.Integer({self.format_arguments(kwargs, 4)})"
-            if (python_type in FLOAT_TYPES or CHAR_TYPES) and kwargs.get("digits", (0, 2))[1] != MONETARY_DIGITS:
+            if (python_type in FLOAT_TYPES or CHAR_TYPES) and kwargs.get(
+                "digits", (0, 2)
+            )[1] != MONETARY_DIGITS:
                 kwargs["digits"] = kwargs["digits"][1]
                 return f"fields.Float({self.format_arguments(kwargs, 4)})"
             elif python_type in DECIMAL_TYPES or kwargs.get("currency_field"):
@@ -321,11 +332,11 @@ class OdooFilters(Filters):
                         kwargs["comodel"] = self.registry_comodel(type_names)
                         return f"fields.Many2one({self.format_arguments(kwargs, 4)})"
 
-
-                message = f"Missing class {attr.types[0]}! class: {obj.name} attr: {attr}"
+                message = (
+                    f"Missing class {attr.types[0]}! class: {obj.name} attr: {attr}"
+                )
                 logger.warning(message)
                 return message
-
 
     def import_contant(self, name: str, alias: Optional[str]) -> str:
         """Convert import class name with alias support."""
