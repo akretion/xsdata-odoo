@@ -80,10 +80,8 @@ class OdooGenerator(DataclassGenerator):
                             type_names = collections.unique_sequence(
                                 self.filters.field_type_name(x, []) for x in field.types
                             )
-                            # self.filters.registry_comodel
                             comodel = self.filters.registry_comodel(type_names)
-                            target_field = f"{schema}{version}_{field.name}_{klass.name}_id"  # TODO type_names sure?
-                            # print("OOOOOOOO2MMM", klass.name, field.name, type_names, comodel, target_field)
+                            target_field = f"{schema}{version}_{field.name}_{klass.name}_id"
                             self.implicit_many2ones[comodel].append(
                                 (self.filters.registry_name(klass.name), target_field)
                             )
