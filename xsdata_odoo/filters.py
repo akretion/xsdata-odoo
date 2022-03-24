@@ -85,6 +85,7 @@ class OdooFilters(Filters):
                 "registry_name": self.registry_name,
                 "clean_docstring": self.clean_docstring,
                 "binding_type": self.binding_type,
+                "odoo_class_description": self.odoo_class_description,
                 "odoo_field_definition": self.odoo_field_definition,
                 "odoo_field_name": self.odoo_field_name,
                 "odoo_implicit_many2ones": self.odoo_implicit_many2ones,
@@ -121,6 +122,14 @@ class OdooFilters(Filters):
                     return True
 
         return False
+
+    def odoo_class_description(self, obj: Class) -> str:
+        if obj.help:
+            return f"""textwrap.dedent("    %s" % (__doc__,))"""
+        else:
+            # TODO some inner classes have no obj.help
+            # but we can read the XML annotations. Ex: "TretEnviNfe.InfRec", "Tnfe.InfNfe"...
+            return f'"{obj.name}"'
 
     def enum_docstring(self, obj: Class) -> str:
         """Works well for Brazilian fiscal xsd, may need adaptations for your
@@ -346,6 +355,8 @@ class OdooFilters(Filters):
         return self.class_name(name).upper()
 
     def field_simple_type_from_xsd(self, obj: Class, attr_name: str):
+        if not os.path.isfile(obj.location):
+            return None
         if not self.files_to_etree.get(obj.location):
             xsd_tree = etree.parse(obj.location)
             self.files_to_etree[obj.location] = xsd_tree

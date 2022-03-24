@@ -4,7 +4,7 @@
 {%- if not obj.name|pattern_skip(parents) %}
 class {{ obj.name|class_name }}(models.AbstractModel):
     {{- obj.help|clean_docstring }}
-    _description = textwrap.dedent("    %s" % (__doc__,))
+    _description = {{ obj|odoo_class_description }}
     _name = '{{ obj.name|registry_name }}'
     _inherit = 'spec.mixin.nfe'
     _binding_type = "{{ obj|binding_type(parents) }}"
