@@ -69,12 +69,13 @@ class OdooGenerator(DataclassGenerator):
 
             # collect relation dependencies from other files/includes:
             for klass in all_file_classes:
-
                 if klass.is_enumeration and klass not in self.all_simple_types:
                     self.all_simple_types.append(
                         klass
                     )  # TODO add module name/path for import?
                 elif klass not in self.all_complex_types:
+#                    print("\nKKKKK", klass)
+                    self.filters.xsd_complex_type_node(klass)
                     for field in klass.attrs:
                         if not field.types[0].datatype and field.is_list:
                             type_names = collections.unique_sequence(

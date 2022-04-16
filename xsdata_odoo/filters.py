@@ -354,6 +354,49 @@ class OdooFilters(Filters):
 
         return self.class_name(name).upper()
 
+    def xsd_complex_type_node(self, obj: Class):
+        # The goal is to find the cpx type xsd node and iterate over its children
+        # to search the choice tags.
+        # inside a choice we can have: choice < sequence < element
+        # from the choice to its complex type parent we can have element < complexType < choice
+
+        # TODO filter when several xsd nodes are found. We could do that with parents
+        # in the jinja class tpl we have the obj parents, but not simply
+        # when calling from generator.py right now.
+        location = (obj.location or "").replace("file://", "")
+        if not os.path.isfile(location):
+            print("loc", obj.location)
+            x = a/0
+            return None
+        if not self.files_to_etree.get(location):
+            xsd_tree = etree.parse(location)
+            self.files_to_etree[location] = xsd_tree
+        else:
+            xsd_tree = self.files_to_etree[location]
+
+        type_lookups = (
+            f"//xs:element[@name='{obj.name}']",
+            f"//xs:complexType[@name='{obj.name}']",
+        )
+#        print("\n", obj.name, type_lookups)
+ 
+        for lookup in type_lookups:
+            xpath_matches = xsd_tree.getroot().xpath(
+                lookup,
+                namespaces={
+                    "xs": "http://www.w3.org/2001/XMLSchema",
+                },
+            )
+            if xpath_matches:
+                if len(xpath_matches) > 1:
+                    print("BBBBAAAAAAAAAAADDDD SEVERAL MATCHES", xpath_matches, location, obj) # TODO use parents to filter
+                else:
+                    print("--- ", xpath_matches)
+                return xpath_matches[0].get("type")
+            else:
+                print("############", type_lookups)
+ 
+
     def field_simple_type_from_xsd(self, obj: Class, attr_name: str):
         if not os.path.isfile(obj.location):
             return None
