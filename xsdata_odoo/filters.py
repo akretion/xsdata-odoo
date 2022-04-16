@@ -89,7 +89,7 @@ class OdooFilters(Filters):
                 "odoo_field_definition": self.odoo_field_definition,
                 "odoo_field_name": self.odoo_field_name,
                 "odoo_implicit_many2ones": self.odoo_implicit_many2ones,
-                "import_contant": self.import_contant,
+                "import_class": self.import_class,
                 "enum_docstring": self.enum_docstring,
             }
         )
@@ -347,12 +347,15 @@ class OdooFilters(Filters):
                 logger.warning(message)
                 return message
 
-    def import_contant(self, name: str, alias: Optional[str]) -> str:
+    def import_class(self, name: str, alias: Optional[str]) -> str:
         """Convert import class name with alias support."""
         if alias:
-            return f"{self.class_name(name).upper()} as {self.class_name(alias)}"
+            return f"{self.class_name(name)} as {self.class_name(alias)}"
 
-        return self.class_name(name).upper()
+        if name in [klass.name for klass in self.all_simple_types]:
+            return self.class_name(name).upper()  # const are upcase in Odoo
+        else:
+            return self.class_name(name)
 
     def field_simple_type_from_xsd(self, obj: Class, attr_name: str):
         if not os.path.isfile(obj.location):
