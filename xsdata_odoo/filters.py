@@ -316,7 +316,7 @@ class OdooFilters(Filters):
             elif python_type in DATE_TYPES:
                 return f"fields.Date({self.format_arguments(kwargs, 4)})"
             elif python_type in DATETIME_TYPES:
-                return f"fields.DateTime({self.format_arguments(kwargs, 4)})"
+                return f"fields.Datetime({self.format_arguments(kwargs, 4)})"
             elif python_type in BOOLEAN_TYPES:
                 return f"fields.Boolean({self.format_arguments(kwargs, 4)})"
             else:
