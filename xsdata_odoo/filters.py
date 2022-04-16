@@ -200,7 +200,7 @@ class OdooFilters(Filters):
         )
         for implicit_many2one_data in implicit_many2ones:
             kwargs = {}
-            kwargs["comodel"] = implicit_many2one_data[0]
+            kwargs["comodel_name"] = implicit_many2one_data[0]
             kwargs["xsd_implicit"] = True
             kwargs["required"] = True
             kwargs["ondelete"] = "cascade"
@@ -338,7 +338,7 @@ class OdooFilters(Filters):
                 for klass in self.all_complex_types:
                     if attr.types[0].qname == klass.qname:
                         # Many2one
-                        kwargs["comodel"] = self.registry_comodel(type_names)
+                        kwargs["comodel_name"] = self.registry_comodel(type_names)
                         return f"fields.Many2one({self.format_arguments(kwargs, 4)})"
 
                 message = (
