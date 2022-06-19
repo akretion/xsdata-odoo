@@ -5,8 +5,8 @@
 class {{ obj.name|class_name }}(models.AbstractModel):
     {{- obj.help|clean_docstring }}
     _description = {{ obj|odoo_class_description }}
-    _name = '{{ obj.name|registry_name }}'
-    _inherit = 'spec.mixin.nfe'
+    _name = "{{ obj.name|registry_name }}"
+    _inherit = "{{ obj|inherit_model }}"
     _binding_type = "{{ obj|binding_type(parents) }}"
 
     {{ obj|odoo_implicit_many2ones }}
