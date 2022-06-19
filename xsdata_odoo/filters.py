@@ -20,8 +20,10 @@ from .wrap_text import wrap_text
 
 
 INTEGER_TYPES = ("integer", "positiveInteger")
-FLOAT_TYPES = ("float",)
-DECIMAL_TYPES = ("decimal",)
+FLOAT_TYPES = ("float", "decimal")
+# Odoo has no Decimal field and all in all it's better to guess float by default
+# and override if required.
+# DECIMAL_TYPES = ("decimal",)
 MONETARY_DIGITS = 2
 CHAR_TYPES = (
     "string",
@@ -41,16 +43,17 @@ BOOLEAN_TYPES = "boolean"
 # generally it's not interresting to generate mixins for signature
 SIGNATURE_CLASS_SKIP = [
     "^Signature$",
-    "^SignatureValue$",
-    "^SignedInfo$",
-    "^Reference$",
-    "^DigestMethod$",
-    "^Transforms$",
-    "^Transform$",
-    "^KeyInfo$",
-    "^X509Data$",
-    "^CanonicalizationMethod$",
-    "^SignatureMethod$",
+    "^SignatureType$",
+    "^SignatureValueType$",
+    "^SignedInfoType$",
+    "^ReferenceType$",
+    "^DigestMethodType$",
+    "^TransformsType$",
+    "^TransformType$",
+    "^KeyInfoType$",
+    "^X509DataType$",
+    "^CanonicalizationMethodType$",
+    "^SignatureMethodType$",
 ]
 
 
@@ -83,6 +86,7 @@ class OdooFilters(Filters):
             {
                 "pattern_skip": self.pattern_skip,
                 "registry_name": self.registry_name,
+                "inherit_model": self.inherit_model,
                 "clean_docstring": self.clean_docstring,
                 "binding_type": self.binding_type,
                 "odoo_class_description": self.odoo_class_description,
@@ -166,13 +170,15 @@ class OdooFilters(Filters):
 
         return self.clean_docstring(obj.help)
 
-    def registry_name(self, name: str, replace_type: bool = True) -> str:
+    def registry_name(self, name: str) -> str:
         schema = os.environ.get("SCHEMA", "spec")
         version = os.environ.get("VERSION", "10")
         name = self.class_name(name)
-        if replace_type:
-            name = name.rpartition("Type")[0] or name
         return f"{schema}.{version}.{name.lower()}"
+
+    def inherit_model(self, obj: Class) -> str:
+        schema = os.environ.get("SCHEMA", "spec")
+        return f"spec.mixin.{schema}"
 
     def registry_comodel(self, type_names: List[str]):
         # NOTE: we take only the last part of inner Types with .split(".")[-1]
@@ -202,7 +208,7 @@ class OdooFilters(Filters):
             kwargs = {}
             kwargs["comodel_name"] = implicit_many2one_data[0]
             kwargs["xsd_implicit"] = True
-            kwargs["required"] = True
+            # kwargs["required"] = True  # FIXME seems it creates ORM issues
             kwargs["ondelete"] = "cascade"
             target_field = implicit_many2one_data[1]
             fields.append(
@@ -230,17 +236,18 @@ class OdooFilters(Filters):
             name = name[1:100]
         return f"{field_prefix}{name}"
 
-    def odoo_extract_monetary_attrs(self, kwargs: Dict[str, Dict]):
+    def odoo_extract_number_attrs(self, kwargs: Dict[str, Dict]):
         """
         Monetary field detection.
-
         Here adapted for Brazil fiscal schemas
         """
         xsd_type = kwargs.get("xsd_type")
-        if xsd_type.startswith("TDec_"):
-            kwargs["currency_field"] = "brl_currency_id"  # TODO make pluggable. ENV?
+        if xsd_type.startswith("TDec_"):  # TODO make pluggable. ENV?
             if int(xsd_type[7:9]) != MONETARY_DIGITS:
                 kwargs["digits"] = (int(xsd_type[5:7]), int(xsd_type[7:9]))
+                # TODO or xsd_type[-2:] for "TDec_0302a04" for instance
+            else:
+                kwargs["currency_field"] = "brl_currency_id"  # TODO make it customizable!
 
     def odoo_field_definition(
         self,
@@ -282,9 +289,9 @@ class OdooFilters(Filters):
         version = os.environ.get("VERSION", "10")
 
         xsd_type = self.field_simple_type_from_xsd(obj, attr.name)
-        if xsd_type:
+        if xsd_type and xsd_type not in ["xsd:string", "xsd:date"]:  # (not in trivial types)
             kwargs["xsd_type"] = xsd_type
-            self.odoo_extract_monetary_attrs(kwargs)
+            self.odoo_extract_number_attrs(kwargs)
 
         metadata = self.field_metadata(attr, {}, [p.name for p in parents])
         if metadata.get("required"):
@@ -304,13 +311,21 @@ class OdooFilters(Filters):
             python_type = attr.types[0].datatype.code
             if python_type in INTEGER_TYPES:
                 return f"fields.Integer({self.format_arguments(kwargs, 4)})"
+
             if (python_type in FLOAT_TYPES or CHAR_TYPES) and kwargs.get(
                 "digits", (0, 2)
             )[1] != MONETARY_DIGITS:
-                kwargs["digits"] = kwargs["digits"][1]
+#                kwargs["digits"] = kwargs["digits"][1]
                 return f"fields.Float({self.format_arguments(kwargs, 4)})"
-            elif python_type in DECIMAL_TYPES or kwargs.get("currency_field"):
+            elif python_type in FLOAT_TYPES or kwargs.get("currency_field"):
                 return f"fields.Monetary({self.format_arguments(kwargs, 4)})"
+
+#            if (python_type in FLOAT_TYPES or CHAR_TYPES):
+#                if kwargs.get("currency_field"):
+#                    return f"fields.Monetary({self.format_arguments(kwargs, 4)})"
+#                else:
+#                    return f"fields.Float({self.format_arguments(kwargs, 4)})"
+
             elif python_type in CHAR_TYPES:
                 return f"fields.Char({self.format_arguments(kwargs, 4)})"
             elif python_type in DATE_TYPES:
@@ -326,13 +341,13 @@ class OdooFilters(Filters):
                 return ""
         else:
             if attr.is_list:
-                return f"""fields.One2many("{self.registry_comodel(type_names)}", "{schema}{version}_{attr.name}_{obj.name}_id", {self.format_arguments(kwargs, 4)})"""
+                return f"""fields.One2many("{self.registry_comodel(type_names)}", "{schema}{version}_{attr.name}_{obj.name}_id",{self.format_arguments(kwargs, 4)})"""
             else:
 
                 for klass in self.all_simple_types:
                     if attr.types[0].qname == klass.qname:
                         # Selection
-                        return f"fields.Selection({klass.name.upper()}, {self.format_arguments(kwargs, 4)})"
+                        return f"fields.Selection({klass.name.upper()},{self.format_arguments(kwargs, 4)})"
                         # kwargs["selection"] = klass.name.upper()
                         # return f"fields.Selection({self.format_arguments(kwargs, 4)})"
                 for klass in self.all_complex_types:
@@ -358,13 +373,14 @@ class OdooFilters(Filters):
             return self.class_name(name)
 
     def field_simple_type_from_xsd(self, obj: Class, attr_name: str):
-        if not os.path.isfile(obj.location):
+        location = (obj.location or "").replace("file://", "")
+        if not os.path.isfile(location):
             return None
-        if not self.files_to_etree.get(obj.location):
-            xsd_tree = etree.parse(obj.location)
-            self.files_to_etree[obj.location] = xsd_tree
+        if not self.files_to_etree.get(location):
+            xsd_tree = etree.parse(location)
+            self.files_to_etree[location] = xsd_tree
         else:
-            xsd_tree = self.files_to_etree[obj.location]
+            xsd_tree = self.files_to_etree[location]
 
         type_lookups = (
             f"//xs:element[@name='{obj.name}']//xs:element[@name='{attr_name}']",
