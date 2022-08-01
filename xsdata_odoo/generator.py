@@ -3,6 +3,7 @@ from collections import defaultdict
 from pathlib import Path
 from typing import Iterator
 from typing import List
+from typing import Optional
 
 from jinja2 import Environment
 from jinja2 import FileSystemLoader
@@ -114,3 +115,34 @@ class OdooGenerator(DataclassGenerator):
                 title=cluster[0].target_module,
                 source=self.render_module(resolver, cluster),
             )
+
+    def render_classes(
+        self, classes: List[Class], module_namespace: Optional[str]
+    ) -> str:
+        """
+        Render the source code of the classes.
+
+        Overriden to control different number of line breaks for enums
+        and classes for Odoo.
+        """
+        load = self.env.get_template
+
+        def render_class(obj: Class) -> str:
+            """Render class or enumeration."""
+
+            if obj.is_enumeration:
+                template = load("enum.jinja2")
+            elif obj.is_service:
+                template = load("service.jinja2")
+            else:
+                template = load("class.jinja2")
+
+            string = template.render(
+                obj=obj,
+                module_namespace=module_namespace,
+            ).strip()
+            if not obj.is_enumeration:
+                string = "\n" + string
+            return string
+
+        return "\n\n".join(map(render_class, classes)) + "\n"

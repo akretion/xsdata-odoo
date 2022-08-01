@@ -1,6 +1,5 @@
-{% set level = level|default(0) -%}
-{% set parents = parents|default([obj]) -%}
-
+{% set level = level|default(0) %}
+{% set parents = parents|default([obj]) %}
 {%- if not obj.name|pattern_skip(parents) %}
 class {{ obj.name|class_name }}(models.AbstractModel):
     {{- obj.help|clean_docstring }}
@@ -10,27 +9,19 @@ class {{ obj.name|class_name }}(models.AbstractModel):
     _binding_type = "{{ obj|binding_type(parents) }}"
 
     {{ obj|odoo_implicit_many2ones }}
-    {%- for attr in obj.attrs %}
-    {%- if not attr.name|pattern_skip(parents) %}
+    {%- for attr in obj.attrs -%}
+    {%- if not attr.name|pattern_skip(parents) -%}
     {%- set odoo_field_definition = attr|odoo_field_definition(parents) %}
-    {%- if odoo_field_definition %}
+    {%- if odoo_field_definition -%}
     {{ attr.name|odoo_field_name }} = {{ odoo_field_definition }}
-    {%- endif %}
-    {%- endif %}
-    {%- endfor %}
-
-{% for ext in obj.extensions %}
-
-{%- endfor %}
-
-
-
-{%- for inner in obj.inner %}
+    {% endif -%}
+    {%- endif -%}
+    {%- endfor -%}
+{%- for inner in obj.inner -%}
     {%- set tpl = "enum.jinja2" if inner.is_enumeration else "class.jinja2" -%}
     {%- set inner_parents = parents + [inner] -%}
     {%- with obj=inner, parents=inner_parents, level=(level + 1) -%}
-        {% include tpl %}
+        {%- include tpl -%}
     {%- endwith -%}
 {%- endfor -%}
-
-{%- endif %}
+{%- endif -%}
