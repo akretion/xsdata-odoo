@@ -1,3 +1,4 @@
+from black import format_str, FileMode
 import os
 from collections import defaultdict
 from pathlib import Path
@@ -8,6 +9,7 @@ from typing import Optional
 from jinja2 import Environment
 from jinja2 import FileSystemLoader
 from xsdata.codegen.models import Class
+from xsdata.codegen.resolver import DependenciesResolver
 from xsdata.formats.dataclass.generator import DataclassGenerator
 from xsdata.formats.mixins import GeneratorResult
 from xsdata.models.config import GeneratorConfig
@@ -115,6 +117,13 @@ class OdooGenerator(DataclassGenerator):
                 title=cluster[0].target_module,
                 source=self.render_module(resolver, cluster),
             )
+
+    def render_module(
+        self, resolver: DependenciesResolver, classes: List[Class]
+    ) -> str:
+        res = super().render_module(resolver, classes)
+        res = format_str(res, mode=FileMode())
+        return res
 
     def render_classes(
         self, classes: List[Class], module_namespace: Optional[str]
