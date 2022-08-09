@@ -239,6 +239,7 @@ class OdooFilters(Filters):
     def odoo_extract_number_attrs(self, kwargs: Dict[str, Dict]):
         """
         Monetary field detection.
+
         Here adapted for Brazil fiscal schemas
         """
         xsd_type = kwargs.get("xsd_type")
@@ -247,7 +248,9 @@ class OdooFilters(Filters):
                 kwargs["digits"] = (int(xsd_type[5:7]), int(xsd_type[7:9]))
                 # TODO or xsd_type[-2:] for "TDec_0302a04" for instance
             else:
-                kwargs["currency_field"] = "brl_currency_id"  # TODO make it customizable!
+                kwargs[
+                    "currency_field"
+                ] = "brl_currency_id"  # TODO make it customizable!
 
     def odoo_field_definition(
         self,
@@ -289,7 +292,10 @@ class OdooFilters(Filters):
         version = os.environ.get("VERSION", "10")
 
         xsd_type = self.field_simple_type_from_xsd(obj, attr.name)
-        if xsd_type and xsd_type not in ["xsd:string", "xsd:date"]:  # (not in trivial types)
+        if xsd_type and xsd_type not in [
+            "xsd:string",
+            "xsd:date",
+        ]:  # (not in trivial types)
             kwargs["xsd_type"] = xsd_type
             self.odoo_extract_number_attrs(kwargs)
 
@@ -315,16 +321,16 @@ class OdooFilters(Filters):
             if (python_type in FLOAT_TYPES or CHAR_TYPES) and kwargs.get(
                 "digits", (0, 2)
             )[1] != MONETARY_DIGITS:
-#                kwargs["digits"] = kwargs["digits"][1]
+                #                kwargs["digits"] = kwargs["digits"][1]
                 return f"fields.Float({self.format_arguments(kwargs, 4)})"
             elif python_type in FLOAT_TYPES or kwargs.get("currency_field"):
                 return f"fields.Monetary({self.format_arguments(kwargs, 4)})"
 
-#            if (python_type in FLOAT_TYPES or CHAR_TYPES):
-#                if kwargs.get("currency_field"):
-#                    return f"fields.Monetary({self.format_arguments(kwargs, 4)})"
-#                else:
-#                    return f"fields.Float({self.format_arguments(kwargs, 4)})"
+            #            if (python_type in FLOAT_TYPES or CHAR_TYPES):
+            #                if kwargs.get("currency_field"):
+            #                    return f"fields.Monetary({self.format_arguments(kwargs, 4)})"
+            #                else:
+            #                    return f"fields.Float({self.format_arguments(kwargs, 4)})"
 
             elif python_type in CHAR_TYPES:
                 return f"fields.Char({self.format_arguments(kwargs, 4)})"

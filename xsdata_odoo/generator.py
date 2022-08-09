@@ -1,11 +1,13 @@
-from black import format_str, FileMode
 import os
 from collections import defaultdict
 from pathlib import Path
+from typing import Dict
 from typing import Iterator
 from typing import List
 from typing import Optional
 
+from black import FileMode
+from black import format_str
 from jinja2 import Environment
 from jinja2 import FileSystemLoader
 from xsdata.codegen.models import Class
@@ -57,7 +59,6 @@ class OdooGenerator(DataclassGenerator):
 
         # Generate packages
         for path, cluster in self.group_by_package(classes).items():
-            module = ".".join(path.relative_to(Path.cwd()).parts)
             yield from self.ensure_packages(path.parent)
 
             def dfs(visited, graph, node):
@@ -84,7 +85,9 @@ class OdooGenerator(DataclassGenerator):
                                 self.filters.field_type_name(x, []) for x in field.types
                             )
                             comodel = self.filters.registry_comodel(type_names)
-                            target_field = f"{schema}{version}_{field.name}_{klass.name}_id"
+                            target_field = (
+                                f"{schema}{version}_{field.name}_{klass.name}_id"
+                            )
                             self.implicit_many2ones[comodel].append(
                                 (self.filters.registry_name(klass.name), target_field)
                             )
