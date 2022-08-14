@@ -1,4 +1,5 @@
 import os
+import re
 from collections import defaultdict
 from pathlib import Path
 from typing import Dict
@@ -19,9 +20,9 @@ from xsdata.utils import collections
 
 from .codegen.resolver import OdooDependenciesResolver
 from .filters import OdooFilters
+from .filters import SIGNATURE_CLASS_SKIP
 
 
-# use pattern_skip in generator.py (to avoid empty files?)
 # only put this header in files with complex types (not in tipos_basico_v4_00.py for instance)
 # import textwrap
 # from odoo import fields, models
@@ -114,6 +115,15 @@ class OdooGenerator(DataclassGenerator):
             #                     pass
             #                     # TODO FIMXE
             #                     #cluster.append(k)
+
+            should_skip = False
+            for pattern in SIGNATURE_CLASS_SKIP:
+                for klass in cluster:
+                    if re.search(pattern, klass.name):
+                        should_skip = True
+                        break
+            if should_skip:
+                continue
 
             yield GeneratorResult(
                 path=path.with_suffix(".py"),
