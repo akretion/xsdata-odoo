@@ -135,7 +135,20 @@ class OdooGenerator(DataclassGenerator):
         self, resolver: DependenciesResolver, classes: List[Class]
     ) -> str:
         res = super().render_module(resolver, classes)
-        res = format_str(res, mode=FileMode())
+
+        # for some reason, when generating several files at once,
+        # some field can loose their indention, we fix them here:
+        schema = os.environ.get("SCHEMA", "spec")
+        version = os.environ.get("VERSION", "10")
+        field_prefix = "%s%s_" % (schema, version,)
+        reindented = "\n".join([
+            re.sub("^%s" % (field_prefix), "    %s" % (field_prefix), line)
+            for line in res.splitlines()
+        ])
+
+        # the overall formatting is not too bad but there are a few
+        # glitches with line breaks, so we apply Black formatting.
+        res = format_str(reindented, mode=FileMode())
         return res
 
     def render_classes(
