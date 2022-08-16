@@ -11,6 +11,7 @@ from black import FileMode
 from black import format_str
 from jinja2 import Environment
 from jinja2 import FileSystemLoader
+from xsdata.codegen.handlers import MergeAttributes
 from xsdata.codegen.models import Class
 from xsdata.codegen.resolver import DependenciesResolver
 from xsdata.formats.dataclass.generator import DataclassGenerator
@@ -21,14 +22,12 @@ from xsdata.utils import collections
 from .codegen.resolver import OdooDependenciesResolver
 from .filters import OdooFilters
 from .filters import SIGNATURE_CLASS_SKIP
-
+from .merge_attributes import MergeAttributes as PatchedMergeAttributes
 
 # only put this header in files with complex types (not in tipos_basico_v4_00.py for instance)
 # import textwrap
 # from odoo import fields, models
 
-# NOTE nfe40_IPI in Imposto class a One2many. Should be Many2one. This is an xsdata bug
-# for now it works thanks to my patch https://github.com/tefra/xsdata/pull/667]
 # WISHLIST base model as a filter
 # WISHLIST pluggable filters (test with UBL and cbc: => simpleType + UBL simple types mapping)
 
@@ -37,13 +36,19 @@ class OdooGenerator(DataclassGenerator):
     """Odoo generator."""
 
     def __init__(self, config: GeneratorConfig):
+        if not os.environ.get("NO_PATCH"):
+            # see the evil detail: https://github.com/tefra/xsdata/issues/666
+            # for instance with this patch the Brazilian Invoicing nfe40_IPI
+            # in Imposto class is a Many2one as expected
+            MergeAttributes.process = PatchedMergeAttributes.process
+
         # if field prefix is not set via the config (default is "value")
         # then set it with SCHEMA and VERSION env vars
-        if (config.conventions.field_name.safe_prefix == "value"):
+        if config.conventions.field_name.safe_prefix == "value":
             schema = os.environ.get("SCHEMA", "spec")
             version = os.environ.get("VERSION", "10")
             config.conventions.field_name.safe_prefix = f"{schema}{version}_"
- 
+
         super().__init__(config)
         self.all_simple_types: List[Class] = []
         self.all_complex_types: List[Class] = []
@@ -127,11 +132,16 @@ class OdooGenerator(DataclassGenerator):
         # some field can loose their indention, we fix them here:
         schema = os.environ.get("SCHEMA", "spec")
         version = os.environ.get("VERSION", "10")
-        field_prefix = "%s%s_" % (schema, version,)
-        res = "\n".join([
-            re.sub("^%s" % (field_prefix), "    %s" % (field_prefix), line)
-            for line in res.splitlines()
-        ])
+        field_prefix = "%s%s_" % (
+            schema,
+            version,
+        )
+        res = "\n".join(
+            [
+                re.sub("^%s" % (field_prefix), "    %s" % (field_prefix), line)
+                for line in res.splitlines()
+            ]
+        )
 
         # the overall formatting is not too bad but there are a few
         # glitches with line breaks, so we apply Black formatting.
