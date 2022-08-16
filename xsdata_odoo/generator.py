@@ -97,25 +97,6 @@ class OdooGenerator(DataclassGenerator):
 
         # Generate modules
         for path, cluster in self.group_by_module(classes).items():
-
-            # TODO would be an option to repeat missing types from included xsd files
-            # instead of using imports, specially for simple_types.
-            # activating this crashes the title=cluster[0].target_module (file_name)
-            # and it also conflicts with the initial import statements
-            # for attr in klass.attrs:
-            #     if attr.types and not attr.types[0].datatype:
-            #         if attr.types[0].qname not in [k.qname for k in all_file_classes]:
-            #             for k in self.all_simple_types:
-            #                 if (attr.types[0].qname == k.qname) and (k.qname not in [k.qname for k in cluster]):
-            #                     pass
-            #                     # TODO FIXME
-            #                     #cluster.append(k)
-            #             for k in self.all_complex_types:
-            #                 if (attr.types[0].qname == k.qname) and (k.qname not in [k.qname for k in cluster]):
-            #                     pass
-            #                     # TODO FIMXE
-            #                     #cluster.append(k)
-
             should_skip = False
             for pattern in SIGNATURE_CLASS_SKIP:
                 for klass in cluster:
