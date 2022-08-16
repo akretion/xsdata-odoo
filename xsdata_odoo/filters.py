@@ -9,6 +9,7 @@ from jinja2 import Environment
 from lxml import etree
 from xsdata.codegen.models import Attr
 from xsdata.codegen.models import Class
+from xsdata.models.config import ObjectType
 from xsdata.formats.dataclass.filters import Filters
 from xsdata.logger import logger
 from xsdata.models.config import GeneratorConfig
@@ -64,6 +65,8 @@ class OdooFilters(Filters):
         "all_simple_types",
         "all_complex_types",
         "implicit_many2ones",
+        "schema",
+        "version",
     )
 
     def __init__(
@@ -72,6 +75,8 @@ class OdooFilters(Filters):
         all_simple_types: List[Class],
         all_complex_types: List[Class],
         implicit_many2ones: Dict,
+        schema: str = "spec",
+        version: str = "10",
     ):
         super().__init__(config)
         self.all_simple_types = all_simple_types
@@ -79,6 +84,8 @@ class OdooFilters(Filters):
         self.implicit_many2ones = implicit_many2ones
         self.files_to_etree: Dict[str, Any] = {}
         self.relative_imports = True
+        self.schema = schema
+        self.version = version
 
     def register(self, env: Environment):
         super().register(env)
@@ -91,7 +98,6 @@ class OdooFilters(Filters):
                 "binding_type": self.binding_type,
                 "odoo_class_description": self.odoo_class_description,
                 "odoo_field_definition": self.odoo_field_definition,
-                "odoo_field_name": self.odoo_field_name,
                 "odoo_implicit_many2ones": self.odoo_implicit_many2ones,
                 "import_class": self.import_class,
                 "enum_docstring": self.enum_docstring,
@@ -216,25 +222,22 @@ class OdooFilters(Filters):
             )
         return ("\n").join(fields)
 
-    def odoo_field_name(self, name: str) -> str:
-        """
-        field_name with schema and version prefix.
+    def field_name(self, name: str, class_name: str) -> str:
+        prefix = self.field_safe_prefix
+        name = self.apply_substitutions(name, ObjectType.FIELD)
 
-        We could have used a 'safe_name' like xsdata does for the Python
-        bindings. But having this prefix it's already safe. It's also
-        backward compatible with the models we generated with
-        GenerateDS. And finally it's good to use some digits of the
-        schema version in the field prefix, so minor schema updates are
-        mapped to the same Odoo fields and --update should take care of
-        it while major schema updates get different fields and possibly
-        different classes/tables.
-        """
-        schema = os.environ.get("SCHEMA", "spec")
-        version = os.environ.get("VERSION", "10")
-        field_prefix = f"{schema}{version}_"
-        if name.startswith("@"):
-            name = name[1:100]
-        return f"{field_prefix}{name}"
+        if self.field_safe_prefix in ("", "value"):  # do like standard xsdata
+            name = self.safe_name(name, prefix, self.field_case, class_name=class_name)
+        if self.field_safe_prefix == "NO_PREFIX_NO_SAFE_NAME":  # keep my field name!
+            pass
+        elif self.field_safe_prefix.endswith("SAFE_NAME"):  # prefix + python field name
+            prefix = prefix.split("SAFE_NAME")[0]
+            name = f"{prefix}{name}"
+            name = self.safe_name(name, prefix, self.field_case, class_name=class_name)
+        else:  # prefix + keep my field name
+            name = f"{prefix}{name}"
+
+        return self.apply_substitutions(name, ObjectType.FIELD)
 
     def odoo_extract_number_attrs(self, kwargs: Dict[str, Dict]):
         """

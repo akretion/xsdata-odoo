@@ -37,6 +37,13 @@ class OdooGenerator(DataclassGenerator):
     """Odoo generator."""
 
     def __init__(self, config: GeneratorConfig):
+        # if field prefix is not set via the config (default is "value")
+        # then set it with SCHEMA and VERSION env vars
+        if (config.conventions.field_name.safe_prefix == "value"):
+            schema = os.environ.get("SCHEMA", "spec")
+            version = os.environ.get("VERSION", "10")
+            config.conventions.field_name.safe_prefix = f"{schema}{version}_"
+ 
         super().__init__(config)
         self.all_simple_types: List[Class] = []
         self.all_complex_types: List[Class] = []
@@ -55,8 +62,6 @@ class OdooGenerator(DataclassGenerator):
         """Return a iterator of the generated results."""
         packages = {obj.qname: obj.target_module for obj in classes}
         resolver = OdooDependenciesResolver(packages=packages)
-        schema = os.environ.get("SCHEMA", "spec")
-        version = os.environ.get("VERSION", "10")
 
         # Generate packages
         for path, cluster in self.group_by_package(classes).items():
@@ -86,8 +91,9 @@ class OdooGenerator(DataclassGenerator):
                                 self.filters.field_type_name(x, []) for x in field.types
                             )
                             comodel = self.filters.registry_comodel(type_names)
-                            target_field = (
-                                f"{schema}{version}_{field.name}_{klass.name}_id"
+                            target_field = self.filters.field_name(
+                                f"{field.name}_{klass.name}_id",
+                                klass.name,
                             )
                             self.implicit_many2ones[comodel].append(
                                 (self.filters.registry_name(klass.name), target_field)
@@ -122,14 +128,14 @@ class OdooGenerator(DataclassGenerator):
         schema = os.environ.get("SCHEMA", "spec")
         version = os.environ.get("VERSION", "10")
         field_prefix = "%s%s_" % (schema, version,)
-        reindented = "\n".join([
+        res = "\n".join([
             re.sub("^%s" % (field_prefix), "    %s" % (field_prefix), line)
             for line in res.splitlines()
         ])
 
         # the overall formatting is not too bad but there are a few
         # glitches with line breaks, so we apply Black formatting.
-        res = format_str(reindented, mode=FileMode())
+        res = format_str(res, mode=FileMode())
         return res
 
     def render_classes(
