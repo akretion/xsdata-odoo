@@ -177,10 +177,8 @@ class OdooFilters(Filters):
         return self.clean_docstring(obj.help)
 
     def registry_name(self, name: str) -> str:
-        schema = os.environ.get("SCHEMA", "spec")
-        version = os.environ.get("VERSION", "10")
         name = self.class_name(name)
-        return f"{schema}.{version}.{name.lower()}"
+        return f"{self.schema}.{self.version}.{name.lower()}"
 
     def inherit_model(self, obj: Class) -> str:
         schema = os.environ.get("SCHEMA", "spec")
