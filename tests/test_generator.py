@@ -1,4 +1,5 @@
 import os
+import sys
 from pathlib import Path
 
 from click.testing import CliRunner
@@ -134,12 +135,14 @@ class ClassC(models.AbstractModel):
         )
 
         self.assertIsNone(result.exception)
-        expected = "to be read 1"
-        generated = "to be read 2"
-        with open("tests/fixtures/nfe/models.py") as f:
-            expected = f.read()
-        with open("generated/nfe/v4_0/models.py") as f:
-            generated = f.read()
-        self.assertEqual(expected, generated)
+
+        if sys.version_info >= (3, 9):  # avoid Black details Python < 3.7
+            expected = "to be read 1"
+            generated = "to be read 2"
+            with open("tests/fixtures/nfe/models.py") as f:
+                expected = f.read()
+            with open("generated/nfe/v4_0/models.py") as f:
+                generated = f.read()
+            self.assertEqual(expected, generated)
 
 
