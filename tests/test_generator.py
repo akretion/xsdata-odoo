@@ -136,7 +136,7 @@ class ClassC(models.AbstractModel):
 
         self.assertIsNone(result.exception)
 
-        if sys.version_info >= (3, 9):  # avoid Black details Python < 3.7
+        if sys.version_info >= (3, 9) and "win" not in sys.platform.lower():
             expected = "to be read 1"
             generated = "to be read 2"
             with open("tests/fixtures/nfe/models.py") as f:
