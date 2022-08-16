@@ -42,11 +42,12 @@ class OdooGenerator(DataclassGenerator):
             # in Imposto class is a Many2one as expected
             MergeAttributes.process = PatchedMergeAttributes.process
 
+        schema = os.environ.get("SCHEMA", "spec")
+        version = os.environ.get("VERSION", "10")
+
         # if field prefix is not set via the config (default is "value")
         # then set it with SCHEMA and VERSION env vars
         if config.conventions.field_name.safe_prefix == "value":
-            schema = os.environ.get("SCHEMA", "spec")
-            version = os.environ.get("VERSION", "10")
             config.conventions.field_name.safe_prefix = f"{schema}{version}_"
 
         super().__init__(config)
@@ -60,6 +61,8 @@ class OdooGenerator(DataclassGenerator):
             self.all_simple_types,
             self.all_complex_types,
             self.implicit_many2ones,
+            schema,
+            version,
         )
         self.filters.register(self.env)
 

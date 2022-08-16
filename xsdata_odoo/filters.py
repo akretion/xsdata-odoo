@@ -67,6 +67,8 @@ class OdooFilters(Filters):
         "implicit_many2ones",
         "schema",
         "version",
+        "python_inherit_model",
+        "inherit_model",
     )
 
     def __init__(
@@ -77,6 +79,8 @@ class OdooFilters(Filters):
         implicit_many2ones: Dict,
         schema: str = "spec",
         version: str = "10",
+        python_inherit_model: str = "models.AbstractModel",
+        inherit_model = None,
     ):
         super().__init__(config)
         self.all_simple_types = all_simple_types
@@ -86,6 +90,10 @@ class OdooFilters(Filters):
         self.relative_imports = True
         self.schema = schema
         self.version = version
+        self.python_inherit_model = python_inherit_model
+        if inherit_model is None:
+            inherit_model = f"spec.mixin.{schema}"
+        self.inherit_model = inherit_model
 
     def register(self, env: Environment):
         super().register(env)
@@ -93,7 +101,8 @@ class OdooFilters(Filters):
             {
                 "pattern_skip": self.pattern_skip,
                 "registry_name": self.registry_name,
-                "inherit_model": self.inherit_model,
+                "odoo_python_inherit_model": self.odoo_python_inherit_model,
+                "odoo_inherit_model": self.odoo_inherit_model,
                 "clean_docstring": self.clean_docstring,
                 "binding_type": self.binding_type,
                 "odoo_class_description": self.odoo_class_description,
@@ -180,9 +189,11 @@ class OdooFilters(Filters):
         name = self.class_name(name)
         return f"{self.schema}.{self.version}.{name.lower()}"
 
-    def inherit_model(self, obj: Class) -> str:
-        schema = os.environ.get("SCHEMA", "spec")
-        return f"spec.mixin.{schema}"
+    def odoo_inherit_model(self, obj: Class) -> str:
+        return self.inherit_model
+
+    def odoo_python_inherit_model(self, obj: Class) -> str:
+        return self.python_inherit_model
 
     def registry_comodel(self, type_names: List[str]):
         # NOTE: we take only the last part of inner Types with .split(".")[-1]
