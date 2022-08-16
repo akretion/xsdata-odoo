@@ -103,13 +103,15 @@ class ClassC(models.AbstractModel):
         )
 
         self.assertIsNone(result.exception)
-        expected = "to be read 1"
-        generated = "to be read 2"
-        with open("tests/fixtures/po/models.py") as f:
-            expected = f.read()
-        with open("generated/po/models.py") as f:
-            generated = f.read()
-        self.assertEqual(expected, generated)
+
+        if "win" not in sys.platform.lower():
+            expected = "to be read 1"
+            generated = "to be read 2"
+            with open("tests/fixtures/po/models.py") as f:
+                expected = f.read()
+            with open("generated/po/models.py") as f:
+                generated = f.read()
+            self.assertEqual(expected, generated)
 
     def test_complete_nfe(self):
         os.environ["SCHEMA"] = "nfe"
