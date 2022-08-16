@@ -7,8 +7,13 @@ STRING_MAX_LEN = 64
 
 
 def extract_string_and_help(
-    field_name: str, doc: str, unique_labels: set
+    obj_name: str, field_name: str, doc: str, unique_labels: set
 ) -> Tuple[str, str]:
+    """
+    Eventually field_name is technical and a better string/label can be
+    extracted from the beginning of the help text.
+    """
+
     string = field_name
     if doc:
         string = " ".join(doc.strip().splitlines()[0].split())

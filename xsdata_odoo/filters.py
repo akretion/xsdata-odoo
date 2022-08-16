@@ -1,5 +1,6 @@
 import os
 import re
+from collections import OrderedDict
 from typing import Any
 from typing import Dict
 from typing import List
@@ -9,10 +10,10 @@ from jinja2 import Environment
 from lxml import etree
 from xsdata.codegen.models import Attr
 from xsdata.codegen.models import Class
-from xsdata.models.config import ObjectType
 from xsdata.formats.dataclass.filters import Filters
 from xsdata.logger import logger
 from xsdata.models.config import GeneratorConfig
+from xsdata.models.config import ObjectType
 from xsdata.utils import collections
 from xsdata.utils import namespaces
 
@@ -80,7 +81,7 @@ class OdooFilters(Filters):
         schema: str = "spec",
         version: str = "10",
         python_inherit_model: str = "models.AbstractModel",
-        inherit_model = None,
+        inherit_model=None,
     ):
         super().__init__(config)
         self.all_simple_types = all_simple_types
@@ -215,6 +216,9 @@ class OdooFilters(Filters):
         return ".".join([self.class_name(p.name) for p in parents])
 
     def odoo_implicit_many2ones(self, obj: Class) -> str:
+        """
+        The m2o fields for the o2m keys
+        """
         fields = []
         implicit_many2ones = self.implicit_many2ones.get(
             self.registry_name(obj.name), []
@@ -232,6 +236,9 @@ class OdooFilters(Filters):
         return ("\n").join(fields)
 
     def field_name(self, name: str, class_name: str) -> str:
+        """
+        Like xsdata but you can enforce the prefix or safe_name conversion
+        """
         prefix = self.field_safe_prefix
         name = self.apply_substitutions(name, ObjectType.FIELD)
 
@@ -248,36 +255,18 @@ class OdooFilters(Filters):
 
         return self.apply_substitutions(name, ObjectType.FIELD)
 
-    def odoo_extract_number_attrs(self, kwargs: Dict[str, Dict]):
-        """
-        Monetary field detection.
-
-        Here adapted for Brazil fiscal schemas
-        """
-        xsd_type = kwargs.get("xsd_type")
-        if xsd_type.startswith("TDec_"):  # TODO make pluggable. ENV?
-            if int(xsd_type[7:9]) != MONETARY_DIGITS:
-                kwargs["digits"] = (int(xsd_type[5:7]), int(xsd_type[7:9]))
-                # TODO or xsd_type[-2:] for "TDec_0302a04" for instance
-            else:
-                kwargs[
-                    "currency_field"
-                ] = "brl_currency_id"  # TODO make it customizable!
-
     def odoo_field_definition(
         self,
         attr: Attr,
         parents: List[Class],
     ) -> str:
-        """Return the Odoo field definition."""
+        """Returns the Odoo field definition."""
 
-        # 1st some checks inspired from Filters.field_type:
+        # 1st some checks inspired from xsdata Filters:
         type_names = collections.unique_sequence(
             self.field_type_name(x, [p.name for p in parents]) for x in attr.types
         )
-        kwargs = {}
         obj = parents[-1]
-
         if len(type_names) > 1:
             logger.warning(
                 f"len(type_names) > 1 (Union) not implemented yet! class: {obj.name} attr: {attr}"
@@ -295,47 +284,19 @@ class OdooFilters(Filters):
 
         # default_value = self.field_default_value(attr, {})
 
-        xsd_type = self.field_simple_type_from_xsd(obj, attr.name)
-        if xsd_type and xsd_type not in [
-            "xsd:string",
-            "xsd:date",
-        ]:  # (not in trivial types)
-            kwargs["xsd_type"] = xsd_type
-            self.odoo_extract_number_attrs(kwargs)
+        kwargs = self.extract_field_attributes(parents, attr)
 
-        metadata = self.field_metadata(attr, {}, [p.name for p in parents])
-        if metadata.get("required"):
-            # we choose not to put required=True (required in database) to avoid
-            # messing with existing Odoo modules.
-            kwargs["xsd_required"] = True
-
-        if not hasattr(obj, "unique_labels"):
-            obj.unique_labels = set()  # will avoid repeating field labels
-        string, help_attr = extract_string_and_help(
-            attr.name, attr.help, obj.unique_labels
-        )
-        kwargs["string"] = string
-        if help_attr and help_attr != string:
-            kwargs["help"] = help_attr
-        if attr.types[0].datatype:
+        if attr.types[0].datatype:  # simple field
+            self.odoo_extract_number_attrs(obj, attr, kwargs)
+            if kwargs.get("help"):
+                kwargs.move_to_end("help", last=True)
             python_type = attr.types[0].datatype.code
             if python_type in INTEGER_TYPES:
                 return f"fields.Integer({self.format_arguments(kwargs, 4)})"
-
-            if (python_type in FLOAT_TYPES or CHAR_TYPES) and kwargs.get(
-                "digits", (0, 2)
-            )[1] != MONETARY_DIGITS:
-                #                kwargs["digits"] = kwargs["digits"][1]
-                return f"fields.Float({self.format_arguments(kwargs, 4)})"
-            elif python_type in FLOAT_TYPES or kwargs.get("currency_field"):
+            if kwargs.get("currency_field"):
                 return f"fields.Monetary({self.format_arguments(kwargs, 4)})"
-
-            #            if (python_type in FLOAT_TYPES or CHAR_TYPES):
-            #                if kwargs.get("currency_field"):
-            #                    return f"fields.Monetary({self.format_arguments(kwargs, 4)})"
-            #                else:
-            #                    return f"fields.Float({self.format_arguments(kwargs, 4)})"
-
+            elif python_type in FLOAT_TYPES or kwargs.get("digits"):
+                return f"fields.Float({self.format_arguments(kwargs, 4)})"
             elif python_type in CHAR_TYPES:
                 return f"fields.Char({self.format_arguments(kwargs, 4)})"
             elif python_type in DATE_TYPES:
@@ -349,7 +310,8 @@ class OdooFilters(Filters):
                     f"{python_type} {attr.types[0].datatype} not implemented yet! class: {obj.name} attr: {attr}"
                 )
                 return ""
-        else:
+
+        else:  # relational field
             if attr.is_list:
                 comodel_key = self.field_name(f"{attr.name}_{obj.name}_id", obj.name)
                 return f"""fields.One2many("{self.registry_comodel(type_names)}", "{comodel_key}",{self.format_arguments(kwargs, 4)})"""
@@ -359,12 +321,11 @@ class OdooFilters(Filters):
                     if attr.types[0].qname == klass.qname:
                         # Selection
                         return f"fields.Selection({klass.name.upper()},{self.format_arguments(kwargs, 4)})"
-                        # kwargs["selection"] = klass.name.upper()
-                        # return f"fields.Selection({self.format_arguments(kwargs, 4)})"
                 for klass in self.all_complex_types:
                     if attr.types[0].qname == klass.qname:
                         # Many2one
                         kwargs["comodel_name"] = self.registry_comodel(type_names)
+                        kwargs.move_to_end("comodel_name", last=False)
                         return f"fields.Many2one({self.format_arguments(kwargs, 4)})"
 
                 message = (
@@ -373,15 +334,56 @@ class OdooFilters(Filters):
                 logger.warning(message)
                 return message
 
-    def import_class(self, name: str, alias: Optional[str]) -> str:
-        """Convert import class name with alias support."""
-        if alias:
-            return f"{self.class_name(name)} as {self.class_name(alias)}"
+    def extract_field_attributes(self, parents: List[Class], attr: Attr):
+        obj = parents[-1]
+        kwargs = OrderedDict()
+        if not hasattr(obj, "unique_labels"):
+            obj.unique_labels = set()  # will avoid repeating field labels
+        string, help_attr = extract_string_and_help(
+            obj.name, attr.name, attr.help, obj.unique_labels
+        )
+        kwargs["string"] = string
 
-        if name in [klass.name for klass in self.all_simple_types]:
-            return self.class_name(name).upper()  # const are upcase in Odoo
-        else:
-            return self.class_name(name)
+        metadata = self.field_metadata(attr, {}, [p.name for p in parents])
+        if metadata.get("required"):
+            # we choose not to put required=True (required in database) to avoid
+            # messing with existing Odoo modules.
+            kwargs["xsd_required"] = True
+
+        xsd_type = self.field_simple_type_from_xsd(obj, attr.name)
+        if xsd_type and xsd_type not in [
+            "xsd:string",
+            "xsd:date",
+        ]:  # (not in trivial types)
+            kwargs["xsd_type"] = xsd_type
+
+        if help_attr and help_attr != string:
+            kwargs["help"] = help_attr
+
+        return kwargs
+
+    def odoo_extract_number_attrs(
+        self, obj: Class, attr: Attr, kwargs: Dict[str, Dict]
+    ):
+        """
+        Monetary field detection.
+        Here adapted for Brazil fiscal schemas.
+        """
+        python_type = attr.types[0].datatype.code
+        if python_type in FLOAT_TYPES or python_type in CHAR_TYPES:
+            xsd_type = kwargs.get("xsd_type", "")
+            if xsd_type.startswith("TDec_"):  # TODO make pluggable. ENV?
+                if int(xsd_type[7:9]) != MONETARY_DIGITS or (
+                    attr.name[0] == "p" and attr.name[1].isupper()
+                ):
+                    kwargs["digits"] = (
+                        int(xsd_type[5:7]),
+                        int(xsd_type[7:9]),
+                    )
+                else:
+                    kwargs[
+                        "currency_field"
+                    ] = "brl_currency_id"  # TODO make it customizable!
 
     def field_simple_type_from_xsd(self, obj: Class, attr_name: str):
         location = (obj.location or "").replace("file://", "")
@@ -409,3 +411,13 @@ class OdooFilters(Filters):
             if xpath_matches:
                 return xpath_matches[0].get("type")
         return None
+
+    def import_class(self, name: str, alias: Optional[str]) -> str:
+        """Converts import class name with alias support."""
+        if alias:
+            return f"{self.class_name(name)} as {self.class_name(alias)}"
+
+        if name in [klass.name for klass in self.all_simple_types]:
+            return self.class_name(name).upper()  # const are upcase in Odoo
+        else:
+            return self.class_name(name)
