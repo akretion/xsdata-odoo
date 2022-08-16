@@ -293,15 +293,7 @@ class OdooFilters(Filters):
                 f"attr.is_dict not implemented yet! class: {obj.name} attr: {attr}"
             )
 
-        # if attr.is_nillable or (
-        #     attr.default is None and (attr.is_optional or not self.format.kw_only)
-        # ):
-        #     return f"Optional[{result}]"
-
         # default_value = self.field_default_value(attr, {})
-
-        schema = os.environ.get("SCHEMA", "spec")
-        version = os.environ.get("VERSION", "10")
 
         xsd_type = self.field_simple_type_from_xsd(obj, attr.name)
         if xsd_type and xsd_type not in [

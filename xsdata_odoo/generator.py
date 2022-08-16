@@ -133,12 +133,7 @@ class OdooGenerator(DataclassGenerator):
 
         # for some reason, when generating several files at once,
         # some field can loose their indention, we fix them here:
-        schema = os.environ.get("SCHEMA", "spec")
-        version = os.environ.get("VERSION", "10")
-        field_prefix = "%s%s_" % (
-            schema,
-            version,
-        )
+        field_prefix = self.filters.field_safe_prefix
         res = "\n".join(
             [
                 re.sub("^%s" % (field_prefix), "    %s" % (field_prefix), line)
