@@ -359,7 +359,8 @@ class OdooFilters(Filters):
                 return ""
         else:
             if attr.is_list:
-                return f"""fields.One2many("{self.registry_comodel(type_names)}", "{schema}{version}_{attr.name}_{obj.name}_id",{self.format_arguments(kwargs, 4)})"""
+                comodel_key = self.field_name(f"{attr.name}_{obj.name}_id", obj.name)
+                return f"""fields.One2many("{self.registry_comodel(type_names)}", "{comodel_key}",{self.format_arguments(kwargs, 4)})"""
             else:
 
                 for klass in self.all_simple_types:
