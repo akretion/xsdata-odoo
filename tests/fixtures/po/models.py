@@ -26,19 +26,19 @@ class Item(models.AbstractModel):
     spec10_item_Items_id = fields.Many2one(
         comodel_name="spec.10.items", xsd_implicit=True, ondelete="cascade"
     )
-    spec10_productName = fields.Char(xsd_required=True, string="productName")
+    spec10_productName = fields.Char(string="productName", xsd_required=True)
 
-    spec10_quantity = fields.Integer(xsd_required=True, string="quantity")
+    spec10_quantity = fields.Integer(string="quantity", xsd_required=True)
 
-    spec10_USPrice = fields.Monetary(
-        xsd_type="xsd:decimal", xsd_required=True, string="USPrice"
+    spec10_USPrice = fields.Float(
+        string="USPrice", xsd_required=True, xsd_type="xsd:decimal"
     )
 
     spec10_comment = fields.Char(string="comment")
 
     spec10_shipDate = fields.Date(string="shipDate")
 
-    spec10_partNum = fields.Char(xsd_type="x:SKU", xsd_required=True, string="partNum")
+    spec10_partNum = fields.Char(string="partNum", xsd_required=True, xsd_type="x:SKU")
 
 
 class Usaddress(models.AbstractModel):
@@ -47,19 +47,17 @@ class Usaddress(models.AbstractModel):
     _inherit = "spec.mixin.spec"
     _binding_type = "Usaddress"
 
-    spec10_name = fields.Char(xsd_required=True, string="name")
+    spec10_name = fields.Char(string="name", xsd_required=True)
 
-    spec10_street = fields.Char(xsd_required=True, string="street")
+    spec10_street = fields.Char(string="street", xsd_required=True)
 
-    spec10_city = fields.Char(xsd_required=True, string="city")
+    spec10_city = fields.Char(string="city", xsd_required=True)
 
-    spec10_state = fields.Char(xsd_required=True, string="state")
+    spec10_state = fields.Char(string="state", xsd_required=True)
 
-    spec10_zip = fields.Monetary(
-        xsd_type="xsd:decimal", xsd_required=True, string="zip"
-    )
+    spec10_zip = fields.Float(string="zip", xsd_required=True, xsd_type="xsd:decimal")
 
-    spec10_country = fields.Char(xsd_type="xsd:NMTOKEN", string="country")
+    spec10_country = fields.Char(string="country", xsd_type="xsd:NMTOKEN")
 
 
 class Comment(models.AbstractModel):
@@ -68,7 +66,7 @@ class Comment(models.AbstractModel):
     _inherit = "spec.mixin.spec"
     _binding_type = "Comment"
 
-    spec10_value = fields.Char(xsd_required=True, string="value")
+    spec10_value = fields.Char(string="value", xsd_required=True)
 
 
 class PurchaseOrderType(models.AbstractModel):
@@ -78,26 +76,26 @@ class PurchaseOrderType(models.AbstractModel):
     _binding_type = "PurchaseOrderType"
 
     spec10_shipTo = fields.Many2one(
-        xsd_type="x:USAddress",
-        xsd_required=True,
-        string="shipTo",
         comodel_name="spec.10.usaddress",
+        string="shipTo",
+        xsd_required=True,
+        xsd_type="x:USAddress",
     )
 
     spec10_billTo = fields.Many2one(
-        xsd_type="x:USAddress",
-        xsd_required=True,
-        string="billTo",
         comodel_name="spec.10.usaddress",
+        string="billTo",
+        xsd_required=True,
+        xsd_type="x:USAddress",
     )
 
     spec10_comment = fields.Char(string="comment")
 
     spec10_items = fields.Many2one(
-        xsd_type="x:Items",
-        xsd_required=True,
-        string="items",
         comodel_name="spec.10.items",
+        string="items",
+        xsd_required=True,
+        xsd_type="x:Items",
     )
 
     spec10_orderDate = fields.Date(string="orderDate")
