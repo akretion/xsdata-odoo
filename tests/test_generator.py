@@ -18,10 +18,10 @@ class OdooGeneratorTests(FactoryTestCase):
         self.generator = OdooGenerator(config)
 
     def test_render(self):
-        if os.environ.get("SCHEMA"):
-            del os.environ["SCHEMA"]
-        if os.environ.get("VERSION"):
-            del os.environ["VERSION"]
+        if os.environ.get("XSDATA_SCHEMA"):
+            del os.environ["XSDATA_SCHEMA"]
+        if os.environ.get("XSDATA_VERSION"):
+            del os.environ["XSDATA_VERSION"]
 
         classes = [
             ClassFactory.elements(2, package="foo"),
@@ -78,10 +78,10 @@ class ClassC(models.AbstractModel):
 
 
     def test_complete_po(self):
-        if os.environ.get("SCHEMA"):
-            del os.environ["SCHEMA"]
-        if os.environ.get("VERSION"):
-            del os.environ["VERSION"]
+        if os.environ.get("XSDATA_SCHEMA"):
+            del os.environ["XSDATA_SCHEMA"]
+        if os.environ.get("XSDATA_VERSION"):
+            del os.environ["XSDATA_VERSION"]
 
         runner = CliRunner()
         schema = Path(__file__).parent.joinpath("fixtures/po/po.xsd")
@@ -114,8 +114,8 @@ class ClassC(models.AbstractModel):
             self.assertEqual(expected, generated)
 
     def test_complete_nfe(self):
-        os.environ["SCHEMA"] = "nfe"
-        os.environ["VERSION"] = "40"
+        os.environ["XSDATA_SCHEMA"] = "nfe"
+        os.environ["XSDATA_VERSION"] = "40"
 
         runner = CliRunner()
         schema = Path(__file__).parent.joinpath("fixtures/nfe/leiauteNFe_v4.00.xsd")

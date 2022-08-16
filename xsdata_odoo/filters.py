@@ -118,8 +118,8 @@ class OdooFilters(Filters):
         if parents is None:
             parents = []
         class_skip = SIGNATURE_CLASS_SKIP
-        if os.environ.get("SKIP"):
-            class_skip += os.environ["SKIP"].split("|")
+        if os.environ.get("XSDATA_SKIP"):
+            class_skip += os.environ["XSDATA_SKIP"].split("|")
         for pattern in class_skip:
             # do we have a simple match? (no scoping can be risky)
             if re.search(pattern, name):

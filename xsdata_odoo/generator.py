@@ -36,14 +36,14 @@ class OdooGenerator(DataclassGenerator):
     """Odoo generator."""
 
     def __init__(self, config: GeneratorConfig):
-        if not os.environ.get("NO_PATCH"):
+        if not os.environ.get("XSDATA_NO_PATCH"):
             # see the evil detail: https://github.com/tefra/xsdata/issues/666
             # for instance with this patch the Brazilian Invoicing nfe40_IPI
             # in Imposto class is a Many2one as expected
             MergeAttributes.process = PatchedMergeAttributes.process
 
-        schema = os.environ.get("SCHEMA", "spec")
-        version = os.environ.get("VERSION", "10")
+        schema = os.environ.get("XSDATA_SCHEMA", "spec")
+        version = os.environ.get("XSDATA_VERSION", "10")
 
         # if field prefix is not set via the config (default is "value")
         # then set it with SCHEMA and VERSION env vars
@@ -143,7 +143,8 @@ class OdooGenerator(DataclassGenerator):
 
         # the overall formatting is not too bad but there are a few
         # glitches with line breaks, so we apply Black formatting.
-        res = format_str(res, mode=FileMode())
+        if not os.environ.get("XSDATA_NO_BLACK"):
+            res = format_str(res, mode=FileMode())
         return res
 
     def render_classes(
