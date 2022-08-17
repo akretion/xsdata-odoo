@@ -10,6 +10,7 @@ from typing import Optional
 from black import FileMode
 from black import format_str
 from jinja2 import Environment
+from lxml import etree
 from jinja2 import FileSystemLoader
 from xsdata.codegen.handlers import MergeAttributes
 from xsdata.codegen.models import Class
@@ -87,6 +88,12 @@ class OdooGenerator(DataclassGenerator):
 
             # collect relation dependencies from other files/includes:
             for klass in all_file_classes:
+                if (
+                    not self.filters.files_to_etree.get(klass.location)
+                    and os.path.isfile(klass.location)
+                ):
+                    xsd_tree = etree.parse(klass.location)
+                    self.filters.files_to_etree[klass.location] = xsd_tree
 
                 if klass.is_enumeration and klass not in self.all_simple_types:
                     self.all_simple_types.append(
