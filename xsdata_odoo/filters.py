@@ -9,7 +9,9 @@ from typing import Optional
 from jinja2 import Environment
 from lxml import etree
 from xsdata.codegen.models import Attr
+from xsdata.codegen.models import AttrType
 from xsdata.codegen.models import Class
+from xsdata.codegen.models import Import
 from xsdata.formats.dataclass.filters import Filters
 from xsdata.logger import logger
 from xsdata.models.config import GeneratorConfig
@@ -66,6 +68,7 @@ class OdooFilters(Filters):
         "all_simple_types",
         "all_complex_types",
         "implicit_many2ones",
+        "simple_type_cache",
         "schema",
         "version",
         "python_inherit_model",
@@ -87,6 +90,7 @@ class OdooFilters(Filters):
         self.all_simple_types = all_simple_types
         self.all_complex_types = all_complex_types
         self.implicit_many2ones = implicit_many2ones
+        self.simple_type_cache = {}
         self.files_to_etree: Dict[str, Any] = {}
         self.relative_imports = True
         self.schema = schema
@@ -110,6 +114,7 @@ class OdooFilters(Filters):
                 "odoo_field_definition": self.odoo_field_definition,
                 "odoo_implicit_many2ones": self.odoo_implicit_many2ones,
                 "import_class": self.import_class,
+                "filtered_imports": self.filtered_imports,
                 "enum_docstring": self.enum_docstring,
             }
         )
@@ -337,6 +342,15 @@ class OdooFilters(Filters):
     def extract_field_attributes(self, parents: List[Class], attr: Attr):
         obj = parents[-1]
         kwargs = OrderedDict()
+
+        if (  # extract help for UBL:
+            attr.help
+            and "<ns1:Definition>" in attr.help
+            and "</ns1:Definition>" in attr.help
+        ):
+            attr.help = attr.help.split("<ns1:Definition>")[1]
+            attr.help = attr.help.split("</ns1:Definition>")[0]
+
         if not hasattr(obj, "unique_labels"):
             obj.unique_labels = set()  # will avoid repeating field labels
         string, help_attr = extract_string_and_help(
@@ -350,7 +364,9 @@ class OdooFilters(Filters):
             # messing with existing Odoo modules.
             kwargs["xsd_required"] = True
 
-        xsd_type = self.simple_type_from_xsd(obj, attr)
+        xsd_type = self.ubl_simple_type_from_xsd(obj, attr)
+        if xsd_type is None:
+            xsd_type = self.simple_type_from_xsd(obj, attr)
         if xsd_type and xsd_type not in [
             "xsd:string",
             "xsd:date",
@@ -389,6 +405,19 @@ class OdooFilters(Filters):
                         "currency_field"
                     ] = "brl_currency_id"  # TODO use company_curreny_id
 
+            # UBL
+            elif xsd_type in ("AmountType", "PriceAmountType", "RateType"):
+                # TODO many other Monetary types
+                kwargs[
+                    "currency_field"
+                ] = "brl_currency_id"  # TODO use company_currency_id
+            elif (
+                xsd_type.endswith("AmountType")
+                or xsd_type.endswith("NumericType")
+                or xsd_type.endswith("QuantityType")
+            ):
+                kwargs["digits"] = (16, 4)  # hacky: we could avoid arbitrary digits
+
     def simple_type_from_xsd(self, obj: Class, attr: Attr):
         location = (obj.location or "").replace("file://", "")
         attr_name = attr.name
@@ -419,6 +448,58 @@ class OdooFilters(Filters):
                 return xpath_matches[0].get("type")
         return None
 
+    def ubl_simple_type_from_xsd(self, obj: Class, attr: Attr):
+        """
+        Try to infer a simpler type when possible (UBL cbc CommonBasicComponents for instance).
+        Indeed UBL-CommonAggregateComponents-2.3.xsd has xsd:complexType with a xsd:simpleContent
+        restriction which is much better modeled using a simple type rather than a m2o field.
+        """
+        SimplifiablePattern = "CommonBasicComponents"
+        if (
+            attr.types
+            and SimplifiablePattern in attr.types[0].qname
+            and "}" in attr.types[0].qname
+        ):
+            xsd_type = f"{attr.types[0].qname.split('}')[-1]}Type"
+            base = False
+            if self.simple_type_cache.get(xsd_type):
+                base = self.simple_type_cache[xsd_type]
+            else:
+                xsd_tree = False
+                for k, v in self.files_to_etree.items():
+                    if SimplifiablePattern in k:
+                        xsd_tree = v
+                        lookups = (
+                            f"//xsd:simpleType[@name='{xsd_type}']//xsd:restriction",
+                            f"//xsd:complexType[@name='{xsd_type}']//xsd:restriction",
+                        )
+                        for lookup in lookups:
+                            xpath_matches = xsd_tree.getroot().xpath(
+                                lookup,
+                                namespaces={
+                                    "xs": "http://www.w3.org/2001/XMLSchema",
+                                    "xsd": "http://www.w3.org/2001/XMLSchema",
+                                },
+                            )
+                            if xpath_matches:
+                                base = xpath_matches[0].get("base")
+            if base:
+                if "xs:" in base:
+                    base = base.split["xs:"][1]
+                else:
+                    base = "string"
+                types = [
+                    AttrType(
+                        qname="{http://www.w3.org/2001/XMLSchema}%s" % (base,),
+                        native=True,
+                    )
+                ]
+                attr.types = types
+                attr.native = True
+                return xsd_type
+
+        return None
+
     def import_class(self, name: str, alias: Optional[str]) -> str:
         """Converts import class name with alias support."""
         if alias:
@@ -428,3 +509,7 @@ class OdooFilters(Filters):
             return self.class_name(name).upper()  # const are upcase in Odoo
         else:
             return self.class_name(name)
+
+    def filtered_imports(self, imports: List[Import]) -> List[Import]:
+        # TODO use constants / env vars
+        return filter(lambda x: "ubl_common_basic_components" not in x.source, imports)

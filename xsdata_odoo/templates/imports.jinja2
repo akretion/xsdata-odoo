@@ -1,14 +1,14 @@
-{%- for source, items in imports|groupby("source") -%}
+{%- for source, items in imports|filtered_imports|groupby("source") -%}
 {%- if items|length == 1 -%}
-{%- if not items[0].name|pattern_skip() %}
+{% if not items[0].name|pattern_skip() %}
 from {{ source | import_module(module)  }} import {{ items[0].name | import_class(alias=items[0].alias) }}
-{%- endif %}
-{% else -%}
+{% endif %}
+{% else %}
 from {{ source | import_module(module) }} import (
 {%- for item in items %}
 {%- if not item.name|pattern_skip() %}
     {{ item.name | import_class(alias=item.alias) }},
-{%- endif %}
+{% endif %}
 {%- endfor %}
 )
 {%- endif -%}

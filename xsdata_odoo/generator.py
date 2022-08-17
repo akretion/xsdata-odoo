@@ -124,8 +124,9 @@ class OdooGenerator(DataclassGenerator):
                     if re.search(pattern, klass.name):
                         should_skip = True
                         break
-            if should_skip:
-                continue
+# disabled for UBL as it prevent the generation of CommongAggregateComponents
+#            if should_skip:
+#                continue
 
             yield GeneratorResult(
                 path=path.with_suffix(".py"),
