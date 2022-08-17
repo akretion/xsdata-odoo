@@ -151,7 +151,10 @@ class OdooGenerator(DataclassGenerator):
         # the overall formatting is not too bad but there are a few
         # glitches with line breaks, so we apply Black formatting.
         if not os.environ.get("XSDATA_NO_BLACK"):
-            res = format_str(res, mode=FileMode())
+            try:
+                res = format_str(res, mode=FileMode())
+            except Exception as e:
+                print(e)
         return res
 
     def render_classes(
