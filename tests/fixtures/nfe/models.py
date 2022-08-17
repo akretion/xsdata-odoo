@@ -2087,10 +2087,10 @@ class RefEcf(models.AbstractModel):
         string="Código do modelo do Documento Fiscal",
         xsd_required=True,
         help=(
-            'Código do modelo do Documento Fiscal\nPreencher com "2B", '
-            "quando se tratar de Cupom Fiscal emitido por máquina registradora"
-            ' (não ECF), com "2C", quando se tratar de Cupom Fiscal PDV, ou '
-            '"2D", quando se tratar de Cupom Fiscal (emitido por ECF)'
+            "Código do modelo do Documento Fiscal\nPreencher com 2B, quando se"
+            " tratar de Cupom Fiscal emitido por máquina registradora (não "
+            "ECF), com 2C, quando se tratar de Cupom Fiscal PDV, ou 2D, quando"
+            " se tratar de Cupom Fiscal (emitido por ECF)"
         ),
     )
 
@@ -2781,7 +2781,7 @@ class Rastro(models.AbstractModel):
         string="Data de fabricação/produção",
         xsd_required=True,
         xsd_type="TData",
-        help='Data de fabricação/produção. Formato "AAAA-MM-DD".',
+        help="Data de fabricação/produção. Formato AAAA-MM-DD.",
     )
 
     nfe40_dVal = fields.Char(
@@ -2790,7 +2790,7 @@ class Rastro(models.AbstractModel):
         xsd_type="TData",
         help=(
             "Data de validade. Informar o último dia do mês caso a validade "
-            'não especifique o dia. Formato "AAAA-MM-DD".'
+            "não especifique o dia. Formato AAAA-MM-DD."
         ),
     )
 
@@ -3156,9 +3156,7 @@ class Comb(models.AbstractModel):
     nfe40_CIDE = fields.Many2one(comodel_name="nfe.40.cide", string="CIDE Combustíveis")
 
     nfe40_encerrante = fields.Many2one(
-        comodel_name="nfe.40.encerrante",
-        string="Informações do grupo de 'encerrante'",
-        help='Informações do grupo de "encerrante"',
+        comodel_name="nfe.40.encerrante", string="Informações do grupo de encerrante"
     )
 
 
@@ -7335,12 +7333,12 @@ class InfNfeSupl(models.AbstractModel):
     )
 
     nfe40_urlChave = fields.Char(
-        string="Informar a URL da 'Consulta por chave de acesso da NFC",
+        string="Informar a URL da Consulta por chave de acesso da NFC",
         xsd_required=True,
         help=(
-            'Informar a URL da "Consulta por chave de acesso da NFC-e". A '
-            "mesma URL que deve estar informada no DANFE NFC-e para consulta "
-            "por chave de acesso."
+            "Informar a URL da Consulta por chave de acesso da NFC-e. A mesma "
+            "URL que deve estar informada no DANFE NFC-e para consulta por "
+            "chave de acesso."
         ),
     )
 

@@ -16,6 +16,7 @@ def extract_string_and_help(
 
     string = field_name
     if doc:
+        doc = doc.replace('"', "")
         string = " ".join(doc.strip().splitlines()[0].split())
         if len(string) > STRING_MIN_LEN and len(string.split(". ")[0]) < STRING_MAX_LEN:
             string = string.split(". ")[0].strip()
