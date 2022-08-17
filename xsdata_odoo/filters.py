@@ -350,7 +350,7 @@ class OdooFilters(Filters):
             # messing with existing Odoo modules.
             kwargs["xsd_required"] = True
 
-        xsd_type = self.field_simple_type_from_xsd(obj, attr.name)
+        xsd_type = self.simple_type_from_xsd(obj, attr)
         if xsd_type and xsd_type not in [
             "xsd:string",
             "xsd:date",
@@ -366,12 +366,16 @@ class OdooFilters(Filters):
         self, obj: Class, attr: Attr, kwargs: Dict[str, Dict]
     ):
         """
-        Monetary field detection.
-        Here adapted for Brazil fiscal schemas.
+        Monetary vs Float field detection.
+        Detection tends to be brittle but in general it doesn't
+        impact XML serialization/desrialization as both types
+        are floats and we usually take the xsd_type into account.
         """
         python_type = attr.types[0].datatype.code
         if python_type in FLOAT_TYPES or python_type in CHAR_TYPES:
             xsd_type = kwargs.get("xsd_type", "")
+
+            # Brazilian fiscal documents:
             if xsd_type.startswith("TDec_"):  # TODO make pluggable. ENV?
                 if int(xsd_type[7:9]) != MONETARY_DIGITS or (
                     attr.name[0] == "p" and attr.name[1].isupper()
@@ -383,13 +387,15 @@ class OdooFilters(Filters):
                 else:
                     kwargs[
                         "currency_field"
-                    ] = "brl_currency_id"  # TODO make it customizable!
+                    ] = "brl_currency_id"  # TODO use company_curreny_id
 
-    def field_simple_type_from_xsd(self, obj: Class, attr_name: str):
+    def simple_type_from_xsd(self, obj: Class, attr: Attr):
         location = (obj.location or "").replace("file://", "")
+        attr_name = attr.name
         if not os.path.isfile(location):
             return None
-        if not self.files_to_etree.get(location):
+
+        if not self.files_to_etree.get(location):  # yes it can still happen
             xsd_tree = etree.parse(location)
             self.files_to_etree[location] = xsd_tree
         else:
@@ -406,6 +412,7 @@ class OdooFilters(Filters):
                 lookup,
                 namespaces={
                     "xs": "http://www.w3.org/2001/XMLSchema",
+                    "xsd": "http://www.w3.org/2001/XMLSchema",
                 },
             )
             if xpath_matches:
