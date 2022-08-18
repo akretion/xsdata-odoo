@@ -29,8 +29,8 @@ from .merge_attributes import MergeAttributes as PatchedMergeAttributes
 # import textwrap
 # from odoo import fields, models
 
-# WISHLIST base model as a filter
 # WISHLIST pluggable filters (test with UBL and cbc: => simpleType + UBL simple types mapping)
+# (see UBL branch for UBL)
 
 
 class OdooGenerator(DataclassGenerator):
