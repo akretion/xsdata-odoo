@@ -357,7 +357,7 @@ class OdooFilters(Filters):
         ]:  # (not in trivial types)
             kwargs["xsd_type"] = xsd_type
 
-        if help_attr and help_attr != string:
+        if help_attr:
             kwargs["help"] = help_attr
 
         return kwargs

@@ -4,6 +4,7 @@ from typing import Tuple
 
 STRING_MIN_LEN = 36
 STRING_MAX_LEN = 64
+PONCT_TOKENS = (". ", ", ", " (", "-", ",", ",")
 
 
 def extract_string_and_help(
@@ -16,32 +17,29 @@ def extract_string_and_help(
 
     string = field_name
     if doc:
-        doc = doc.replace('"', "")
-        string = " ".join(doc.strip().splitlines()[0].split())
-        if len(string) > STRING_MIN_LEN and len(string.split(". ")[0]) < STRING_MAX_LEN:
-            string = string.split(". ")[0].strip()
-        if len(string) > STRING_MIN_LEN and len(string.split(", ")[0]) < STRING_MAX_LEN:
-            string = string.split(", ")[0].strip()
-        if len(string) > STRING_MIN_LEN and len(string.split(" (")[0]) < STRING_MAX_LEN:
-            string = string.split(" (")[0].strip()
-        if (
-            len(string) > STRING_MIN_LEN and len(string.split("-")[0]) < STRING_MAX_LEN
-        ):  # TODO sure?
-            string = string.split("-")[0].strip()
-        if len(string) > STRING_MIN_LEN and len(string.split(".")[0]) < STRING_MAX_LEN:
-            string = string.split(".")[0].strip()
-        if len(string) > STRING_MIN_LEN and len(string.split(",")[0]) < STRING_MAX_LEN:
-            string = string.split(",")[0].strip()
+        doc = doc.strip().replace('"', "")
+        string = " ".join(doc.splitlines()[0].split())  # avoids double spaces
+
+        for token in PONCT_TOKENS:
+            if len(string) > STRING_MIN_LEN and len(string.split(token)[0]) < STRING_MAX_LEN:
+                string = string.split(token)[0].strip()
+
         string = string.replace('"', "'")
-        if string.endswith(":"):
+        if string.endswith(":") or string.endswith("."):
             string = string[:-1]
+
         if len(string) > 58:
             string = field_name.split("_")[-1]
+
+        if string == doc or doc[:-1] == string:  # doc might end with '.'
+            doc = None
+
     if string in unique_labels:
         string = f"{string} ({field_name})"
         if len(string) > 58:
             string = field_name.split("_")[-1]
     unique_labels.add(string)
+
     return string, doc
 
 

@@ -1524,19 +1524,17 @@ class InfProt(models.AbstractModel):
         string="Código do status da mensagem enviada",
         xsd_required=True,
         xsd_type="TStat",
-        help="Código do status da mensagem enviada.",
     )
 
     nfe40_xMotivo = fields.Char(
         string="Descrição literal do status do serviço solicitado",
         xsd_required=True,
         xsd_type="TMotivo",
-        help="Descrição literal do status do serviço solicitado.",
     )
 
-    nfe40_cMsg = fields.Char(string="Código da Mensagem.")
+    nfe40_cMsg = fields.Char(string="Código da Mensagem")
 
-    nfe40_xMsg = fields.Char(string="Mensagem da SEFAZ para o emissor.")
+    nfe40_xMsg = fields.Char(string="Mensagem da SEFAZ para o emissor")
 
     nfe40_Id = fields.Char(string="Id", xsd_type="xs:ID")
 
@@ -2150,7 +2148,7 @@ class Emit(models.AbstractModel):
 
     nfe40_CRT = fields.Selection(
         EMIT_CRT,
-        string="Código de Regime Tributário.",
+        string="Código de Regime Tributário",
         xsd_required=True,
         help=(
             "Código de Regime Tributário.\nEste campo será obrigatoriamente "
@@ -2425,7 +2423,7 @@ class Prod(models.AbstractModel):
     )
 
     nfe40_vProd = fields.Monetary(
-        string="Valor bruto do produto ou serviço.",
+        string="Valor bruto do produto ou serviço",
         xsd_required=True,
         xsd_type="TDec_1302",
         currency_field="brl_currency_id",
@@ -2765,10 +2763,10 @@ class Rastro(models.AbstractModel):
     nfe40_rastro_prod_id = fields.Many2one(
         comodel_name="nfe.40.prod", xsd_implicit=True, ondelete="cascade"
     )
-    nfe40_nLote = fields.Char(string="Número do lote do produto.", xsd_required=True)
+    nfe40_nLote = fields.Char(string="Número do lote do produto", xsd_required=True)
 
     nfe40_qLote = fields.Float(
-        string="Quantidade de produto no lote.",
+        string="Quantidade de produto no lote",
         xsd_required=True,
         xsd_type="TDec_0803v",
         digits=(
@@ -2996,7 +2994,7 @@ class Med(models.AbstractModel):
     )
 
     nfe40_xMotivoIsencao = fields.Char(
-        string="Obs",
+        string="Obs.: Para medicamento isento de registro na ANVISA",
         help=(
             "Obs.: Para medicamento isento de registro na ANVISA, informar o "
             "número da decisão que o isenta, como por exemplo o número da "
@@ -3005,7 +3003,7 @@ class Med(models.AbstractModel):
     )
 
     nfe40_vPMC = fields.Monetary(
-        string="Preço Máximo ao Consumidor.",
+        string="Preço Máximo ao Consumidor",
         xsd_required=True,
         xsd_type="TDec_1302",
         currency_field="brl_currency_id",
@@ -3898,14 +3896,12 @@ class Icmsufdest(models.AbstractModel):
         xsd_required=True,
         xsd_type="TDec_1302",
         currency_field="brl_currency_id",
-        help="Valor da Base de Cálculo do ICMS na UF do destinatário.",
     )
 
     nfe40_vBCFCPUFDest = fields.Monetary(
         string="Valor da Base de Cálculo do FCP na UF do destinatário",
         xsd_type="TDec_1302",
         currency_field="brl_currency_id",
-        help="Valor da Base de Cálculo do FCP na UF do destinatário.",
     )
 
     nfe40_pFCPUFDest = fields.Float(
@@ -3976,7 +3972,6 @@ class Icmsufdest(models.AbstractModel):
         xsd_required=True,
         xsd_type="TDec_1302",
         currency_field="brl_currency_id",
-        help="Valor do ICMS de partilha para a UF do destinatário.",
     )
 
     nfe40_vICMSUFRemet = fields.Monetary(
@@ -4275,7 +4270,7 @@ class Icms10(models.AbstractModel):
     )
 
     nfe40_vBCFCP = fields.Monetary(
-        string="Valor da Base de cálculo do FCP.",
+        string="Valor da Base de cálculo do FCP",
         xsd_type="TDec_1302",
         currency_field="brl_currency_id",
     )
@@ -4365,18 +4360,16 @@ class Icms10(models.AbstractModel):
             3,
             2,
         ),
-        help="Percentual de FCP retido por substituição tributária.",
     )
 
     nfe40_vFCPST = fields.Monetary(
         string="Valor do FCP retido por substituição tributária",
         xsd_type="TDec_1302",
         currency_field="brl_currency_id",
-        help="Valor do FCP retido por substituição tributária.",
     )
 
     nfe40_vICMSSTDeson = fields.Monetary(
-        string="Valor do ICMS-ST desonerado.",
+        string="Valor do ICMS-ST desonerado",
         xsd_type="TDec_1302",
         currency_field="brl_currency_id",
     )
@@ -4461,7 +4454,7 @@ class Icms20(models.AbstractModel):
     )
 
     nfe40_vBCFCP = fields.Monetary(
-        string="Valor da Base de cálculo do FCP.",
+        string="Valor da Base de cálculo do FCP",
         xsd_type="TDec_1302",
         currency_field="brl_currency_id",
     )
@@ -4581,7 +4574,7 @@ class Icms30(models.AbstractModel):
     )
 
     nfe40_vBCFCPST = fields.Monetary(
-        string="Valor da Base de cálculo do FCP.",
+        string="Valor da Base de cálculo do FCP",
         xsd_type="TDec_1302",
         currency_field="brl_currency_id",
     )
@@ -4593,14 +4586,12 @@ class Icms30(models.AbstractModel):
             3,
             2,
         ),
-        help="Percentual de FCP retido por substituição tributária.",
     )
 
     nfe40_vFCPST = fields.Monetary(
         string="Valor do FCP retido por substituição tributária",
         xsd_type="TDec_1302",
         currency_field="brl_currency_id",
-        help="Valor do FCP retido por substituição tributária.",
     )
 
     nfe40_vICMSDeson = fields.Monetary(
@@ -4756,7 +4747,7 @@ class Icms51(models.AbstractModel):
     )
 
     nfe40_vBCFCP = fields.Monetary(
-        string="Valor da Base de cálculo do FCP.",
+        string="Valor da Base de cálculo do FCP",
         xsd_type="TDec_1302",
         currency_field="brl_currency_id",
     )
@@ -4848,7 +4839,6 @@ class Icms60(models.AbstractModel):
             3,
             2,
         ),
-        help="Aliquota suportada pelo consumidor final.",
     )
 
     nfe40_vICMSSubstituto = fields.Monetary(
@@ -4885,7 +4875,6 @@ class Icms60(models.AbstractModel):
         string="Valor do FCP retido por substituição tributária",
         xsd_type="TDec_1302",
         currency_field="brl_currency_id",
-        help="Valor do FCP retido por substituição tributária.",
     )
 
     nfe40_pRedBCEfet = fields.Float(
@@ -4895,17 +4884,16 @@ class Icms60(models.AbstractModel):
             3,
             2,
         ),
-        help="Percentual de redução da base de cálculo efetiva.",
     )
 
     nfe40_vBCEfet = fields.Monetary(
-        string="Valor da base de cálculo efetiva.",
+        string="Valor da base de cálculo efetiva",
         xsd_type="TDec_1302",
         currency_field="brl_currency_id",
     )
 
     nfe40_pICMSEfet = fields.Float(
-        string="Alíquota do ICMS efetiva.",
+        string="Alíquota do ICMS efetiva",
         xsd_type="TDec_0302a04Opc",
         digits=(
             3,
@@ -4914,7 +4902,7 @@ class Icms60(models.AbstractModel):
     )
 
     nfe40_vICMSEfet = fields.Monetary(
-        string="Valor do ICMS efetivo.",
+        string="Valor do ICMS efetivo",
         xsd_type="TDec_1302",
         currency_field="brl_currency_id",
     )
@@ -4993,7 +4981,7 @@ class Icms70(models.AbstractModel):
     )
 
     nfe40_vBCFCP = fields.Monetary(
-        string="Valor da Base de cálculo do FCP.",
+        string="Valor da Base de cálculo do FCP",
         xsd_type="TDec_1302",
         currency_field="brl_currency_id",
     )
@@ -5083,14 +5071,12 @@ class Icms70(models.AbstractModel):
             3,
             2,
         ),
-        help="Percentual de FCP retido por substituição tributária.",
     )
 
     nfe40_vFCPST = fields.Monetary(
         string="Valor do FCP retido por substituição tributária",
         xsd_type="TDec_1302",
         currency_field="brl_currency_id",
-        help="Valor do FCP retido por substituição tributária.",
     )
 
     nfe40_vICMSDeson = fields.Monetary(
@@ -5109,7 +5095,7 @@ class Icms70(models.AbstractModel):
     )
 
     nfe40_vICMSSTDeson = fields.Monetary(
-        string="Valor do ICMS-ST desonerado.",
+        string="Valor do ICMS-ST desonerado",
         xsd_type="TDec_1302",
         currency_field="brl_currency_id",
     )
@@ -5187,7 +5173,7 @@ class Icms90(models.AbstractModel):
     )
 
     nfe40_vBCFCP = fields.Monetary(
-        string="Valor da Base de cálculo do FCP.",
+        string="Valor da Base de cálculo do FCP",
         xsd_type="TDec_1302",
         currency_field="brl_currency_id",
     )
@@ -5260,10 +5246,9 @@ class Icms90(models.AbstractModel):
     )
 
     nfe40_vBCFCPST = fields.Monetary(
-        string="Valor da Base de cálculo do FCP. (vBCFCPST)",
+        string="Valor da Base de cálculo do FCP (vBCFCPST)",
         xsd_type="TDec_1302",
         currency_field="brl_currency_id",
-        help="Valor da Base de cálculo do FCP.",
     )
 
     nfe40_pFCPST = fields.Float(
@@ -5273,14 +5258,12 @@ class Icms90(models.AbstractModel):
             3,
             2,
         ),
-        help="Percentual de FCP retido por substituição tributária.",
     )
 
     nfe40_vFCPST = fields.Monetary(
         string="Valor do FCP retido por substituição tributária",
         xsd_type="TDec_1302",
         currency_field="brl_currency_id",
-        help="Valor do FCP retido por substituição tributária.",
     )
 
     nfe40_vICMSDeson = fields.Monetary(
@@ -5299,7 +5282,7 @@ class Icms90(models.AbstractModel):
     )
 
     nfe40_vICMSSTDeson = fields.Monetary(
-        string="Valor do ICMS-ST desonerado.",
+        string="Valor do ICMS-ST desonerado",
         xsd_type="TDec_1302",
         currency_field="brl_currency_id",
     )
@@ -5458,7 +5441,6 @@ class Icmspart(models.AbstractModel):
         string="Sigla da UF para qual é devido o ICMS ST da operação",
         xsd_required=True,
         xsd_type="TUf",
-        help="Sigla da UF para qual é devido o ICMS ST da operação.",
     )
 
 
@@ -5503,7 +5485,6 @@ class Icmsst(models.AbstractModel):
             3,
             2,
         ),
-        help="Aliquota suportada pelo consumidor final.",
     )
 
     nfe40_vICMSSubstituto = fields.Monetary(
@@ -5575,17 +5556,16 @@ class Icmsst(models.AbstractModel):
             3,
             2,
         ),
-        help="Percentual de redução da base de cálculo efetiva.",
     )
 
     nfe40_vBCEfet = fields.Monetary(
-        string="Valor da base de cálculo efetiva.",
+        string="Valor da base de cálculo efetiva",
         xsd_type="TDec_1302",
         currency_field="brl_currency_id",
     )
 
     nfe40_pICMSEfet = fields.Float(
-        string="Alíquota do ICMS efetivo.",
+        string="Alíquota do ICMS efetivo",
         xsd_type="TDec_0302a04Opc",
         digits=(
             3,
@@ -5594,7 +5574,7 @@ class Icmsst(models.AbstractModel):
     )
 
     nfe40_vICMSEfet = fields.Monetary(
-        string="Valor do ICMS efetivo.",
+        string="Valor do ICMS efetivo",
         xsd_type="TDec_1302",
         currency_field="brl_currency_id",
     )
@@ -5764,7 +5744,7 @@ class Icmssn201(models.AbstractModel):
     )
 
     nfe40_vBCFCPST = fields.Monetary(
-        string="Valor da Base de cálculo do FCP.",
+        string="Valor da Base de cálculo do FCP",
         xsd_type="TDec_1302",
         currency_field="brl_currency_id",
     )
@@ -5776,14 +5756,12 @@ class Icmssn201(models.AbstractModel):
             3,
             2,
         ),
-        help="Percentual de FCP retido por substituição tributária.",
     )
 
     nfe40_vFCPST = fields.Monetary(
         string="Valor do FCP retido por substituição tributária",
         xsd_type="TDec_1302",
         currency_field="brl_currency_id",
-        help="Valor do FCP retido por substituição tributária.",
     )
 
     nfe40_pCredSN = fields.Float(
@@ -5896,7 +5874,7 @@ class Icmssn202(models.AbstractModel):
     )
 
     nfe40_vBCFCPST = fields.Monetary(
-        string="Valor da Base de cálculo do FCP.",
+        string="Valor da Base de cálculo do FCP",
         xsd_type="TDec_1302",
         currency_field="brl_currency_id",
     )
@@ -5908,14 +5886,12 @@ class Icmssn202(models.AbstractModel):
             3,
             2,
         ),
-        help="Percentual de FCP retido por substituição tributária.",
     )
 
     nfe40_vFCPST = fields.Monetary(
         string="Valor do FCP retido por substituição tributária",
         xsd_type="TDec_1302",
         currency_field="brl_currency_id",
-        help="Valor do FCP retido por substituição tributária.",
     )
 
 
@@ -5960,7 +5936,6 @@ class Icmssn500(models.AbstractModel):
             3,
             2,
         ),
-        help="Aliquota suportada pelo consumidor final.",
     )
 
     nfe40_vICMSSubstituto = fields.Monetary(
@@ -5980,7 +5955,6 @@ class Icmssn500(models.AbstractModel):
         string="Valor da Base de cálculo do FCP retido anteriormente",
         xsd_type="TDec_1302",
         currency_field="brl_currency_id",
-        help="Valor da Base de cálculo do FCP retido anteriormente.",
     )
 
     nfe40_pFCPSTRet = fields.Float(
@@ -5997,7 +5971,6 @@ class Icmssn500(models.AbstractModel):
         string="Valor do FCP retido por substituição tributária",
         xsd_type="TDec_1302",
         currency_field="brl_currency_id",
-        help="Valor do FCP retido por substituição tributária.",
     )
 
     nfe40_pRedBCEfet = fields.Float(
@@ -6007,17 +5980,16 @@ class Icmssn500(models.AbstractModel):
             3,
             2,
         ),
-        help="Percentual de redução da base de cálculo efetiva.",
     )
 
     nfe40_vBCEfet = fields.Monetary(
-        string="Valor da base de cálculo efetiva.",
+        string="Valor da base de cálculo efetiva",
         xsd_type="TDec_1302",
         currency_field="brl_currency_id",
     )
 
     nfe40_pICMSEfet = fields.Float(
-        string="Alíquota do ICMS efetiva.",
+        string="Alíquota do ICMS efetiva",
         xsd_type="TDec_0302a04Opc",
         digits=(
             3,
@@ -6026,7 +5998,7 @@ class Icmssn500(models.AbstractModel):
     )
 
     nfe40_vICMSEfet = fields.Monetary(
-        string="Valor do ICMS efetivo.",
+        string="Valor do ICMS efetivo",
         xsd_type="TDec_1302",
         currency_field="brl_currency_id",
     )
@@ -6145,7 +6117,7 @@ class Icmssn900(models.AbstractModel):
     )
 
     nfe40_vBCFCPST = fields.Monetary(
-        string="Valor da Base de cálculo do FCP.",
+        string="Valor da Base de cálculo do FCP",
         xsd_type="TDec_1302",
         currency_field="brl_currency_id",
     )
@@ -6157,14 +6129,12 @@ class Icmssn900(models.AbstractModel):
             3,
             2,
         ),
-        help="Percentual de FCP retido por substituição tributária.",
     )
 
     nfe40_vFCPST = fields.Monetary(
         string="Valor do FCP retido por substituição tributária",
         xsd_type="TDec_1302",
         currency_field="brl_currency_id",
-        help="Valor do FCP retido por substituição tributária.",
     )
 
     nfe40_pCredSN = fields.Float(
@@ -6960,11 +6930,10 @@ class Pag(models.AbstractModel):
         "nfe.40.detpag",
         "nfe40_detPag_pag_id",
         string="Grupo de detalhamento da forma de pagamento",
-        help="Grupo de detalhamento da forma de pagamento.",
     )
 
     nfe40_vTroco = fields.Monetary(
-        string="Valor do Troco.", xsd_type="TDec_1302", currency_field="brl_currency_id"
+        string="Valor do Troco", xsd_type="TDec_1302", currency_field="brl_currency_id"
     )
 
 
@@ -6986,9 +6955,7 @@ class DetPag(models.AbstractModel):
         ),
     )
 
-    nfe40_tPag = fields.Char(
-        string="Forma de Pagamento", xsd_required=True, help="Forma de Pagamento:"
-    )
+    nfe40_tPag = fields.Char(string="Forma de Pagamento", xsd_required=True)
 
     nfe40_xPag = fields.Char(string="Descrição do Meio de Pagamento")
 
@@ -7375,14 +7342,12 @@ class TretConsReciNfe(models.AbstractModel):
         string="Código do status da mensagem enviada",
         xsd_required=True,
         xsd_type="TStat",
-        help="Código do status da mensagem enviada.",
     )
 
     nfe40_xMotivo = fields.Char(
         string="Descrição literal do status do serviço solicitado",
         xsd_required=True,
         xsd_type="TMotivo",
-        help="Descrição literal do status do serviço solicitado.",
     )
 
     nfe40_cUF = fields.Selection(
@@ -7446,21 +7411,18 @@ class TretEnviNfe(models.AbstractModel):
         string="Versão do Aplicativo que recebeu o Lote",
         xsd_required=True,
         xsd_type="TVerAplic",
-        help="Versão do Aplicativo que recebeu o Lote.",
     )
 
     nfe40_cStat = fields.Char(
         string="Código do status da mensagem enviada",
         xsd_required=True,
         xsd_type="TStat",
-        help="Código do status da mensagem enviada.",
     )
 
     nfe40_xMotivo = fields.Char(
         string="Descrição literal do status do serviço solicitado",
         xsd_required=True,
         xsd_type="TMotivo",
-        help="Descrição literal do status do serviço solicitado.",
     )
 
     nfe40_cUF = fields.Selection(
