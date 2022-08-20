@@ -1,34 +1,63 @@
-# taken from https://github.com/akretion/generateds-odoo
 import textwrap
 from typing import Tuple
 
-STRING_MIN_LEN = 36
-STRING_MAX_LEN = 64
-PONCT_TOKENS = (". ", ", ", " (", "-", ",", ",")
+# where to stop when trying to extract the beginning of a text
+STRONG_PONCT_TOKENS = (". ", ", ", " (", " - ", ".", ",", ": ", "|")
+
+# adpositions separator
+# works for Brazilian fiscal documents, you may need to adapt for your language
+PONCT_TOKENS = (" e ",  " da ", " do ", " de ", " na ", " no ", " nas ", " nos ", " ou ", " que ", " em ", " para ")
+
+STRING_MIN_LEN = 36  # agressive cuts
+STRING_MAX_LEN = 40  # progressive cuts
+
+USELESS_STARTS = ("Informar o ", "Informar a ", "Preencher com ")
 
 
 def extract_string_and_help(
-    obj_name: str, field_name: str, doc: str, unique_labels: set
+        obj_name: str, field_name: str, doc: str, unique_labels: set, max_len: int = STRING_MAX_LEN
 ) -> Tuple[str, str]:
     """
     Eventually field_name is technical and a better string/label can be
     extracted from the beginning of the help text.
     """
 
+    def remove_after(string, token):
+        return token.join(string.split(token)[:-1])
+
     string = field_name
     if doc:
-        doc = doc.strip().replace('"', "")
+        doc = doc.strip().replace('"', "'")
+        for start in USELESS_STARTS:
+            if doc.lower().startswith(start.lower()):
+                doc = doc[len(start):]
+
         string = " ".join(doc.splitlines()[0].split())  # avoids double spaces
 
-        for token in PONCT_TOKENS:
-            if len(string) > STRING_MIN_LEN and len(string.split(token)[0]) < STRING_MAX_LEN:
-                string = string.split(token)[0].strip()
+        for token in STRONG_PONCT_TOKENS:  # cut aggressively
+            while token in string:
+                if len(string) > STRING_MIN_LEN:
+                    string = remove_after(string, token)
+                else:
+                    break
 
-        string = string.replace('"', "'")
-        if string.endswith(":") or string.endswith("."):
-            string = string[:-1]
+        while len(string) > max_len:
+            max_index = 0
+            max_token = None
+            for token in PONCT_TOKENS:  # cut progressively
+                if token in string and string.rindex(token) > max_index:
+                    max_index = string.rindex(token)
+                    max_token = token
+            if max_token:
+                string = remove_after(string, max_token)
+            else:
+                break
 
-        if len(string) > 58:
+        for token in PONCT_TOKENS + STRONG_PONCT_TOKENS:
+             if string.endswith(token.rstrip()):
+                 string = string[:string.rindex(token.rstrip())]
+
+        if len(string) > max_len:
             string = field_name.split("_")[-1]
 
         if string == doc or doc[:-1] == string:  # doc might end with '.'
@@ -36,7 +65,7 @@ def extract_string_and_help(
 
     if string in unique_labels:
         string = f"{string} ({field_name})"
-        if len(string) > 58:
+        if len(string) > max_len:
             string = field_name.split("_")[-1]
     unique_labels.add(string)
 

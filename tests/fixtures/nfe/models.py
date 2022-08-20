@@ -1103,36 +1103,34 @@ class TinfRespTec(models.AbstractModel):
     nfe40_CNPJ = fields.Char(string="CNPJ", xsd_required=True, xsd_type="TCnpjOpc")
 
     nfe40_xContato = fields.Char(
-        string="xContato",
+        string="nome da pessoa a ser contatada",
         xsd_required=True,
         help=(
-            "Informar o nome da pessoa a ser contatada na empresa "
-            "desenvolvedora do sistema utilizado na emissão do documento "
-            "fiscal eletrônico."
+            "nome da pessoa a ser contatada na empresa desenvolvedora do "
+            "sistema utilizado na emissão do documento fiscal eletrônico."
         ),
     )
 
     nfe40_email = fields.Char(
-        string="Informar o e",
+        string="e-mail da pessoa a ser contatada",
         xsd_required=True,
         help=(
-            "Informar o e-mail da pessoa a ser contatada na empresa "
-            "desenvolvedora do sistema."
+            "e-mail da pessoa a ser contatada na empresa desenvolvedora do " "sistema."
         ),
     )
 
     nfe40_fone = fields.Char(
-        string="fone",
+        string="telefone da pessoa a ser contatada",
         xsd_required=True,
         help=(
-            "Informar o telefone da pessoa a ser contatada na empresa "
-            "desenvolvedora do sistema. Preencher com o Código DDD + número do"
-            " telefone."
+            "telefone da pessoa a ser contatada na empresa desenvolvedora do "
+            "sistema. Preencher com o Código DDD + número do telefone."
         ),
     )
 
     nfe40_idCSRT = fields.Char(
-        string="Identificador do CSRT utilizado para montar o hash do CSRT"
+        string="Identificador do CSRT utilizado",
+        help="Identificador do CSRT utilizado para montar o hash do CSRT",
     )
 
     nfe40_hashCSRT = fields.Char(
@@ -1202,8 +1200,8 @@ class TenderEmi(models.AbstractModel):
     nfe40_xPais = fields.Selection(TENDEREMI_XPAIS, string="Nome do país")
 
     nfe40_fone = fields.Char(
-        string="Preencher com Código DDD + número do telefone",
-        help="Preencher com Código DDD + número do telefone (v.2.0)",
+        string="Código DDD + número do telefone",
+        help="Código DDD + número do telefone (v.2.0)",
     )
 
 
@@ -1326,12 +1324,13 @@ class Ipitrib(models.AbstractModel):
     )
 
     nfe40_qUnid = fields.Float(
-        string="Quantidade total na unidade padrão para tributação",
+        string="Quantidade total na unidade padrão",
         xsd_type="TDec_1204v",
         digits=(
             12,
             4,
         ),
+        help="Quantidade total na unidade padrão para tributação",
     )
 
     nfe40_vUnid = fields.Float(
@@ -1388,7 +1387,10 @@ class Tlocal(models.AbstractModel):
 
     nfe40_CPF = fields.Char(string="CPF (v2.0)", xsd_type="TCpf")
 
-    nfe40_xNome = fields.Char(string="Razão Social ou Nome do Expedidor/Recebedor")
+    nfe40_xNome = fields.Char(
+        string="Razão Social ou Nome",
+        help="Razão Social ou Nome do Expedidor/Recebedor",
+    )
 
     nfe40_xLgr = fields.Char(string="Logradouro", xsd_required=True)
 
@@ -1427,11 +1429,10 @@ class Tlocal(models.AbstractModel):
     )
 
     nfe40_email = fields.Char(
-        string="Informar o e",
+        string="e-mail do expedidor/Recebedor",
         help=(
-            "Informar o e-mail do expedidor/Recebedor. O campo pode ser "
-            "utilizado para informar o e-mail de recepção da NF-e indicada "
-            "pelo expedidor"
+            "e-mail do expedidor/Recebedor. O campo pode ser utilizado para "
+            "informar o e-mail de recepção da NF-e indicada pelo expedidor"
         ),
     )
 
@@ -1472,7 +1473,7 @@ class InfProt(models.AbstractModel):
     )
 
     nfe40_verAplic = fields.Char(
-        string="Versão do Aplicativo que processou a NF",
+        string="Versão do Aplicativo",
         xsd_required=True,
         xsd_type="TVerAplic",
         help="Versão do Aplicativo que processou a NF-e",
@@ -1502,7 +1503,7 @@ class InfProt(models.AbstractModel):
     )
 
     nfe40_nProt = fields.Char(
-        string="Número do Protocolo de Status da NF",
+        string="Número do Protocolo de Status da NF-e",
         xsd_type="TProt",
         help=(
             "Número do Protocolo de Status da NF-e. 1 posição (1 – Secretaria "
@@ -1527,9 +1528,10 @@ class InfProt(models.AbstractModel):
     )
 
     nfe40_xMotivo = fields.Char(
-        string="Descrição literal do status do serviço solicitado",
+        string="Descrição literal do status",
         xsd_required=True,
         xsd_type="TMotivo",
+        help="Descrição literal do status do serviço solicitado.",
     )
 
     nfe40_cMsg = fields.Char(string="Código da Mensagem")
@@ -1554,7 +1556,7 @@ class Tveiculo(models.AbstractModel):
     nfe40_UF = fields.Selection(TUF, string="Sigla da UF", xsd_type="TUf")
 
     nfe40_RNTC = fields.Char(
-        string="Registro Nacional de Transportador de Carga",
+        string="Registro Nacional de Transportador",
         help="Registro Nacional de Transportador de Carga (ANTT)",
     )
 
@@ -1629,7 +1631,7 @@ class InfNfe(models.AbstractModel):
     nfe40_autXML = fields.One2many(
         "nfe.40.autxml",
         "nfe40_autXML_infNFe_id",
-        string="Pessoas autorizadas para o download do XML da NF",
+        string="Pessoas autorizadas para o download",
         help="Pessoas autorizadas para o download do XML da NF-e",
     )
 
@@ -1662,7 +1664,8 @@ class InfNfe(models.AbstractModel):
 
     nfe40_infIntermed = fields.Many2one(
         comodel_name="nfe.40.infintermed",
-        string="Grupo de Informações do Intermediador da Transação",
+        string="Grupo de Informações do Intermediador",
+        help="Grupo de Informações do Intermediador da Transação",
     )
 
     nfe40_infAdic = fields.Many2one(
@@ -1680,19 +1683,22 @@ class InfNfe(models.AbstractModel):
     )
 
     nfe40_cana = fields.Many2one(
-        comodel_name="nfe.40.cana", string="Informações de registro aquisições de cana"
+        comodel_name="nfe.40.cana",
+        string="Informações de registro aquisições",
+        help="Informações de registro aquisições de cana",
     )
 
     nfe40_infRespTec = fields.Many2one(
         comodel_name="nfe.40.tinfresptec",
-        string="Informações do Responsável Técnico pela emissão do DF",
+        string="Informações",
         xsd_type="TInfRespTec",
         help="Informações do Responsável Técnico pela emissão do DF-e",
     )
 
     nfe40_infSolicNFF = fields.Many2one(
         comodel_name="nfe.40.infsolicnff",
-        string="Grupo para informações da solicitação da NFF",
+        string="Grupo para informações da solicitação",
+        help="Grupo para informações da solicitação da NFF",
     )
 
     nfe40_versao = fields.Char(
@@ -1712,7 +1718,7 @@ class Ide(models.AbstractModel):
 
     nfe40_cUF = fields.Selection(
         TCODUFIBGE,
-        string="Código da UF do emitente do Documento Fiscal",
+        string="Código da UF do emitente",
         xsd_required=True,
         xsd_type="TCodUfIBGE",
         help=(
@@ -1722,7 +1728,7 @@ class Ide(models.AbstractModel):
     )
 
     nfe40_cNF = fields.Char(
-        string="Código numérico que compõe a Chave de Acesso",
+        string="Código numérico que compõe a Chave",
         xsd_required=True,
         help=(
             "Código numérico que compõe a Chave de Acesso. Número aleatório "
@@ -1757,7 +1763,7 @@ class Ide(models.AbstractModel):
     )
 
     nfe40_dhEmi = fields.Char(
-        string="Data e Hora de emissão do Documento Fiscal",
+        string="Data e Hora de emissão",
         xsd_required=True,
         xsd_type="TDateTimeUTC",
         help=(
@@ -1767,7 +1773,7 @@ class Ide(models.AbstractModel):
     )
 
     nfe40_dhSaiEnt = fields.Char(
-        string="Data e Hora da saída ou de entrada da mercadoria / produto",
+        string="Data e Hora da saída ou de entrada",
         xsd_type="TDateTimeUTC",
         help=(
             "Data e Hora da saída ou de entrada da mercadoria / produto (AAAA-"
@@ -1784,7 +1790,7 @@ class Ide(models.AbstractModel):
 
     nfe40_idDest = fields.Selection(
         IDE_IDDEST,
-        string="Identificador de Local de destino da operação",
+        string="Identificador de Local de destino",
         xsd_required=True,
         help=(
             "Identificador de Local de destino da operação "
@@ -1793,7 +1799,7 @@ class Ide(models.AbstractModel):
     )
 
     nfe40_cMunFG = fields.Char(
-        string="Código do Município de Ocorrência do Fato Gerador",
+        string="Código do Município de Ocorrência",
         xsd_required=True,
         xsd_type="TCodMunIBGE",
         help=(
@@ -1827,7 +1833,7 @@ class Ide(models.AbstractModel):
     )
 
     nfe40_cDV = fields.Char(
-        string="Digito Verificador da Chave de Acesso da NF",
+        string="Digito Verificador da Chave de Acesso",
         xsd_required=True,
         help="Digito Verificador da Chave de Acesso da NF-e",
     )
@@ -1860,7 +1866,7 @@ class Ide(models.AbstractModel):
 
     nfe40_indPres = fields.Selection(
         IDE_INDPRES,
-        string="indPres",
+        string="Indicador de presença do comprador",
         xsd_required=True,
         help=(
             "Indicador de presença do comprador no estabelecimento comercial "
@@ -1886,7 +1892,7 @@ class Ide(models.AbstractModel):
 
     nfe40_procEmi = fields.Selection(
         TPROCEMI,
-        string="Processo de emissão utilizado com a seguinte codificação",
+        string="Processo",
         xsd_required=True,
         xsd_type="TProcEmi",
         help=(
@@ -1900,22 +1906,21 @@ class Ide(models.AbstractModel):
     )
 
     nfe40_verProc = fields.Char(
-        string="versão do aplicativo utilizado no processo de",
+        string="versão do aplicativo utilizado",
         xsd_required=True,
         help="versão do aplicativo utilizado no processo de\nemissão",
     )
 
     nfe40_dhCont = fields.Char(
-        string="dhCont",
+        string="data e hora de entrada",
         xsd_type="TDateTimeUTC",
         help=(
-            "Informar a data e hora de entrada em contingência contingência no"
-            " formato  (AAAA-MM-DDThh:mm:ssTZD) ex.: "
-            "2012-09-01T13:00:00-03:00."
+            "data e hora de entrada em contingência contingência no formato  "
+            "(AAAA-MM-DDThh:mm:ssTZD) ex.: 2012-09-01T13:00:00-03:00."
         ),
     )
 
-    nfe40_xJust = fields.Char(string="Informar a Justificativa da entrada")
+    nfe40_xJust = fields.Char(string="Justificativa da entrada")
 
     nfe40_NFref = fields.One2many(
         "nfe.40.nfref",
@@ -1934,7 +1939,7 @@ class Nfref(models.AbstractModel):
         comodel_name="nfe.40.ide", xsd_implicit=True, ondelete="cascade"
     )
     nfe40_refNFe = fields.Char(
-        string="Chave de acesso das NF",
+        string="Chave de acesso das NF-e referenciadas",
         xsd_type="TChNFe",
         help=(
             "Chave de acesso das NF-e referenciadas. Chave de acesso compostas"
@@ -1946,17 +1951,18 @@ class Nfref(models.AbstractModel):
 
     nfe40_refNF = fields.Many2one(
         comodel_name="nfe.40.refnf",
-        string="refNF",
+        string="Dados da NF modelo 1/1A referenciada",
         help=("Dados da NF modelo 1/1A referenciada ou NF modelo 2 referenciada"),
     )
 
     nfe40_refNFP = fields.Many2one(
         comodel_name="nfe.40.refnfp",
-        string="Grupo com as informações NF de produtor referenciada",
+        string="Grupo com as informações NF",
+        help="Grupo com as informações NF de produtor referenciada",
     )
 
     nfe40_refCTe = fields.Char(
-        string="Utilizar esta TAG para referenciar um CT",
+        string="Utilizar esta TAG",
         xsd_type="TChNFe",
         help=(
             "Utilizar esta TAG para referenciar um CT-e emitido anteriormente,"
@@ -1965,9 +1971,7 @@ class Nfref(models.AbstractModel):
     )
 
     nfe40_refECF = fields.Many2one(
-        comodel_name="nfe.40.refecf",
-        string="Grupo do Cupom Fiscal vinculado à NF",
-        help="Grupo do Cupom Fiscal vinculado à NF-e",
+        comodel_name="nfe.40.refecf", string="Grupo do Cupom Fiscal vinculado à NF-e"
     )
 
 
@@ -1979,7 +1983,7 @@ class RefNf(models.AbstractModel):
 
     nfe40_cUF = fields.Selection(
         TCODUFIBGE,
-        string="Código da UF do emitente do Documento Fiscal",
+        string="Código da UF do emitente",
         xsd_required=True,
         xsd_type="TCodUfIBGE",
         help=(
@@ -1991,9 +1995,10 @@ class RefNf(models.AbstractModel):
     nfe40_AAMM = fields.Char(string="AAMM da emissão", xsd_required=True)
 
     nfe40_CNPJ = fields.Char(
-        string="CNPJ do emitente do documento fiscal referenciado",
+        string="CNPJ do emitente",
         xsd_required=True,
         xsd_type="TCnpj",
+        help="CNPJ do emitente do documento fiscal referenciado",
     )
 
     nfe40_mod = fields.Selection(
@@ -2026,7 +2031,7 @@ class RefNfp(models.AbstractModel):
 
     nfe40_cUF = fields.Selection(
         TCODUFIBGE,
-        string="cUF",
+        string="Código da UF do emitente",
         xsd_required=True,
         xsd_type="TCodUfIBGE",
         help=(
@@ -2085,29 +2090,26 @@ class RefEcf(models.AbstractModel):
         string="Código do modelo do Documento Fiscal",
         xsd_required=True,
         help=(
-            "Código do modelo do Documento Fiscal\nPreencher com 2B, quando se"
-            " tratar de Cupom Fiscal emitido por máquina registradora (não "
-            "ECF), com 2C, quando se tratar de Cupom Fiscal PDV, ou 2D, quando"
-            " se tratar de Cupom Fiscal (emitido por ECF)"
+            "Código do modelo do Documento Fiscal\nPreencher com '2B', quando "
+            "se tratar de Cupom Fiscal emitido por máquina registradora (não "
+            "ECF), com '2C', quando se tratar de Cupom Fiscal PDV, ou '2D', "
+            "quando se tratar de Cupom Fiscal (emitido por ECF)"
         ),
     )
 
     nfe40_nECF = fields.Char(
-        string="nECF",
+        string="número de ordem seqüencial do ECF",
         xsd_required=True,
         help=(
-            "Informar o número de ordem seqüencial do ECF que emitiu o Cupom "
-            "Fiscal vinculado à NF-e"
+            "número de ordem seqüencial do ECF que emitiu o Cupom Fiscal "
+            "vinculado à NF-e"
         ),
     )
 
     nfe40_nCOO = fields.Char(
-        string="Informar o Número do Contador de Ordem de Operação",
+        string="Número do Contador de Ordem de Operação",
         xsd_required=True,
-        help=(
-            "Informar o Número do Contador de Ordem de Operação - COO "
-            "vinculado à NF-e"
-        ),
+        help=("Número do Contador de Ordem de Operação - COO vinculado à NF-e"),
     )
 
 
@@ -2139,7 +2141,9 @@ class Emit(models.AbstractModel):
     )
 
     nfe40_IEST = fields.Char(
-        string="Inscricao Estadual do Substituto Tributário", xsd_type="TIeST"
+        string="Inscricao Estadual",
+        xsd_type="TIeST",
+        help="Inscricao Estadual do Substituto Tributário",
     )
 
     nfe40_IM = fields.Char(string="Inscrição Municipal")
@@ -2183,7 +2187,10 @@ class Avulsa(models.AbstractModel):
         xsd_type="TUfEmi",
     )
 
-    nfe40_nDAR = fields.Char(string="Número do Documento de Arrecadação de Receita")
+    nfe40_nDAR = fields.Char(
+        string="Número do Documento de Arrecadação",
+        help="Número do Documento de Arrecadação de Receita",
+    )
 
     nfe40_dEmi = fields.Char(
         string="Data de emissão do DAR (AAAA-MM-DD)", xsd_type="TData"
@@ -2256,14 +2263,16 @@ class Dest(models.AbstractModel):
         ),
     )
 
-    nfe40_IM = fields.Char(string="Inscrição Municipal do tomador do serviço")
+    nfe40_IM = fields.Char(
+        string="Inscrição Municipal do tomador",
+        help="Inscrição Municipal do tomador do serviço",
+    )
 
     nfe40_email = fields.Char(
-        string="Informar o e-mail do destinatário",
+        string="e-mail do destinatário",
         help=(
-            "Informar o e-mail do destinatário. O campo pode ser utilizado "
-            "para informar o e-mail\nde recepção da NF-e indicada pelo "
-            "destinatário"
+            "e-mail do destinatário. O campo pode ser utilizado para informar "
+            "o e-mail\nde recepção da NF-e indicada pelo destinatário"
         ),
     )
 
@@ -2293,14 +2302,13 @@ class Det(models.AbstractModel):
     )
     nfe40_prod = fields.Many2one(
         comodel_name="nfe.40.prod",
-        string="Dados dos produtos e serviços da NF",
+        string="Dados dos produtos e serviços da NF-e",
         xsd_required=True,
-        help="Dados dos produtos e serviços da NF-e",
     )
 
     nfe40_imposto = fields.Many2one(
         comodel_name="nfe.40.imposto",
-        string="Tributos incidentes nos produtos ou serviços da NF",
+        string="Tributos incidentes nos produtos",
         xsd_required=True,
         help="Tributos incidentes nos produtos ou serviços da NF-e",
     )
@@ -2345,7 +2353,10 @@ class Prod(models.AbstractModel):
         ),
     )
 
-    nfe40_cBarra = fields.Char(string="Codigo de barras diferente do padrão GTIN")
+    nfe40_cBarra = fields.Char(
+        string="Codigo de barras diferente",
+        help="Codigo de barras diferente do padrão GTIN",
+    )
 
     nfe40_xProd = fields.Char(
         string="Descrição do produto ou serviço", xsd_required=True
@@ -2364,10 +2375,13 @@ class Prod(models.AbstractModel):
         ),
     )
 
-    nfe40_NVE = fields.Char(string="Nomenclatura de Valor aduaneio e Estatístico")
+    nfe40_NVE = fields.Char(
+        string="Nomenclatura de Valor aduaneio",
+        help="Nomenclatura de Valor aduaneio e Estatístico",
+    )
 
     nfe40_CEST = fields.Char(
-        string="Codigo especificador da Substuicao Tributaria",
+        string="Codigo especificador",
         help=(
             "Codigo especificador da Substuicao Tributaria - CEST, que "
             "identifica a mercadoria sujeita aos regimes de  substituicao "
@@ -2439,7 +2453,7 @@ class Prod(models.AbstractModel):
     )
 
     nfe40_cBarraTrib = fields.Char(
-        string="cBarraTrib",
+        string="Código de barras",
         help=("Código de barras da unidade tributável diferente do padrão GTIN"),
     )
 
@@ -2553,7 +2567,7 @@ class Prod(models.AbstractModel):
 
     nfe40_infProdEmb = fields.Many2one(
         comodel_name="nfe.40.infprodemb",
-        string="Informações mais detalhadas do produto (infProdEmb)",
+        string="infProdEmb",
         help="Informações mais detalhadas do produto (usada na NFF)",
     )
 
@@ -2563,7 +2577,7 @@ class Prod(models.AbstractModel):
 
     nfe40_med = fields.Many2one(
         comodel_name="nfe.40.med",
-        string="grupo do detalhamento de Medicamentos e de matérias",
+        string="grupo do detalhamento de Medicamentos",
         help=(
             "grupo do detalhamento de Medicamentos e de matérias-primas "
             "farmacêuticas"
@@ -2576,7 +2590,8 @@ class Prod(models.AbstractModel):
 
     nfe40_comb = fields.Many2one(
         comodel_name="nfe.40.comb",
-        string="Informar apenas para operações com combustíveis líquidos",
+        string="Informar apenas",
+        help="Informar apenas para operações com combustíveis líquidos",
     )
 
     nfe40_nRECOPI = fields.Char(string="Número do RECOPI")
@@ -2592,7 +2607,7 @@ class Di(models.AbstractModel):
         comodel_name="nfe.40.prod", xsd_implicit=True, ondelete="cascade"
     )
     nfe40_nDI = fields.Char(
-        string="Numero do Documento de Importação DI/DSI/DA/DRI",
+        string="Numero do Documento",
         xsd_required=True,
         help=(
             "Numero do Documento de Importação DI/DSI/DA/DRI-E "
@@ -2627,7 +2642,7 @@ class Di(models.AbstractModel):
 
     nfe40_tpViaTransp = fields.Selection(
         DI_TPVIATRANSP,
-        string="Via de transporte internacional informada na DI",
+        string="Via",
         xsd_required=True,
         help=(
             "Via de transporte internacional informada na DI\n\t\t\t\t\t\t\t\t"
@@ -2640,7 +2655,7 @@ class Di(models.AbstractModel):
     )
 
     nfe40_vAFRMM = fields.Monetary(
-        string="vAFRMM",
+        string="Valor Adicional ao frete para renovação",
         xsd_type="TDec_1302",
         currency_field="brl_currency_id",
         help="Valor Adicional ao frete para renovação de marinha mercante",
@@ -2648,7 +2663,7 @@ class Di(models.AbstractModel):
 
     nfe40_tpIntermedio = fields.Selection(
         DI_TPINTERMEDIO,
-        string="Forma de Importação quanto a intermediação",
+        string="Forma",
         xsd_required=True,
         help=(
             "Forma de Importação quanto a "
@@ -2662,7 +2677,10 @@ class Di(models.AbstractModel):
     )
 
     nfe40_UFTerceiro = fields.Selection(
-        TUFEMI, string="Sigla da UF do adquirente ou do encomendante", xsd_type="TUfEmi"
+        TUFEMI,
+        string="Sigla da UF do adquirente",
+        xsd_type="TUfEmi",
+        help="Sigla da UF do adquirente ou do encomendante",
     )
 
     nfe40_cExportador = fields.Char(
@@ -2691,7 +2709,9 @@ class Adi(models.AbstractModel):
     nfe40_nAdicao = fields.Char(string="Número da Adição")
 
     nfe40_nSeqAdic = fields.Char(
-        string="Número seqüencial do item dentro da Adição", xsd_required=True
+        string="Número seqüencial do item dentro",
+        xsd_required=True,
+        help="Número seqüencial do item dentro da Adição",
     )
 
     nfe40_cFabricante = fields.Char(
@@ -2737,20 +2757,21 @@ class ExportInd(models.AbstractModel):
     nfe40_nRE = fields.Char(string="Registro de exportação", xsd_required=True)
 
     nfe40_chNFe = fields.Char(
-        string="Chave de acesso da NF",
+        string="Chave de acesso da NF-e recebida",
         xsd_required=True,
         xsd_type="TChNFe",
         help="Chave de acesso da NF-e recebida para exportação",
     )
 
     nfe40_qExport = fields.Float(
-        string="Quantidade do item efetivamente exportado",
+        string="Quantidade",
         xsd_required=True,
         xsd_type="TDec_1104v",
         digits=(
             11,
             4,
         ),
+        help="Quantidade do item efetivamente exportado",
     )
 
 
@@ -2779,7 +2800,7 @@ class Rastro(models.AbstractModel):
         string="Data de fabricação/produção",
         xsd_required=True,
         xsd_type="TData",
-        help="Data de fabricação/produção. Formato AAAA-MM-DD.",
+        help="Data de fabricação/produção. Formato 'AAAA-MM-DD'.",
     )
 
     nfe40_dVal = fields.Char(
@@ -2788,7 +2809,7 @@ class Rastro(models.AbstractModel):
         xsd_type="TData",
         help=(
             "Data de validade. Informar o último dia do mês caso a validade "
-            "não especifique o dia. Formato AAAA-MM-DD."
+            "não especifique o dia. Formato 'AAAA-MM-DD'."
         ),
     )
 
@@ -2804,7 +2825,7 @@ class InfProdNff(models.AbstractModel):
     nfe40_cProdFisco = fields.Char(string="Código Fiscal do Produto", xsd_required=True)
 
     nfe40_cOperNFF = fields.Char(
-        string="cOperNFF",
+        string="Código da operação selecionada na NFF",
         xsd_required=True,
         help="Código da operação selecionada na NFF e relacionada ao item",
     )
@@ -2862,7 +2883,7 @@ class VeicProd(models.AbstractModel):
     nfe40_xCor = fields.Char(string="Descrição da cor", xsd_required=True)
 
     nfe40_pot = fields.Char(
-        string="Potência máxima do motor do veículo em cavalo vapor",
+        string="Potência máxima do motor do veículo",
         xsd_required=True,
         help=(
             "Potência máxima do motor do veículo em cavalo vapor (CV). "
@@ -2871,7 +2892,7 @@ class VeicProd(models.AbstractModel):
     )
 
     nfe40_cilin = fields.Char(
-        string="cilin",
+        string="Capacidade voluntária do motor expressa",
         xsd_required=True,
         help=(
             "Capacidade voluntária do motor expressa em centímetros cúbicos "
@@ -2886,7 +2907,7 @@ class VeicProd(models.AbstractModel):
     nfe40_nSerie = fields.Char(string="Serial (série)", xsd_required=True)
 
     nfe40_tpComb = fields.Char(
-        string="Tipo de combustível",
+        string="Tipo de combustível-Tabela RENAVAM",
         xsd_required=True,
         help=(
             "Tipo de combustível-Tabela RENAVAM: 01-Álcool; 02-Gasolina; "
@@ -2898,7 +2919,7 @@ class VeicProd(models.AbstractModel):
     nfe40_nMotor = fields.Char(string="Número do motor", xsd_required=True)
 
     nfe40_CMT = fields.Char(
-        string="CMT",
+        string="CMT-Capacidade Máxima de Tração",
         xsd_required=True,
         help=("CMT-Capacidade Máxima de Tração - em Toneladas 4 casas decimais"),
     )
@@ -2947,7 +2968,7 @@ class VeicProd(models.AbstractModel):
     )
 
     nfe40_cCorDENATRAN = fields.Char(
-        string="Código da Cor Segundo as regras de pré",
+        string="Código da Cor Segundo as regras",
         xsd_required=True,
         help=(
             "Código da Cor Segundo as regras de pré-cadastro do DENATRAN: 01-"
@@ -2958,7 +2979,7 @@ class VeicProd(models.AbstractModel):
     )
 
     nfe40_lota = fields.Char(
-        string="Quantidade máxima de permitida de passageiros sentados",
+        string="Quantidade máxima de permitida",
         xsd_required=True,
         help=(
             "Quantidade máxima de permitida de passageiros sentados, inclusive"
@@ -2985,7 +3006,7 @@ class Med(models.AbstractModel):
     _binding_type = "Tnfe.InfNfe.Det.Prod.Med"
 
     nfe40_cProdANVISA = fields.Char(
-        string="cProdANVISA",
+        string="Utilizar o número do registro ANVISA",
         xsd_required=True,
         help=(
             "Utilizar o número do registro ANVISA  ou preencher com o literal "
@@ -2994,7 +3015,7 @@ class Med(models.AbstractModel):
     )
 
     nfe40_xMotivoIsencao = fields.Char(
-        string="Obs.: Para medicamento isento de registro na ANVISA",
+        string="Obs",
         help=(
             "Obs.: Para medicamento isento de registro na ANVISA, informar o "
             "número da decisão que o isenta, como por exemplo o número da "
@@ -3069,7 +3090,7 @@ class Comb(models.AbstractModel):
     )
 
     nfe40_pGLP = fields.Float(
-        string="Percentual do GLP derivado do petróleo no produto GLP",
+        string="Percentual do GLP derivado do petróleo",
         xsd_type="TDec_0302a04Max100",
         digits=(
             3,
@@ -3098,7 +3119,7 @@ class Comb(models.AbstractModel):
     )
 
     nfe40_pGNi = fields.Float(
-        string="pGNi",
+        string="Percentual",
         xsd_type="TDec_0302a04Max100",
         digits=(
             3,
@@ -3123,7 +3144,7 @@ class Comb(models.AbstractModel):
     )
 
     nfe40_CODIF = fields.Char(
-        string="Código de autorização / registro do CODIF",
+        string="Código de autorização / registro",
         help=(
             "Código de autorização / registro do CODIF. Informar apenas quando"
             " a UF utilizar o CODIF (Sistema de Controle do \t\t\tDiferimento "
@@ -3154,7 +3175,7 @@ class Comb(models.AbstractModel):
     nfe40_CIDE = fields.Many2one(comodel_name="nfe.40.cide", string="CIDE Combustíveis")
 
     nfe40_encerrante = fields.Many2one(
-        comodel_name="nfe.40.encerrante", string="Informações do grupo de encerrante"
+        comodel_name="nfe.40.encerrante", string="Informações do grupo de 'encerrante'"
     )
 
 
@@ -3201,39 +3222,42 @@ class Encerrante(models.AbstractModel):
     _binding_type = "Tnfe.InfNfe.Det.Prod.Comb.Encerrante"
 
     nfe40_nBico = fields.Char(
-        string="Numero de identificação do Bico utilizado no abastecimento",
+        string="Numero de identificação",
         xsd_required=True,
+        help="Numero de identificação do Bico utilizado no abastecimento",
     )
 
     nfe40_nBomba = fields.Char(
-        string="nBomba",
+        string="Numero de identificação (nBomba)",
         help=("Numero de identificação da bomba ao qual o bico está interligado"),
     )
 
     nfe40_nTanque = fields.Char(
-        string="nTanque",
+        string="Numero de identificação (nTanque)",
         xsd_required=True,
         help=("Numero de identificação do tanque ao qual o bico está interligado"),
     )
 
     nfe40_vEncIni = fields.Float(
-        string="Valor do Encerrante no ínicio do abastecimento",
+        string="Valor do Encerrante no ínicio",
         xsd_required=True,
         xsd_type="TDec_1203",
         digits=(
             12,
             3,
         ),
+        help="Valor do Encerrante no ínicio do abastecimento",
     )
 
     nfe40_vEncFin = fields.Float(
-        string="Valor do Encerrante no final do abastecimento",
+        string="Valor do Encerrante no final",
         xsd_required=True,
         xsd_type="TDec_1203",
         digits=(
             12,
             3,
         ),
+        help="Valor do Encerrante no final do abastecimento",
     )
 
 
@@ -3244,7 +3268,7 @@ class Imposto(models.AbstractModel):
     _binding_type = "Tnfe.InfNfe.Det.Imposto"
 
     nfe40_vTotTrib = fields.Monetary(
-        string="Valor estimado total de impostos federais",
+        string="Valor estimado total",
         xsd_type="TDec_1302",
         currency_field="brl_currency_id",
         help=("Valor estimado total de impostos federais, estaduais e municipais"),
@@ -3276,13 +3300,13 @@ class Imposto(models.AbstractModel):
 
     nfe40_COFINSST = fields.Many2one(
         comodel_name="nfe.40.cofinsst",
-        string="Dados do COFINS da",
+        string="Dados do COFINS (COFINSST)",
         help="Dados do COFINS da\nSubstituição Tributaria;",
     )
 
     nfe40_ICMSUFDest = fields.Many2one(
         comodel_name="nfe.40.icmsufdest",
-        string="ICMSUFDest",
+        string="Grupo a ser informado",
         help=(
             "Grupo a ser informado nas vendas interestarduais para consumidor "
             "final, não contribuinte de ICMS"
@@ -3309,7 +3333,7 @@ class Pis(models.AbstractModel):
 
     nfe40_PISQtde = fields.Many2one(
         comodel_name="nfe.40.pisqtde",
-        string="Código de Situação Tributária do PIS (PISQtde)",
+        string="PISQtde",
         help=(
             "Código de Situação Tributária do PIS.\n03 - Operação Tributável -"
             " Base de Calculo = Quantidade Vendida x Alíquota por Unidade de "
@@ -3319,7 +3343,7 @@ class Pis(models.AbstractModel):
 
     nfe40_PISNT = fields.Many2one(
         comodel_name="nfe.40.pisnt",
-        string="Código de Situação Tributária do PIS (PISNT)",
+        string="PISNT",
         help=(
             "Código de Situação Tributária do PIS.\n04 - Operação Tributável -"
             " Tributação Monofásica - (Alíquota Zero);\n06 - Operação "
@@ -3331,7 +3355,7 @@ class Pis(models.AbstractModel):
 
     nfe40_PISOutr = fields.Many2one(
         comodel_name="nfe.40.pisoutr",
-        string="Código de Situação Tributária do PIS (PISOutr)",
+        string="PISOutr",
         help=("Código de Situação Tributária do PIS.\n99 - Outras Operações."),
     )
 
@@ -3408,7 +3432,7 @@ class Pisqtde(models.AbstractModel):
     )
 
     nfe40_vAliqProd = fields.Float(
-        string="Alíquota do PIS",
+        string="Alíquota do PIS (em reais)",
         xsd_required=True,
         xsd_type="TDec_1104v",
         digits=(
@@ -3484,7 +3508,7 @@ class Pisoutr(models.AbstractModel):
     )
 
     nfe40_vAliqProd = fields.Float(
-        string="Alíquota do PIS",
+        string="Alíquota do PIS (em reais)",
         xsd_type="TDec_1104v",
         digits=(
             11,
@@ -3549,7 +3573,7 @@ class Pisst(models.AbstractModel):
 
     nfe40_indSomaPISST = fields.Selection(
         PISST_INDSOMAPISST,
-        string="Indica se o valor do PISST compõe o valor total da NF",
+        string="Indica se o valor",
         help="Indica se o valor do PISST compõe o valor total da NF-e",
     )
 
@@ -3573,7 +3597,7 @@ class Cofins(models.AbstractModel):
 
     nfe40_COFINSQtde = fields.Many2one(
         comodel_name="nfe.40.cofinsqtde",
-        string="Código de Situação Tributária do COFINS (COFINSQtde)",
+        string="COFINSQtde",
         help=(
             "Código de Situação Tributária do COFINS.\n03 - Operação "
             "Tributável - Base de Calculo = Quantidade Vendida x Alíquota por "
@@ -3583,7 +3607,7 @@ class Cofins(models.AbstractModel):
 
     nfe40_COFINSNT = fields.Many2one(
         comodel_name="nfe.40.cofinsnt",
-        string="Código de Situação Tributária do COFINS (COFINSNT)",
+        string="COFINSNT",
         help=(
             "Código de Situação Tributária do COFINS:\n04 - Operação "
             "Tributável - Tributação Monofásica - (Alíquota Zero);\n06 - "
@@ -3595,7 +3619,7 @@ class Cofins(models.AbstractModel):
 
     nfe40_COFINSOutr = fields.Many2one(
         comodel_name="nfe.40.cofinsoutr",
-        string="Código de Situação Tributária do COFINS (COFINSOutr)",
+        string="COFINSOutr",
         help=(
             "Código de Situação Tributária do COFINS:\n49 - Outras Operações "
             "de Saída\n50 - Operação com Direito a Crédito - Vinculada "
@@ -3705,7 +3729,7 @@ class Cofinsqtde(models.AbstractModel):
     )
 
     nfe40_vAliqProd = fields.Float(
-        string="Alíquota do COFINS",
+        string="Alíquota do COFINS (em reais)",
         xsd_required=True,
         xsd_type="TDec_1104v",
         digits=(
@@ -3816,7 +3840,7 @@ class Cofinsoutr(models.AbstractModel):
     )
 
     nfe40_vAliqProd = fields.Float(
-        string="Alíquota do COFINS",
+        string="Alíquota do COFINS (em reais)",
         xsd_type="TDec_1104v",
         digits=(
             11,
@@ -3881,7 +3905,8 @@ class Cofinsst(models.AbstractModel):
 
     nfe40_indSomaCOFINSST = fields.Selection(
         COFINSST_INDSOMACOFINSST,
-        string="Indica se o valor da COFINS ST compõe o valor total da NFe",
+        string="Indica se o valor",
+        help="Indica se o valor da COFINS ST compõe o valor total da NFe",
     )
 
 
@@ -3892,20 +3917,22 @@ class Icmsufdest(models.AbstractModel):
     _binding_type = "Tnfe.InfNfe.Det.Imposto.Icmsufdest"
 
     nfe40_vBCUFDest = fields.Monetary(
-        string="Valor da Base de Cálculo do ICMS na UF do destinatário",
+        string="Valor da Base de Cálculo do ICMS na UF",
         xsd_required=True,
         xsd_type="TDec_1302",
         currency_field="brl_currency_id",
+        help="Valor da Base de Cálculo do ICMS na UF do destinatário.",
     )
 
     nfe40_vBCFCPUFDest = fields.Monetary(
-        string="Valor da Base de Cálculo do FCP na UF do destinatário",
+        string="Valor da Base de Cálculo do FCP na UF",
         xsd_type="TDec_1302",
         currency_field="brl_currency_id",
+        help="Valor da Base de Cálculo do FCP na UF do destinatário.",
     )
 
     nfe40_pFCPUFDest = fields.Float(
-        string="pFCPUFDest",
+        string="Percentual adicional inserido",
         xsd_type="TDec_0302a04",
         digits=(
             3,
@@ -3918,7 +3945,7 @@ class Icmsufdest(models.AbstractModel):
     )
 
     nfe40_pICMSUFDest = fields.Float(
-        string="pICMSUFDest",
+        string="Alíquota adotada nas operações internas",
         xsd_required=True,
         xsd_type="TDec_0302a04",
         digits=(
@@ -3944,7 +3971,7 @@ class Icmsufdest(models.AbstractModel):
     )
 
     nfe40_pICMSInterPart = fields.Float(
-        string="Percentual de partilha para a UF do destinatário",
+        string="Percentual de partilha para a UF",
         xsd_required=True,
         xsd_type="TDec_0302a04",
         digits=(
@@ -3958,7 +3985,7 @@ class Icmsufdest(models.AbstractModel):
     )
 
     nfe40_vFCPUFDest = fields.Monetary(
-        string="Valor do ICMS relativo ao Fundo de Combate à Pobreza",
+        string="Valor do ICMS relativo ao Fundo",
         xsd_type="TDec_1302",
         currency_field="brl_currency_id",
         help=(
@@ -3968,14 +3995,15 @@ class Icmsufdest(models.AbstractModel):
     )
 
     nfe40_vICMSUFDest = fields.Monetary(
-        string="Valor do ICMS de partilha para a UF do destinatário",
+        string="Valor do ICMS de partilha para a UF",
         xsd_required=True,
         xsd_type="TDec_1302",
         currency_field="brl_currency_id",
+        help="Valor do ICMS de partilha para a UF do destinatário.",
     )
 
     nfe40_vICMSUFRemet = fields.Monetary(
-        string="Valor do ICMS de partilha para a UF do remetente",
+        string="vICMSUFRemet",
         xsd_required=True,
         xsd_type="TDec_1302",
         currency_field="brl_currency_id",
@@ -4066,7 +4094,7 @@ class Icms(models.AbstractModel):
 
     nfe40_ICMSPart = fields.Many2one(
         comodel_name="nfe.40.icmspart",
-        string="ICMSPart",
+        string="Partilha do ICMS entre a UF de origem",
         help=(
             "Partilha do ICMS entre a UF de origem e UF de destino ou a UF "
             "definida na legislação\nOperação interestadual para consumidor "
@@ -4078,7 +4106,7 @@ class Icms(models.AbstractModel):
 
     nfe40_ICMSST = fields.Many2one(
         comodel_name="nfe.40.icmsst",
-        string="Grupo de informação do ICMSST devido para a UF de destino",
+        string="Grupo de informação do ICMSST devido",
         help=(
             "Grupo de informação do ICMSST devido para a UF de destino, nas "
             "operações interestaduais de produtos que tiveram retenção "
@@ -4089,13 +4117,13 @@ class Icms(models.AbstractModel):
 
     nfe40_ICMSSN101 = fields.Many2one(
         comodel_name="nfe.40.icmssn101",
-        string="Tributação do ICMS pelo SIMPLES NACIONAL e CSOSN=101",
+        string="Tributação do ICMS pelo SIMPLES NACIONAL",
         help="Tributação do ICMS pelo SIMPLES NACIONAL e CSOSN=101 (v.2.0)",
     )
 
     nfe40_ICMSSN102 = fields.Many2one(
         comodel_name="nfe.40.icmssn102",
-        string="Tributação do ICMS pelo SIMPLES NACIONAL e CSOSN=102",
+        string="ICMSSN102",
         help=(
             "Tributação do ICMS pelo SIMPLES NACIONAL e CSOSN=102, 103, 300 ou"
             " 400 (v.2.0))"
@@ -4104,7 +4132,7 @@ class Icms(models.AbstractModel):
 
     nfe40_ICMSSN201 = fields.Many2one(
         comodel_name="nfe.40.icmssn201",
-        string="Tributação do ICMS pelo SIMPLES NACIONAL e CSOSN=201",
+        string="ICMSSN201",
         help="Tributação do ICMS pelo SIMPLES NACIONAL e CSOSN=201 (v.2.0)",
     )
 
@@ -4116,7 +4144,7 @@ class Icms(models.AbstractModel):
 
     nfe40_ICMSSN500 = fields.Many2one(
         comodel_name="nfe.40.icmssn500",
-        string="Tributação do ICMS pelo SIMPLES NACIONAL",
+        string="ICMSSN500",
         help=(
             "Tributação do ICMS pelo SIMPLES NACIONAL,CRT=1 – Simples Nacional"
             " e CSOSN=500 (v.2.0)"
@@ -4125,7 +4153,7 @@ class Icms(models.AbstractModel):
 
     nfe40_ICMSSN900 = fields.Many2one(
         comodel_name="nfe.40.icmssn900",
-        string="Tributação do ICMS pelo SIMPLES NACIONAL (ICMSSN900)",
+        string="ICMSSN900",
         help=(
             "Tributação do ICMS pelo SIMPLES NACIONAL, CRT=1 – Simples "
             "Nacional e CSOSN=900 (v2.0)"
@@ -4159,7 +4187,7 @@ class Icms00(models.AbstractModel):
 
     nfe40_modBC = fields.Selection(
         ICMS00_MODBC,
-        string="Modalidade de determinação da BC do ICMS",
+        string="Modalidade de determinação da BC",
         xsd_required=True,
         help=(
             "Modalidade de determinação da BC do ICMS:\n0 - Margem Valor "
@@ -4193,7 +4221,7 @@ class Icms00(models.AbstractModel):
     )
 
     nfe40_pFCP = fields.Float(
-        string="Percentual de ICMS relativo ao Fundo de Combate à Pobreza",
+        string="Percentual de ICMS relativo ao Fundo",
         xsd_type="TDec_0302a04Opc",
         digits=(
             3,
@@ -4203,7 +4231,7 @@ class Icms00(models.AbstractModel):
     )
 
     nfe40_vFCP = fields.Monetary(
-        string="Valor do ICMS relativo ao Fundo de Combate à Pobreza",
+        string="Valor do ICMS relativo ao Fundo",
         xsd_type="TDec_1302",
         currency_field="brl_currency_id",
         help="Valor do ICMS relativo ao Fundo de Combate à Pobreza (FCP).",
@@ -4236,7 +4264,7 @@ class Icms10(models.AbstractModel):
 
     nfe40_modBC = fields.Selection(
         ICMS10_MODBC,
-        string="Modalidade de determinação da BC do ICMS",
+        string="Modalidade de determinação da BC",
         xsd_required=True,
         help=(
             "Modalidade de determinação da BC do ICMS:\n0 - Margem Valor "
@@ -4276,7 +4304,7 @@ class Icms10(models.AbstractModel):
     )
 
     nfe40_pFCP = fields.Float(
-        string="Percentual de ICMS relativo ao Fundo de Combate à Pobreza",
+        string="Percentual de ICMS relativo ao Fundo",
         xsd_type="TDec_0302a04Opc",
         digits=(
             3,
@@ -4286,7 +4314,7 @@ class Icms10(models.AbstractModel):
     )
 
     nfe40_vFCP = fields.Monetary(
-        string="Valor do ICMS relativo ao Fundo de Combate à Pobreza",
+        string="Valor do ICMS relativo ao Fundo",
         xsd_type="TDec_1302",
         currency_field="brl_currency_id",
         help="Valor do ICMS relativo ao Fundo de Combate à Pobreza (FCP).",
@@ -4294,7 +4322,7 @@ class Icms10(models.AbstractModel):
 
     nfe40_modBCST = fields.Selection(
         ICMS10_MODBCST,
-        string="Modalidade de determinação da BC do ICMS ST",
+        string="modBCST",
         xsd_required=True,
         help=(
             "Modalidade de determinação da BC do ICMS ST:\n0 – Preço tabelado "
@@ -4305,12 +4333,13 @@ class Icms10(models.AbstractModel):
     )
 
     nfe40_pMVAST = fields.Float(
-        string="Percentual da Margem de Valor Adicionado ICMS ST",
+        string="Percentual da Margem",
         xsd_type="TDec_0302a04Opc",
         digits=(
             3,
             2,
         ),
+        help="Percentual da Margem de Valor Adicionado ICMS ST",
     )
 
     nfe40_pRedBCST = fields.Float(
@@ -4347,25 +4376,27 @@ class Icms10(models.AbstractModel):
     )
 
     nfe40_vBCFCPST = fields.Monetary(
-        string="vBCFCPST",
+        string="Valor da Base de cálculo",
         xsd_type="TDec_1302",
         currency_field="brl_currency_id",
         help=("Valor da Base de cálculo do FCP retido por substituicao " "tributaria."),
     )
 
     nfe40_pFCPST = fields.Float(
-        string="Percentual de FCP retido por substituição tributária",
+        string="Percentual",
         xsd_type="TDec_0302a04Opc",
         digits=(
             3,
             2,
         ),
+        help="Percentual de FCP retido por substituição tributária.",
     )
 
     nfe40_vFCPST = fields.Monetary(
-        string="Valor do FCP retido por substituição tributária",
+        string="Valor",
         xsd_type="TDec_1302",
         currency_field="brl_currency_id",
+        help="Valor do FCP retido por substituição tributária.",
     )
 
     nfe40_vICMSSTDeson = fields.Monetary(
@@ -4376,7 +4407,7 @@ class Icms10(models.AbstractModel):
 
     nfe40_motDesICMSST = fields.Selection(
         ICMS10_MOTDESICMSST,
-        string="Motivo da desoneração do ICMS",
+        string="Motivo da desoneração do ICMS-ST",
         help=(
             "Motivo da desoneração do ICMS-ST: 3-Uso na agropecuária; "
             "9-Outros; 12-Fomento agropecuário."
@@ -4410,7 +4441,7 @@ class Icms20(models.AbstractModel):
 
     nfe40_modBC = fields.Selection(
         ICMS20_MODBC,
-        string="Modalidade de determinação da BC do ICMS",
+        string="Modalidade de determinação da BC",
         xsd_required=True,
         help=(
             "Modalidade de determinação da BC do ICMS:\n0 - Margem Valor "
@@ -4460,7 +4491,7 @@ class Icms20(models.AbstractModel):
     )
 
     nfe40_pFCP = fields.Float(
-        string="Percentual de ICMS relativo ao Fundo de Combate à Pobreza",
+        string="Percentual de ICMS relativo ao Fundo",
         xsd_type="TDec_0302a04Opc",
         digits=(
             3,
@@ -4470,7 +4501,7 @@ class Icms20(models.AbstractModel):
     )
 
     nfe40_vFCP = fields.Monetary(
-        string="Valor do ICMS relativo ao Fundo de Combate à Pobreza",
+        string="Valor do ICMS relativo ao Fundo",
         xsd_type="TDec_1302",
         currency_field="brl_currency_id",
         help="Valor do ICMS relativo ao Fundo de Combate à Pobreza (FCP).",
@@ -4484,7 +4515,7 @@ class Icms20(models.AbstractModel):
 
     nfe40_motDesICMS = fields.Selection(
         ICMS20_MOTDESICMS,
-        string="Motivo da desoneração do ICMS:3",
+        string="Motivo da desoneração do ICMS:3-Uso",
         help=(
             "Motivo da desoneração do ICMS:3-Uso na "
             "agropecuária;9-Outros;12-Fomento agropecuário"
@@ -4521,7 +4552,7 @@ class Icms30(models.AbstractModel):
 
     nfe40_modBCST = fields.Selection(
         ICMS30_MODBCST,
-        string="Modalidade de determinação da BC do ICMS ST",
+        string="Modalidade de determinação da BC",
         xsd_required=True,
         help=(
             "Modalidade de determinação da BC do ICMS ST:\n0 – Preço tabelado "
@@ -4532,12 +4563,13 @@ class Icms30(models.AbstractModel):
     )
 
     nfe40_pMVAST = fields.Float(
-        string="Percentual da Margem de Valor Adicionado ICMS ST",
+        string="Percentual da Margem",
         xsd_type="TDec_0302a04Opc",
         digits=(
             3,
             2,
         ),
+        help="Percentual da Margem de Valor Adicionado ICMS ST",
     )
 
     nfe40_pRedBCST = fields.Float(
@@ -4580,18 +4612,20 @@ class Icms30(models.AbstractModel):
     )
 
     nfe40_pFCPST = fields.Float(
-        string="Percentual de FCP retido por substituição tributária",
+        string="Percentual",
         xsd_type="TDec_0302a04Opc",
         digits=(
             3,
             2,
         ),
+        help="Percentual de FCP retido por substituição tributária.",
     )
 
     nfe40_vFCPST = fields.Monetary(
-        string="Valor do FCP retido por substituição tributária",
+        string="Valor",
         xsd_type="TDec_1302",
         currency_field="brl_currency_id",
+        help="Valor do FCP retido por substituição tributária.",
     )
 
     nfe40_vICMSDeson = fields.Monetary(
@@ -4602,7 +4636,7 @@ class Icms30(models.AbstractModel):
 
     nfe40_motDesICMS = fields.Selection(
         ICMS30_MOTDESICMS,
-        string="Motivo da desoneração do ICMS:6",
+        string="Motivo da desoneração",
         help=(
             "Motivo da desoneração do ICMS:6-Utilitários Motocicleta AÁrea "
             "Livre;7-SUFRAMA;9-Outros"
@@ -4638,7 +4672,7 @@ class Icms40(models.AbstractModel):
     )
 
     nfe40_vICMSDeson = fields.Monetary(
-        string="vICMSDeson",
+        string="O valor do ICMS será informado apenas",
         xsd_type="TDec_1302",
         currency_field="brl_currency_id",
         help=(
@@ -4689,7 +4723,7 @@ class Icms51(models.AbstractModel):
 
     nfe40_modBC = fields.Selection(
         ICMS51_MODBC,
-        string="Modalidade de determinação da BC do ICMS",
+        string="Modalidade de determinação da BC",
         help=(
             "Modalidade de determinação da BC do ICMS:\n0 - Margem Valor "
             "Agregado (%);\n1 - Pauta (valor);\n2 - Preço Tabelado Máximo "
@@ -4753,7 +4787,7 @@ class Icms51(models.AbstractModel):
     )
 
     nfe40_pFCP = fields.Float(
-        string="Percentual de ICMS relativo ao Fundo de Combate à Pobreza",
+        string="Percentual de ICMS relativo ao Fundo",
         xsd_type="TDec_0302a04Opc",
         digits=(
             3,
@@ -4763,14 +4797,14 @@ class Icms51(models.AbstractModel):
     )
 
     nfe40_vFCP = fields.Monetary(
-        string="Valor do ICMS relativo ao Fundo de Combate à Pobreza",
+        string="Valor do ICMS relativo ao Fundo",
         xsd_type="TDec_1302",
         currency_field="brl_currency_id",
         help="Valor do ICMS relativo ao Fundo de Combate à Pobreza (FCP).",
     )
 
     nfe40_pFCPDif = fields.Float(
-        string="pFCPDif",
+        string="Percentual do diferimento",
         xsd_type="TDec_0302a04Opc",
         digits=(
             3,
@@ -4792,7 +4826,7 @@ class Icms51(models.AbstractModel):
     )
 
     nfe40_vFCPEfet = fields.Monetary(
-        string="vFCPEfet",
+        string="Valor efetivo do ICMS relativo ao Fundo",
         xsd_type="TDec_1302",
         currency_field="brl_currency_id",
         help=("Valor efetivo do ICMS relativo ao Fundo de Combate à Pobreza " "(FCP)."),
@@ -4827,9 +4861,10 @@ class Icms60(models.AbstractModel):
     )
 
     nfe40_vBCSTRet = fields.Monetary(
-        string="Valor da BC do ICMS ST retido anteriormente",
+        string="Valor da BC",
         xsd_type="TDec_1302",
         currency_field="brl_currency_id",
+        help="Valor da BC do ICMS ST retido anteriormente",
     )
 
     nfe40_pST = fields.Float(
@@ -4842,7 +4877,7 @@ class Icms60(models.AbstractModel):
     )
 
     nfe40_vICMSSubstituto = fields.Monetary(
-        string="vICMSSubstituto",
+        string="Valor do ICMS Próprio",
         xsd_type="TDec_1302",
         currency_field="brl_currency_id",
         help=("Valor do ICMS Próprio do Substituto cobrado em operação anterior"),
@@ -4855,14 +4890,14 @@ class Icms60(models.AbstractModel):
     )
 
     nfe40_vBCFCPSTRet = fields.Monetary(
-        string="vBCFCPSTRet",
+        string="Valor da Base de cálculo",
         xsd_type="TDec_1302",
         currency_field="brl_currency_id",
         help="Valor da Base de cálculo do FCP retido anteriormente por ST.",
     )
 
     nfe40_pFCPSTRet = fields.Float(
-        string="pFCPSTRet",
+        string="Percentual",
         xsd_type="TDec_0302a04Opc",
         digits=(
             3,
@@ -4872,18 +4907,20 @@ class Icms60(models.AbstractModel):
     )
 
     nfe40_vFCPSTRet = fields.Monetary(
-        string="Valor do FCP retido por substituição tributária",
+        string="Valor",
         xsd_type="TDec_1302",
         currency_field="brl_currency_id",
+        help="Valor do FCP retido por substituição tributária.",
     )
 
     nfe40_pRedBCEfet = fields.Float(
-        string="Percentual de redução da base de cálculo efetiva",
+        string="Percentual de redução da base",
         xsd_type="TDec_0302a04Opc",
         digits=(
             3,
             2,
         ),
+        help="Percentual de redução da base de cálculo efetiva.",
     )
 
     nfe40_vBCEfet = fields.Monetary(
@@ -4937,7 +4974,7 @@ class Icms70(models.AbstractModel):
 
     nfe40_modBC = fields.Selection(
         ICMS70_MODBC,
-        string="Modalidade de determinação da BC do ICMS",
+        string="Modalidade de determinação da BC",
         xsd_required=True,
         help=(
             "Modalidade de determinação da BC do ICMS:\n0 - Margem Valor "
@@ -4987,7 +5024,7 @@ class Icms70(models.AbstractModel):
     )
 
     nfe40_pFCP = fields.Float(
-        string="Percentual de ICMS relativo ao Fundo de Combate à Pobreza",
+        string="Percentual de ICMS relativo ao Fundo",
         xsd_type="TDec_0302a04Opc",
         digits=(
             3,
@@ -4997,7 +5034,7 @@ class Icms70(models.AbstractModel):
     )
 
     nfe40_vFCP = fields.Monetary(
-        string="Valor do ICMS relativo ao Fundo de Combate à Pobreza",
+        string="Valor do ICMS relativo ao Fundo",
         xsd_type="TDec_1302",
         currency_field="brl_currency_id",
         help="Valor do ICMS relativo ao Fundo de Combate à Pobreza (FCP).",
@@ -5005,7 +5042,7 @@ class Icms70(models.AbstractModel):
 
     nfe40_modBCST = fields.Selection(
         ICMS70_MODBCST,
-        string="Modalidade de determinação da BC do ICMS ST",
+        string="modBCST",
         xsd_required=True,
         help=(
             "Modalidade de determinação da BC do ICMS ST:\n0 – Preço tabelado "
@@ -5016,12 +5053,13 @@ class Icms70(models.AbstractModel):
     )
 
     nfe40_pMVAST = fields.Float(
-        string="Percentual da Margem de Valor Adicionado ICMS ST",
+        string="Percentual da Margem",
         xsd_type="TDec_0302a04Opc",
         digits=(
             3,
             2,
         ),
+        help="Percentual da Margem de Valor Adicionado ICMS ST",
     )
 
     nfe40_pRedBCST = fields.Float(
@@ -5058,25 +5096,27 @@ class Icms70(models.AbstractModel):
     )
 
     nfe40_vBCFCPST = fields.Monetary(
-        string="vBCFCPST",
+        string="Valor da Base de cálculo",
         xsd_type="TDec_1302",
         currency_field="brl_currency_id",
         help=("Valor da Base de cálculo do FCP retido por substituição " "tributária."),
     )
 
     nfe40_pFCPST = fields.Float(
-        string="Percentual de FCP retido por substituição tributária",
+        string="Percentual",
         xsd_type="TDec_0302a04Opc",
         digits=(
             3,
             2,
         ),
+        help="Percentual de FCP retido por substituição tributária.",
     )
 
     nfe40_vFCPST = fields.Monetary(
-        string="Valor do FCP retido por substituição tributária",
+        string="Valor",
         xsd_type="TDec_1302",
         currency_field="brl_currency_id",
+        help="Valor do FCP retido por substituição tributária.",
     )
 
     nfe40_vICMSDeson = fields.Monetary(
@@ -5087,7 +5127,7 @@ class Icms70(models.AbstractModel):
 
     nfe40_motDesICMS = fields.Selection(
         ICMS70_MOTDESICMS,
-        string="Motivo da desoneração do ICMS:3",
+        string="Motivo da desoneração do ICMS:3-Uso",
         help=(
             "Motivo da desoneração do ICMS:3-Uso na "
             "agropecuária;9-Outros;12-Fomento agropecuário"
@@ -5102,7 +5142,7 @@ class Icms70(models.AbstractModel):
 
     nfe40_motDesICMSST = fields.Selection(
         ICMS70_MOTDESICMSST,
-        string="Motivo da desoneração do ICMS",
+        string="Motivo da desoneração do ICMS-ST",
         help=(
             "Motivo da desoneração do ICMS-ST: 3-Uso na agropecuária; "
             "9-Outros; 12-Fomento agropecuário."
@@ -5136,7 +5176,7 @@ class Icms90(models.AbstractModel):
 
     nfe40_modBC = fields.Selection(
         ICMS90_MODBC,
-        string="Modalidade de determinação da BC do ICMS",
+        string="Modalidade de determinação da BC",
         help=(
             "Modalidade de determinação da BC do ICMS:\n0 - Margem Valor "
             "Agregado (%);\n1 - Pauta (valor);\n2 - Preço Tabelado Máximo "
@@ -5179,7 +5219,7 @@ class Icms90(models.AbstractModel):
     )
 
     nfe40_pFCP = fields.Float(
-        string="Percentual de ICMS relativo ao Fundo de Combate à Pobreza",
+        string="Percentual de ICMS relativo ao Fundo",
         xsd_type="TDec_0302a04Opc",
         digits=(
             3,
@@ -5189,7 +5229,7 @@ class Icms90(models.AbstractModel):
     )
 
     nfe40_vFCP = fields.Monetary(
-        string="Valor do ICMS relativo ao Fundo de Combate à Pobreza",
+        string="Valor do ICMS relativo ao Fundo",
         xsd_type="TDec_1302",
         currency_field="brl_currency_id",
         help="Valor do ICMS relativo ao Fundo de Combate à Pobreza (FCP).",
@@ -5197,7 +5237,7 @@ class Icms90(models.AbstractModel):
 
     nfe40_modBCST = fields.Selection(
         ICMS90_MODBCST,
-        string="Modalidade de determinação da BC do ICMS ST",
+        string="modBCST",
         help=(
             "Modalidade de determinação da BC do ICMS ST:\n0 – Preço tabelado "
             "ou máximo  sugerido;\n1 - Lista Negativa (valor);\n2 - Lista "
@@ -5207,12 +5247,13 @@ class Icms90(models.AbstractModel):
     )
 
     nfe40_pMVAST = fields.Float(
-        string="Percentual da Margem de Valor Adicionado ICMS ST",
+        string="Percentual da Margem",
         xsd_type="TDec_0302a04Opc",
         digits=(
             3,
             2,
         ),
+        help="Percentual da Margem de Valor Adicionado ICMS ST",
     )
 
     nfe40_pRedBCST = fields.Float(
@@ -5246,24 +5287,24 @@ class Icms90(models.AbstractModel):
     )
 
     nfe40_vBCFCPST = fields.Monetary(
-        string="Valor da Base de cálculo do FCP (vBCFCPST)",
-        xsd_type="TDec_1302",
-        currency_field="brl_currency_id",
+        string="vBCFCPST", xsd_type="TDec_1302", currency_field="brl_currency_id"
     )
 
     nfe40_pFCPST = fields.Float(
-        string="Percentual de FCP retido por substituição tributária",
+        string="Percentual",
         xsd_type="TDec_0302a04Opc",
         digits=(
             3,
             2,
         ),
+        help="Percentual de FCP retido por substituição tributária.",
     )
 
     nfe40_vFCPST = fields.Monetary(
-        string="Valor do FCP retido por substituição tributária",
+        string="Valor",
         xsd_type="TDec_1302",
         currency_field="brl_currency_id",
+        help="Valor do FCP retido por substituição tributária.",
     )
 
     nfe40_vICMSDeson = fields.Monetary(
@@ -5274,7 +5315,7 @@ class Icms90(models.AbstractModel):
 
     nfe40_motDesICMS = fields.Selection(
         ICMS90_MOTDESICMS,
-        string="Motivo da desoneração do ICMS:3",
+        string="Motivo da desoneração do ICMS:3-Uso",
         help=(
             "Motivo da desoneração do ICMS:3-Uso na "
             "agropecuária;9-Outros;12-Fomento agropecuário"
@@ -5289,7 +5330,7 @@ class Icms90(models.AbstractModel):
 
     nfe40_motDesICMSST = fields.Selection(
         ICMS90_MOTDESICMSST,
-        string="Motivo da desoneração do ICMS",
+        string="Motivo da desoneração do ICMS-ST",
         help=(
             "Motivo da desoneração do ICMS-ST: 3-Uso na agropecuária; "
             "9-Outros; 12-Fomento agropecuário."
@@ -5326,7 +5367,7 @@ class Icmspart(models.AbstractModel):
 
     nfe40_modBC = fields.Selection(
         ICMSPART_MODBC,
-        string="Modalidade de determinação da BC do ICMS",
+        string="Modalidade de determinação da BC",
         xsd_required=True,
         help=(
             "Modalidade de determinação da BC do ICMS:\n0 - Margem Valor "
@@ -5370,7 +5411,7 @@ class Icmspart(models.AbstractModel):
 
     nfe40_modBCST = fields.Selection(
         ICMSPART_MODBCST,
-        string="Modalidade de determinação da BC do ICMS ST",
+        string="modBCST",
         xsd_required=True,
         help=(
             "Modalidade de determinação da BC do ICMS ST:\n0 – Preço tabelado "
@@ -5381,12 +5422,13 @@ class Icmspart(models.AbstractModel):
     )
 
     nfe40_pMVAST = fields.Float(
-        string="Percentual da Margem de Valor Adicionado ICMS ST",
+        string="Percentual da Margem",
         xsd_type="TDec_0302a04Opc",
         digits=(
             3,
             2,
         ),
+        help="Percentual da Margem de Valor Adicionado ICMS ST",
     )
 
     nfe40_pRedBCST = fields.Float(
@@ -5423,7 +5465,7 @@ class Icmspart(models.AbstractModel):
     )
 
     nfe40_pBCOp = fields.Float(
-        string="pBCOp",
+        string="Percentual para determinação do valor",
         xsd_required=True,
         xsd_type="TDec_0302a04Opc",
         digits=(
@@ -5438,9 +5480,10 @@ class Icmspart(models.AbstractModel):
 
     nfe40_UFST = fields.Selection(
         TUF,
-        string="Sigla da UF para qual é devido o ICMS ST da operação",
+        string="Sigla da UF para qual é devido o ICMS ST",
         xsd_required=True,
         xsd_type="TUf",
+        help="Sigla da UF para qual é devido o ICMS ST da operação.",
     )
 
 
@@ -5472,10 +5515,11 @@ class Icmsst(models.AbstractModel):
     )
 
     nfe40_vBCSTRet = fields.Monetary(
-        string="Informar o valor da BC do ICMS ST retido na UF remetente",
+        string="valor da BC do ICMS ST retido",
         xsd_required=True,
         xsd_type="TDec_1302",
         currency_field="brl_currency_id",
+        help="valor da BC do ICMS ST retido na UF remetente",
     )
 
     nfe40_pST = fields.Float(
@@ -5488,31 +5532,29 @@ class Icmsst(models.AbstractModel):
     )
 
     nfe40_vICMSSubstituto = fields.Monetary(
-        string="vICMSSubstituto",
+        string="Valor do ICMS Próprio",
         xsd_type="TDec_1302",
         currency_field="brl_currency_id",
         help=("Valor do ICMS Próprio do Substituto cobrado em operação anterior"),
     )
 
     nfe40_vICMSSTRet = fields.Monetary(
-        string="Informar o valor do ICMS ST retido na UF remetente",
+        string="valor do ICMS ST retido na UF remetente",
         xsd_required=True,
         xsd_type="TDec_1302",
         currency_field="brl_currency_id",
-        help="Informar o valor do ICMS ST retido na UF remetente (iv2.0))",
+        help="valor do ICMS ST retido na UF remetente (iv2.0))",
     )
 
     nfe40_vBCFCPSTRet = fields.Monetary(
-        string="vBCFCPSTRet",
+        string="valor da Base de Cálculo",
         xsd_type="TDec_1302",
         currency_field="brl_currency_id",
-        help=(
-            "Informar o valor da Base de Cálculo do FCP retido anteriormente " "por ST."
-        ),
+        help="valor da Base de Cálculo do FCP retido anteriormente por ST.",
     )
 
     nfe40_pFCPSTRet = fields.Float(
-        string="Percentual relativo ao Fundo de Combate à Pobreza",
+        string="Percentual relativo ao Fundo",
         xsd_type="TDec_0302a04Opc",
         digits=(
             3,
@@ -5525,7 +5567,7 @@ class Icmsst(models.AbstractModel):
     )
 
     nfe40_vFCPSTRet = fields.Monetary(
-        string="Valor do ICMS relativo ao Fundo de Combate à Pobreza",
+        string="Valor do ICMS relativo ao Fundo",
         xsd_type="TDec_1302",
         currency_field="brl_currency_id",
         help=(
@@ -5535,7 +5577,7 @@ class Icmsst(models.AbstractModel):
     )
 
     nfe40_vBCSTDest = fields.Monetary(
-        string="Informar o valor da BC do ICMS ST da UF destino",
+        string="valor da BC do ICMS ST da UF destino",
         xsd_required=True,
         xsd_type="TDec_1302",
         currency_field="brl_currency_id",
@@ -5546,16 +5588,17 @@ class Icmsst(models.AbstractModel):
         xsd_required=True,
         xsd_type="TDec_1302",
         currency_field="brl_currency_id",
-        help="Informar o valor da BC do ICMS ST da UF destino (v2.0)",
+        help="valor da BC do ICMS ST da UF destino (v2.0)",
     )
 
     nfe40_pRedBCEfet = fields.Float(
-        string="Percentual de redução da base de cálculo efetiva",
+        string="Percentual de redução da base",
         xsd_type="TDec_0302a04Opc",
         digits=(
             3,
             2,
         ),
+        help="Percentual de redução da base de cálculo efetiva.",
     )
 
     nfe40_vBCEfet = fields.Monetary(
@@ -5599,7 +5642,7 @@ class Icmssn101(models.AbstractModel):
 
     nfe40_CSOSN = fields.Selection(
         ICMSSN101_CSOSN,
-        string="101",
+        string="CSOSN",
         xsd_required=True,
         help=(
             "101- Tributada pelo Simples Nacional com permissão de crédito. " "(v.2.0)"
@@ -5618,7 +5661,7 @@ class Icmssn101(models.AbstractModel):
     )
 
     nfe40_vCredICMSSN = fields.Monetary(
-        string="vCredICMSSN",
+        string="Valor crédito do ICMS",
         xsd_required=True,
         xsd_type="TDec_1302",
         currency_field="brl_currency_id",
@@ -5648,7 +5691,7 @@ class Icmssn102(models.AbstractModel):
 
     nfe40_CSOSN = fields.Selection(
         ICMSSN102_CSOSN,
-        string="102",
+        string="CSOSN",
         xsd_required=True,
         help=(
             "102- Tributada pelo Simples Nacional sem permissão de "
@@ -5679,7 +5722,7 @@ class Icmssn201(models.AbstractModel):
 
     nfe40_CSOSN = fields.Selection(
         ICMSSN201_CSOSN,
-        string="201",
+        string="CSOSN",
         xsd_required=True,
         help=(
             "201- Tributada pelo Simples Nacional com permissão de crédito e "
@@ -5689,7 +5732,7 @@ class Icmssn201(models.AbstractModel):
 
     nfe40_modBCST = fields.Selection(
         ICMSSN201_MODBCST,
-        string="Modalidade de determinação da BC do ICMS ST",
+        string="Modalidade de determinação da BC",
         xsd_required=True,
         help=(
             "Modalidade de determinação da BC do ICMS ST:\n0 – Preço tabelado "
@@ -5700,7 +5743,7 @@ class Icmssn201(models.AbstractModel):
     )
 
     nfe40_pMVAST = fields.Float(
-        string="Percentual da Margem de Valor Adicionado ICMS ST",
+        string="Percentual da Margem",
         xsd_type="TDec_0302a04Opc",
         digits=(
             3,
@@ -5750,18 +5793,20 @@ class Icmssn201(models.AbstractModel):
     )
 
     nfe40_pFCPST = fields.Float(
-        string="Percentual de FCP retido por substituição tributária",
+        string="Percentual",
         xsd_type="TDec_0302a04Opc",
         digits=(
             3,
             2,
         ),
+        help="Percentual de FCP retido por substituição tributária.",
     )
 
     nfe40_vFCPST = fields.Monetary(
-        string="Valor do FCP retido por substituição tributária",
+        string="Valor",
         xsd_type="TDec_1302",
         currency_field="brl_currency_id",
+        help="Valor do FCP retido por substituição tributária.",
     )
 
     nfe40_pCredSN = fields.Float(
@@ -5776,7 +5821,7 @@ class Icmssn201(models.AbstractModel):
     )
 
     nfe40_vCredICMSSN = fields.Monetary(
-        string="vCredICMSSN",
+        string="Valor crédito do ICMS",
         xsd_required=True,
         xsd_type="TDec_1302",
         currency_field="brl_currency_id",
@@ -5807,7 +5852,7 @@ class Icmssn202(models.AbstractModel):
 
     nfe40_CSOSN = fields.Selection(
         ICMSSN202_CSOSN,
-        string="202",
+        string="CSOSN",
         xsd_required=True,
         help=(
             "202- Tributada pelo Simples Nacional sem permissão de crédito e "
@@ -5819,7 +5864,7 @@ class Icmssn202(models.AbstractModel):
 
     nfe40_modBCST = fields.Selection(
         ICMSSN202_MODBCST,
-        string="Modalidade de determinação da BC do ICMS ST",
+        string="Modalidade de determinação da BC",
         xsd_required=True,
         help=(
             "Modalidade de determinação da BC do ICMS ST:\n0 – Preço tabelado "
@@ -5830,7 +5875,7 @@ class Icmssn202(models.AbstractModel):
     )
 
     nfe40_pMVAST = fields.Float(
-        string="Percentual da Margem de Valor Adicionado ICMS ST",
+        string="Percentual da Margem",
         xsd_type="TDec_0302a04Opc",
         digits=(
             3,
@@ -5880,18 +5925,20 @@ class Icmssn202(models.AbstractModel):
     )
 
     nfe40_pFCPST = fields.Float(
-        string="Percentual de FCP retido por substituição tributária",
+        string="Percentual",
         xsd_type="TDec_0302a04Opc",
         digits=(
             3,
             2,
         ),
+        help="Percentual de FCP retido por substituição tributária.",
     )
 
     nfe40_vFCPST = fields.Monetary(
-        string="Valor do FCP retido por substituição tributária",
+        string="Valor",
         xsd_type="TDec_1302",
         currency_field="brl_currency_id",
+        help="Valor do FCP retido por substituição tributária.",
     )
 
 
@@ -5923,7 +5970,7 @@ class Icmssn500(models.AbstractModel):
     )
 
     nfe40_vBCSTRet = fields.Monetary(
-        string="Valor da BC do ICMS ST retido anteriormente",
+        string="Valor da BC",
         xsd_type="TDec_1302",
         currency_field="brl_currency_id",
         help="Valor da BC do ICMS ST retido anteriormente (v2.0)",
@@ -5952,13 +5999,14 @@ class Icmssn500(models.AbstractModel):
     )
 
     nfe40_vBCFCPSTRet = fields.Monetary(
-        string="Valor da Base de cálculo do FCP retido anteriormente",
+        string="Valor da Base de cálculo",
         xsd_type="TDec_1302",
         currency_field="brl_currency_id",
+        help="Valor da Base de cálculo do FCP retido anteriormente.",
     )
 
     nfe40_pFCPSTRet = fields.Float(
-        string="pFCPSTRet",
+        string="Percentual",
         xsd_type="TDec_0302a04Opc",
         digits=(
             3,
@@ -5968,18 +6016,20 @@ class Icmssn500(models.AbstractModel):
     )
 
     nfe40_vFCPSTRet = fields.Monetary(
-        string="Valor do FCP retido por substituição tributária",
+        string="Valor",
         xsd_type="TDec_1302",
         currency_field="brl_currency_id",
+        help="Valor do FCP retido por substituição tributária.",
     )
 
     nfe40_pRedBCEfet = fields.Float(
-        string="Percentual de redução da base de cálculo efetiva",
+        string="Percentual de redução da base",
         xsd_type="TDec_0302a04Opc",
         digits=(
             3,
             2,
         ),
+        help="Percentual de redução da base de cálculo efetiva.",
     )
 
     nfe40_vBCEfet = fields.Monetary(
@@ -6030,7 +6080,7 @@ class Icmssn900(models.AbstractModel):
 
     nfe40_modBC = fields.Selection(
         ICMSSN900_MODBC,
-        string="Modalidade de determinação da BC do ICMS",
+        string="Modalidade de determinação da BC",
         help=(
             "Modalidade de determinação da BC do ICMS:\n0 - Margem Valor "
             "Agregado (%);\n1 - Pauta (valor);\n2 - Preço Tabelado Máximo "
@@ -6068,7 +6118,7 @@ class Icmssn900(models.AbstractModel):
 
     nfe40_modBCST = fields.Selection(
         ICMSSN900_MODBCST,
-        string="Modalidade de determinação da BC do ICMS ST",
+        string="modBCST",
         help=(
             "Modalidade de determinação da BC do ICMS ST:\n0 – Preço tabelado "
             "ou máximo  sugerido;\n1 - Lista Negativa (valor);\n2 - Lista "
@@ -6078,12 +6128,13 @@ class Icmssn900(models.AbstractModel):
     )
 
     nfe40_pMVAST = fields.Float(
-        string="Percentual da Margem de Valor Adicionado ICMS ST",
+        string="Percentual da Margem",
         xsd_type="TDec_0302a04Opc",
         digits=(
             3,
             2,
         ),
+        help="Percentual da Margem de Valor Adicionado ICMS ST",
     )
 
     nfe40_pRedBCST = fields.Float(
@@ -6123,18 +6174,20 @@ class Icmssn900(models.AbstractModel):
     )
 
     nfe40_pFCPST = fields.Float(
-        string="Percentual de FCP retido por substituição tributária",
+        string="Percentual",
         xsd_type="TDec_0302a04Opc",
         digits=(
             3,
             2,
         ),
+        help="Percentual de FCP retido por substituição tributária.",
     )
 
     nfe40_vFCPST = fields.Monetary(
-        string="Valor do FCP retido por substituição tributária",
+        string="Valor",
         xsd_type="TDec_1302",
         currency_field="brl_currency_id",
+        help="Valor do FCP retido por substituição tributária.",
     )
 
     nfe40_pCredSN = fields.Float(
@@ -6148,7 +6201,7 @@ class Icmssn900(models.AbstractModel):
     )
 
     nfe40_vCredICMSSN = fields.Monetary(
-        string="vCredICMSSN",
+        string="Valor crédito do ICMS",
         xsd_type="TDec_1302",
         currency_field="brl_currency_id",
         help=(
@@ -6186,10 +6239,11 @@ class Ii(models.AbstractModel):
     )
 
     nfe40_vIOF = fields.Monetary(
-        string="Valor do Imposto sobre Operações Financeiras",
+        string="Valor",
         xsd_required=True,
         xsd_type="TDec_1302",
         currency_field="brl_currency_id",
+        help="Valor do Imposto sobre Operações Financeiras",
     )
 
 
@@ -6221,31 +6275,31 @@ class Issqn(models.AbstractModel):
     )
 
     nfe40_cMunFG = fields.Char(
-        string="cMunFG",
+        string="município de ocorrência do fato gerador",
         xsd_required=True,
         xsd_type="TCodMunIBGE",
         help=(
-            "Informar o município de ocorrência do fato gerador do ISSQN. "
-            "Utilizar a Tabela do IBGE (Anexo VII - Tabela de UF, Município e "
-            "País). “Atenção, não vincular com os campos B12, C10 ou E10” v2.0"
+            "município de ocorrência do fato gerador do ISSQN. Utilizar a "
+            "Tabela do IBGE (Anexo VII - Tabela de UF, Município e País). "
+            "“Atenção, não vincular com os campos B12, C10 ou E10” v2.0"
         ),
     )
 
     nfe40_cListServ = fields.Selection(
         TCLISTSERV,
-        string="cListServ",
+        string="Item da lista de serviços",
         xsd_required=True,
         xsd_type="TCListServ",
         help=(
-            "Informar o Item da lista de serviços da LC 116/03 em que se "
-            "classifica o serviço."
+            "Item da lista de serviços da LC 116/03 em que se classifica o " "serviço."
         ),
     )
 
     nfe40_vDeducao = fields.Monetary(
-        string="Valor dedução para redução da base de cálculo",
+        string="Valor dedução para redução da base",
         xsd_type="TDec_1302Opc",
         currency_field="brl_currency_id",
+        help="Valor dedução para redução da base de cálculo",
     )
 
     nfe40_vOutro = fields.Monetary(
@@ -6274,7 +6328,7 @@ class Issqn(models.AbstractModel):
 
     nfe40_indISS = fields.Selection(
         ISSQN_INDISS,
-        string="Exibilidade do ISS:1",
+        string="Exibilidade",
         xsd_required=True,
         help=(
             "Exibilidade do ISS:1-Exigível;2-Não "
@@ -6284,17 +6338,20 @@ class Issqn(models.AbstractModel):
     )
 
     nfe40_cServico = fields.Char(
-        string="Código do serviço prestado dentro do município"
+        string="Código do serviço prestado dentro",
+        help="Código do serviço prestado dentro do município",
     )
 
     nfe40_cMun = fields.Char(
-        string="Código do Município de Incidência do Imposto", xsd_type="TCodMunIBGE"
+        string="Código do Município de Incidência",
+        xsd_type="TCodMunIBGE",
+        help="Código do Município de Incidência do Imposto",
     )
 
     nfe40_cPais = fields.Char(string="Código de Pais")
 
     nfe40_nProcesso = fields.Char(
-        string="nProcesso",
+        string="Número do Processo administrativo",
         help=(
             "Número do Processo administrativo ou judicial de suspenção do " "processo"
         ),
@@ -6394,7 +6451,7 @@ class Icmstot(models.AbstractModel):
     )
 
     nfe40_vFCPUFDest = fields.Monetary(
-        string="Valor total do ICMS relativo ao Fundo de Combate à Pobreza",
+        string="Valor total do ICMS relativo ao Fundo",
         xsd_type="TDec_1302",
         currency_field="brl_currency_id",
         help=(
@@ -6404,15 +6461,17 @@ class Icmstot(models.AbstractModel):
     )
 
     nfe40_vICMSUFDest = fields.Monetary(
-        string="Valor total do ICMS de partilha para a UF do destinatário",
+        string="Valor total do ICMS de partilha",
         xsd_type="TDec_1302",
         currency_field="brl_currency_id",
+        help="Valor total do ICMS de partilha para a UF do destinatário",
     )
 
     nfe40_vICMSUFRemet = fields.Monetary(
-        string="Valor total do ICMS de partilha para a UF do remetente",
+        string="vICMSUFRemet",
         xsd_type="TDec_1302",
         currency_field="brl_currency_id",
+        help="Valor total do ICMS de partilha para a UF do remetente",
     )
 
     nfe40_vFCP = fields.Monetary(
@@ -6543,7 +6602,7 @@ class Icmstot(models.AbstractModel):
     )
 
     nfe40_vTotTrib = fields.Monetary(
-        string="Valor estimado total de impostos federais",
+        string="Valor estimado total",
         xsd_type="TDec_1302",
         currency_field="brl_currency_id",
         help=("Valor estimado total de impostos federais, estaduais e municipais"),
@@ -6557,7 +6616,7 @@ class Issqntot(models.AbstractModel):
     _binding_type = "Tnfe.InfNfe.Total.Issqntot"
 
     nfe40_vServ = fields.Monetary(
-        string="Valor Total dos Serviços sob não",
+        string="vServ",
         xsd_type="TDec_1302Opc",
         currency_field="brl_currency_id",
         help=(
@@ -6597,9 +6656,10 @@ class Issqntot(models.AbstractModel):
     )
 
     nfe40_vDeducao = fields.Monetary(
-        string="Valor dedução para redução da base de cálculo",
+        string="Valor dedução para redução da base",
         xsd_type="TDec_1302Opc",
         currency_field="brl_currency_id",
+        help="Valor dedução para redução da base de cálculo",
     )
 
     nfe40_vOutro = fields.Monetary(
@@ -6668,9 +6728,10 @@ class RetTrib(models.AbstractModel):
     )
 
     nfe40_vBCRetPrev = fields.Monetary(
-        string="Base de Cálculo da Retenção da Previdêncica Social",
+        string="Base de Cálculo da Retenção",
         xsd_type="TDec_1302Opc",
         currency_field="brl_currency_id",
+        help="Base de Cálculo da Retenção da Previdêncica Social",
     )
 
     nfe40_vRetPrev = fields.Monetary(
@@ -6793,7 +6854,7 @@ class RetTransp(models.AbstractModel):
     )
 
     nfe40_cMunFG = fields.Char(
-        string="Código do Município de Ocorrência do Fato Gerador",
+        string="Código do Município de Ocorrência",
         xsd_required=True,
         xsd_type="TCodMunIBGE",
         help=(
@@ -6929,7 +6990,8 @@ class Pag(models.AbstractModel):
     nfe40_detPag = fields.One2many(
         "nfe.40.detpag",
         "nfe40_detPag_pag_id",
-        string="Grupo de detalhamento da forma de pagamento",
+        string="Grupo de detalhamento da forma",
+        help="Grupo de detalhamento da forma de pagamento.",
     )
 
     nfe40_vTroco = fields.Monetary(
@@ -6948,7 +7010,7 @@ class DetPag(models.AbstractModel):
     )
     nfe40_indPag = fields.Selection(
         DETPAG_INDPAG,
-        string="Indicador da Forma de Pagamento:0",
+        string="Indicador da Forma",
         help=(
             "Indicador da Forma de Pagamento:0-Pagamento à Vista;1-Pagamento à"
             " Prazo;"
@@ -6981,7 +7043,7 @@ class Card(models.AbstractModel):
 
     nfe40_tpIntegra = fields.Selection(
         CARD_TPINTEGRA,
-        string="tpIntegra",
+        string="Tipo de Integração do processo",
         xsd_required=True,
         help=(
             "Tipo de Integração do processo de pagamento com o sistema de "
@@ -7001,7 +7063,8 @@ class Card(models.AbstractModel):
     nfe40_tBand = fields.Char(string="Bandeira da operadora de cartão")
 
     nfe40_cAut = fields.Char(
-        string="Número de autorização da operação cartão de crédito/débito"
+        string="Número de autorização da operação cartão",
+        help="Número de autorização da operação cartão de crédito/débito",
     )
 
 
@@ -7022,7 +7085,9 @@ class InfIntermed(models.AbstractModel):
     )
 
     nfe40_idCadIntTran = fields.Char(
-        string="Identificador cadastrado no intermediador", xsd_required=True
+        string="Identificador cadastrado",
+        xsd_required=True,
+        help="Identificador cadastrado no intermediador",
     )
 
 
@@ -7033,12 +7098,13 @@ class InfAdic(models.AbstractModel):
     _binding_type = "Tnfe.InfNfe.InfAdic"
 
     nfe40_infAdFisco = fields.Char(
-        string="Informações adicionais de interesse do Fisco",
+        string="Informações adicionais de interesse",
         help="Informações adicionais de interesse do Fisco (v2.0)",
     )
 
     nfe40_infCpl = fields.Char(
-        string="Informações complementares de interesse do Contribuinte"
+        string="Informações complementares de interesse",
+        help="Informações complementares de interesse do Contribuinte",
     )
 
     nfe40_obsCont = fields.One2many(
@@ -7064,7 +7130,7 @@ class InfAdic(models.AbstractModel):
     nfe40_procRef = fields.One2many(
         "nfe.40.procref",
         "nfe40_procRef_infAdic_id",
-        string="Grupo de informações do processo referenciado",
+        string="Grupo de informações",
         help="Grupo de informações do  processo referenciado",
     )
 
@@ -7131,13 +7197,16 @@ class Exporta(models.AbstractModel):
 
     nfe40_UFSaidaPais = fields.Selection(
         TUFEMI,
-        string="Sigla da UF de Embarque ou de transposição de fronteira",
+        string="Sigla da UF de Embarque",
         xsd_required=True,
         xsd_type="TUfEmi",
+        help="Sigla da UF de Embarque ou de transposição de fronteira",
     )
 
     nfe40_xLocExporta = fields.Char(
-        string="Local de Embarque ou de transposição de fronteira", xsd_required=True
+        string="Local de Embarque ou de transposição",
+        xsd_required=True,
+        help="Local de Embarque ou de transposição de fronteira",
     )
 
     nfe40_xLocDespacho = fields.Char(string="Descrição do local de despacho")
@@ -7150,7 +7219,7 @@ class Compra(models.AbstractModel):
     _binding_type = "Tnfe.InfNfe.Compra"
 
     nfe40_xNEmp = fields.Char(
-        string="Informação da Nota de Empenho de compras públicas",
+        string="Informação da Nota de Empenho",
         help=("Informação da Nota de Empenho de compras públicas (NT2011/004)"),
     )
 
@@ -7294,18 +7363,18 @@ class InfNfeSupl(models.AbstractModel):
     _binding_type = "Tnfe.InfNfeSupl"
 
     nfe40_qrCode = fields.Char(
-        string="Texto com o QR",
+        string="Texto com o QR-Code impresso",
         xsd_required=True,
         help="Texto com o QR-Code impresso no DANFE NFC-e",
     )
 
     nfe40_urlChave = fields.Char(
-        string="Informar a URL da Consulta por chave de acesso da NFC",
+        string="URL da 'Consulta por chave de acesso",
         xsd_required=True,
         help=(
-            "Informar a URL da Consulta por chave de acesso da NFC-e. A mesma "
-            "URL que deve estar informada no DANFE NFC-e para consulta por "
-            "chave de acesso."
+            "URL da 'Consulta por chave de acesso da NFC-e'. A mesma URL que "
+            "deve estar informada no DANFE NFC-e para consulta por chave de "
+            "acesso."
         ),
     )
 
@@ -7328,7 +7397,7 @@ class TretConsReciNfe(models.AbstractModel):
     )
 
     nfe40_verAplic = fields.Char(
-        string="Versão do Aplicativo que processou a NF",
+        string="Versão do Aplicativo",
         xsd_required=True,
         xsd_type="TVerAplic",
         help="Versão do Aplicativo que processou a NF-e",
@@ -7345,9 +7414,10 @@ class TretConsReciNfe(models.AbstractModel):
     )
 
     nfe40_xMotivo = fields.Char(
-        string="Descrição literal do status do serviço solicitado",
+        string="Descrição literal do status",
         xsd_required=True,
         xsd_type="TMotivo",
+        help="Descrição literal do status do serviço solicitado.",
     )
 
     nfe40_cUF = fields.Selection(
@@ -7384,7 +7454,7 @@ class TretConsReciNfe(models.AbstractModel):
     nfe40_protNFe = fields.One2many(
         "nfe.40.tprotnfe",
         "nfe40_protNFe_TRetConsReciNFe_id",
-        string="Protocolo de status resultado do processamento da NF",
+        string="Protocolo de status resultado",
         xsd_type="TProtNFe",
         help="Protocolo de status resultado do processamento da NF-e",
     )
@@ -7420,9 +7490,10 @@ class TretEnviNfe(models.AbstractModel):
     )
 
     nfe40_xMotivo = fields.Char(
-        string="Descrição literal do status do serviço solicitado",
+        string="Descrição literal do status",
         xsd_required=True,
         xsd_type="TMotivo",
+        help="Descrição literal do status do serviço solicitado.",
     )
 
     nfe40_cUF = fields.Selection(
@@ -7445,7 +7516,7 @@ class TretEnviNfe(models.AbstractModel):
 
     nfe40_protNFe = fields.Many2one(
         comodel_name="nfe.40.tprotnfe",
-        string="protNFe",
+        string="Protocolo de status resultado",
         xsd_type="TProtNFe",
         help=("Protocolo de status resultado do processamento sincrono da NFC-e"),
     )
