@@ -106,6 +106,7 @@ class OdooFilters(Filters):
                 "odoo_inherit_model": self.odoo_inherit_model,
                 "clean_docstring": self.clean_docstring,
                 "binding_type": self.binding_type,
+                "class_properties": self.class_properties,
                 "odoo_class_description": self.odoo_class_description,
                 "odoo_field_definition": self.odoo_field_definition,
                 "odoo_implicit_many2ones": self.odoo_implicit_many2ones,
@@ -207,6 +208,14 @@ class OdooFilters(Filters):
             return ""  # TODO read from parent field if any
         return "\n    {}".format(wrap_text(string, 4, 79))
 
+    def class_properties(
+        self,
+        obj: Class,
+        parents: List[Class],
+    ) -> str:
+        """Return the name of the xsdata class for a given Odoo model."""
+        return f'_binding_type = "{self.binding_type(obj, parents)}"'
+
     def binding_type(
         self,
         obj: Class,
@@ -260,7 +269,7 @@ class OdooFilters(Filters):
         attr: Attr,
         parents: List[Class],
     ) -> str:
-        """Returns the Odoo field definition."""
+        """Return the Odoo field definition."""
 
         # 1st some checks inspired from xsdata Filters:
         type_names = collections.unique_sequence(
@@ -420,7 +429,7 @@ class OdooFilters(Filters):
         return None
 
     def import_class(self, name: str, alias: Optional[str]) -> str:
-        """Converts import class name with alias support."""
+        """Convert import class name with alias support."""
         if alias:
             return f"{self.class_name(name)} as {self.class_name(alias)}"
 

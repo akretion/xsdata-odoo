@@ -6,7 +6,7 @@ class {{ obj.name|class_name }}({{ obj|odoo_python_inherit_model }}):
     _description = {{ obj|odoo_class_description }}
     _name = "{{ obj.name|registry_name }}"
     _inherit = "{{ obj|odoo_inherit_model }}"
-    _binding_type = "{{ obj|binding_type(parents) }}"
+    {{ obj|class_properties(parents) }}
 
     {{ obj|odoo_implicit_many2ones }}
     {%- for attr in obj.attrs -%}
