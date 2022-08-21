@@ -15,17 +15,17 @@ USELESS_STARTS = ("Informar o ", "Informar a ", "Preencher com ")
 
 
 def extract_string_and_help(
-        obj_name: str, field_name: str, doc: str, unique_labels: set, max_len: int = STRING_MAX_LEN
+        obj_name: str, attr_name: str, doc: str, unique_labels: set, max_len: int = STRING_MAX_LEN
 ) -> Tuple[str, str]:
     """
-    Eventually field_name is technical and a better string/label can be
+    Eventually attr_name is technical and a better string/label can be
     extracted from the beginning of the help text.
     """
 
     def remove_after(string, token):
         return token.join(string.split(token)[:-1])
 
-    string = field_name
+    string = attr_name
     if doc:
         doc = doc.strip().replace('"', "'")
         for start in USELESS_STARTS:
@@ -58,15 +58,16 @@ def extract_string_and_help(
                  string = string[:string.rindex(token.rstrip())]
 
         if len(string) > max_len:
-            string = field_name.split("_")[-1]
+            string = attr_name
 
         if string == doc or doc[:-1] == string:  # doc might end with '.'
             doc = None
 
     if string in unique_labels:
-        string = f"{string} ({field_name})"
+        string = f"{string} ({attr_name})"
         if len(string) > max_len:
-            string = field_name.split("_")[-1]
+            string = attr_name
+
     unique_labels.add(string)
 
     return string, doc
