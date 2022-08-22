@@ -293,10 +293,10 @@ class OdooFilters(Filters):
 
         # default_value = self.field_default_value(attr, {})
 
-        kwargs = self.extract_field_attributes(parents, attr)
+        kwargs = self._extract_field_attributes(parents, attr)
 
         if attr.types[0].datatype:  # simple field
-            self.odoo_extract_number_attrs(obj, attr, kwargs)
+            self._extract_number_attrs(obj, attr, kwargs)
             if kwargs.get("help"):
                 kwargs.move_to_end("help", last=True)
             python_type = attr.types[0].datatype.code
@@ -325,7 +325,6 @@ class OdooFilters(Filters):
                 comodel_key = self.field_name(f"{attr.name}_{obj.name}_id", obj.name)
                 return f"""fields.One2many("{self.registry_comodel(type_names)}", "{comodel_key}",{self.format_arguments(kwargs, 4)})"""
             else:
-
                 for klass in self.all_simple_types:
                     if attr.types[0].qname == klass.qname:
                         # Selection
@@ -343,7 +342,7 @@ class OdooFilters(Filters):
                 logger.warning(message)
                 return message
 
-    def extract_field_attributes(self, parents: List[Class], attr: Attr):
+    def _extract_field_attributes(self, parents: List[Class], attr: Attr):
         obj = parents[-1]
         kwargs = OrderedDict()
         if not hasattr(obj, "unique_labels"):
@@ -359,7 +358,7 @@ class OdooFilters(Filters):
             # messing with existing Odoo modules.
             kwargs["xsd_required"] = True
 
-        xsd_type = self.simple_type_from_xsd(obj, attr)
+        xsd_type = self._simple_type_from_xsd(obj, attr)
         if xsd_type and xsd_type not in [
             "xsd:string",
             "xsd:date",
@@ -371,7 +370,7 @@ class OdooFilters(Filters):
 
         return kwargs
 
-    def odoo_extract_number_attrs(
+    def _extract_number_attrs(
         self, obj: Class, attr: Attr, kwargs: Dict[str, Dict]
     ):
         """
@@ -398,7 +397,7 @@ class OdooFilters(Filters):
                         "currency_field"
                     ] = "brl_currency_id"  # TODO use company_curreny_id
 
-    def simple_type_from_xsd(self, obj: Class, attr: Attr):
+    def _simple_type_from_xsd(self, obj: Class, attr: Attr):
         location = (obj.location or "").replace("file://", "")
         attr_name = attr.name
         if not os.path.isfile(location):
