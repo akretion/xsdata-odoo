@@ -225,9 +225,7 @@ class OdooFilters(Filters):
         return ".".join([self.class_name(p.name) for p in parents])
 
     def odoo_implicit_many2ones(self, obj: Class) -> str:
-        """
-        The m2o fields for the o2m keys
-        """
+        """The m2o fields for the o2m keys."""
         fields = []
         implicit_many2ones = self.implicit_many2ones.get(
             self.registry_name(obj.name), []
@@ -245,9 +243,8 @@ class OdooFilters(Filters):
         return ("\n").join(fields)
 
     def field_name(self, name: str, class_name: str) -> str:
-        """
-        Like xsdata but you can enforce the prefix or safe_name conversion
-        """
+        """Like xsdata but you can enforce the prefix or safe_name
+        conversion."""
         prefix = self.field_safe_prefix
         name = self.apply_substitutions(name, ObjectType.FIELD)
 
@@ -296,51 +293,25 @@ class OdooFilters(Filters):
         kwargs = self._extract_field_attributes(parents, attr)
 
         if attr.types[0].datatype:  # simple field
-            self._extract_number_attrs(obj, attr, kwargs)
-            if kwargs.get("help"):
-                kwargs.move_to_end("help", last=True)
-            python_type = attr.types[0].datatype.code
-            if python_type in INTEGER_TYPES:
-                return f"fields.Integer({self.format_arguments(kwargs, 4)})"
-            if kwargs.get("currency_field"):
-                return f"fields.Monetary({self.format_arguments(kwargs, 4)})"
-            elif python_type in FLOAT_TYPES or kwargs.get("digits"):
-                return f"fields.Float({self.format_arguments(kwargs, 4)})"
-            elif python_type in CHAR_TYPES:
-                return f"fields.Char({self.format_arguments(kwargs, 4)})"
-            elif python_type in DATE_TYPES:
-                return f"fields.Date({self.format_arguments(kwargs, 4)})"
-            elif python_type in DATETIME_TYPES:
-                return f"fields.Datetime({self.format_arguments(kwargs, 4)})"
-            elif python_type in BOOLEAN_TYPES:
-                return f"fields.Boolean({self.format_arguments(kwargs, 4)})"
-            else:
-                logger.warning(
-                    f"{python_type} {attr.types[0].datatype} not implemented yet! class: {obj.name} attr: {attr}"
-                )
-                return ""
+            return self._simple_field_definition(obj, attr, type_names, kwargs)
 
         else:  # relational field
-            if attr.is_list:
-                comodel_key = self.field_name(f"{attr.name}_{obj.name}_id", obj.name)
-                return f"""fields.One2many("{self.registry_comodel(type_names)}", "{comodel_key}",{self.format_arguments(kwargs, 4)})"""
-            else:
-                for klass in self.all_simple_types:
-                    if attr.types[0].qname == klass.qname:
-                        # Selection
-                        return f"fields.Selection({klass.name.upper()},{self.format_arguments(kwargs, 4)})"
-                for klass in self.all_complex_types:
-                    if attr.types[0].qname == klass.qname:
-                        # Many2one
-                        kwargs["comodel_name"] = self.registry_comodel(type_names)
-                        kwargs.move_to_end("comodel_name", last=False)
-                        return f"fields.Many2one({self.format_arguments(kwargs, 4)})"
-
-                message = (
-                    f"Missing class {attr.types[0]}! class: {obj.name} attr: {attr}"
+            field = self._try_many2one_field_definition(obj, attr, type_names, kwargs)
+            if field is None:
+                field = self._try_selection_field_definition(
+                    obj, attr, type_names, kwargs
                 )
-                logger.warning(message)
-                return message
+                if field is None:
+                    field = self._try_one2many_field_definition(
+                        obj, attr, type_names, kwargs
+                    )
+
+            if field is not None:
+                return field
+
+            message = f"Missing class {attr.types[0]}! class: {obj.name} attr: {attr}"
+            logger.warning(message)
+            return message
 
     def _extract_field_attributes(self, parents: List[Class], attr: Attr):
         obj = parents[-1]
@@ -370,14 +341,13 @@ class OdooFilters(Filters):
 
         return kwargs
 
-    def _extract_number_attrs(
-        self, obj: Class, attr: Attr, kwargs: Dict[str, Dict]
-    ):
+    def _extract_number_attrs(self, obj: Class, attr: Attr, kwargs: Dict[str, Dict]):
         """
         Monetary vs Float field detection.
-        Detection tends to be brittle but in general it doesn't
-        impact XML serialization/desrialization as both types
-        are floats and we usually take the xsd_type into account.
+
+        Detection tends to be brittle but in general it doesn't impact
+        XML serialization/desrialization as both types are floats and we
+        usually take the xsd_type into account.
         """
         python_type = attr.types[0].datatype.code
         if python_type in FLOAT_TYPES or python_type in CHAR_TYPES:
@@ -426,6 +396,57 @@ class OdooFilters(Filters):
             if xpath_matches:
                 return xpath_matches[0].get("type")
         return None
+
+    def _simple_field_definition(
+        self, obj: Class, attr: Attr, type_names: str, kwargs: Dict
+    ):
+        self._extract_number_attrs(obj, attr, kwargs)
+        if kwargs.get("help"):
+            kwargs.move_to_end("help", last=True)
+        python_type = attr.types[0].datatype.code
+        if python_type in INTEGER_TYPES:
+            return f"fields.Integer({self.format_arguments(kwargs, 4)})"
+        if kwargs.get("currency_field"):
+            return f"fields.Monetary({self.format_arguments(kwargs, 4)})"
+        elif python_type in FLOAT_TYPES or kwargs.get("digits"):
+            return f"fields.Float({self.format_arguments(kwargs, 4)})"
+        elif python_type in CHAR_TYPES:
+            return f"fields.Char({self.format_arguments(kwargs, 4)})"
+        elif python_type in DATE_TYPES:
+            return f"fields.Date({self.format_arguments(kwargs, 4)})"
+        elif python_type in DATETIME_TYPES:
+            return f"fields.Datetime({self.format_arguments(kwargs, 4)})"
+        elif python_type in BOOLEAN_TYPES:
+            return f"fields.Boolean({self.format_arguments(kwargs, 4)})"
+        else:
+            logger.warning(
+                f"{python_type} {attr.types[0].datatype} not implemented yet! class: {obj.name} attr: {attr}"
+            )
+            return ""
+
+    def _try_many2one_field_definition(
+        self, obj: Class, attr: Attr, type_names: str, kwargs: Dict
+    ):
+        if attr.is_list:
+            comodel_key = self.field_name(f"{attr.name}_{obj.name}_id", obj.name)
+            return f"""fields.One2many("{self.registry_comodel(type_names)}", "{comodel_key}",{self.format_arguments(kwargs, 4)})"""
+
+    def _try_selection_field_definition(
+        self, obj: Class, attr: Attr, type_names: str, kwargs: Dict
+    ):
+        for klass in self.all_simple_types:
+            if attr.types[0].qname == klass.qname:
+                return f"fields.Selection({klass.name.upper()},{self.format_arguments(kwargs, 4)})"
+
+    def _try_one2many_field_definition(
+        self, obj: Class, attr: Attr, type_names: str, kwargs: Dict
+    ):
+        for klass in self.all_complex_types:
+            if attr.types[0].qname == klass.qname:
+                # Many2one
+                kwargs["comodel_name"] = self.registry_comodel(type_names)
+                kwargs.move_to_end("comodel_name", last=False)
+                return f"fields.Many2one({self.format_arguments(kwargs, 4)})"
 
     def import_class(self, name: str, alias: Optional[str]) -> str:
         """Convert import class name with alias support."""
