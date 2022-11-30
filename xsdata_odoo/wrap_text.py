@@ -6,7 +6,20 @@ STRONG_PONCT_TOKENS = (". ", ", ", " (", " - ", ".", ",", ": ", "|")
 
 # adpositions separator
 # works for Brazilian fiscal documents, you may need to adapt for your language
-PONCT_TOKENS = (" e ",  " da ", " do ", " de ", " na ", " no ", " nas ", " nos ", " ou ", " que ", " em ", " para ")
+PONCT_TOKENS = (
+    " e ",
+    " da ",
+    " do ",
+    " de ",
+    " na ",
+    " no ",
+    " nas ",
+    " nos ",
+    " ou ",
+    " que ",
+    " em ",
+    " para ",
+)
 
 STRING_MIN_LEN = 36  # agressive cuts
 STRING_MAX_LEN = 40  # progressive cuts
@@ -15,12 +28,14 @@ USELESS_STARTS = ("Informar o ", "Informar a ", "Preencher com ")
 
 
 def extract_string_and_help(
-        obj_name: str, attr_name: str, doc: str, unique_labels: set, max_len: int = STRING_MAX_LEN
+    obj_name: str,
+    attr_name: str,
+    doc: str,
+    unique_labels: set,
+    max_len: int = STRING_MAX_LEN,
 ) -> Tuple[str, str]:
-    """
-    Eventually attr_name is technical and a better string/label can be
-    extracted from the beginning of the help text.
-    """
+    """Eventually attr_name is technical and a better string/label can be
+    extracted from the beginning of the help text."""
 
     def remove_after(string, token):
         return token.join(string.split(token)[:-1])
@@ -30,7 +45,7 @@ def extract_string_and_help(
         doc = doc.strip().replace('"', "'")
         for start in USELESS_STARTS:
             if doc.lower().startswith(start.lower()):
-                doc = doc[len(start):]
+                doc = doc[len(start) :]
 
         string = " ".join(doc.splitlines()[0].split())  # avoids double spaces
 
@@ -54,8 +69,8 @@ def extract_string_and_help(
                 break
 
         for token in PONCT_TOKENS + STRONG_PONCT_TOKENS:
-             if string.endswith(token.rstrip()):
-                 string = string[:string.rindex(token.rstrip())]
+            if string.endswith(token.rstrip()):
+                string = string[: string.rindex(token.rstrip())]
 
         if len(string) > max_len:
             string = attr_name
