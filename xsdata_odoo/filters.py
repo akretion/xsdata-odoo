@@ -38,8 +38,8 @@ CHAR_TYPES = (
     "normalizedString",
     "language",
 )
-DATE_TYPES = ("date",)
-DATETIME_TYPES = ("dateTime",)
+DATE_TYPES = ("date", "TData")
+DATETIME_TYPES = ("dateTime", "TDateTimeUTC")
 BOOLEAN_TYPES = "boolean"
 
 # generally it's not interresting to generate mixins for signature
@@ -404,7 +404,11 @@ class OdooFilters(Filters):
         if kwargs.get("help"):
             kwargs.move_to_end("help", last=True)
         python_type = attr.types[0].datatype.code
-        if python_type in INTEGER_TYPES:
+        if python_type in DATE_TYPES or kwargs.get("xsd_type") in DATE_TYPES:
+            return f"fields.Date({self.format_arguments(kwargs, 4)})"
+        elif python_type in DATETIME_TYPES or kwargs.get("xsd_type") in DATETIME_TYPES:
+            return f"fields.Datetime({self.format_arguments(kwargs, 4)})"
+        elif python_type in INTEGER_TYPES:
             return f"fields.Integer({self.format_arguments(kwargs, 4)})"
         if kwargs.get("currency_field"):
             return f"fields.Monetary({self.format_arguments(kwargs, 4)})"
@@ -412,10 +416,6 @@ class OdooFilters(Filters):
             return f"fields.Float({self.format_arguments(kwargs, 4)})"
         elif python_type in CHAR_TYPES:
             return f"fields.Char({self.format_arguments(kwargs, 4)})"
-        elif python_type in DATE_TYPES:
-            return f"fields.Date({self.format_arguments(kwargs, 4)})"
-        elif python_type in DATETIME_TYPES:
-            return f"fields.Datetime({self.format_arguments(kwargs, 4)})"
         elif python_type in BOOLEAN_TYPES:
             return f"fields.Boolean({self.format_arguments(kwargs, 4)})"
         else:

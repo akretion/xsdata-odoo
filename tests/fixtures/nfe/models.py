@@ -1490,7 +1490,7 @@ class InfProt(models.AbstractModel):
         ),
     )
 
-    nfe40_dhRecbto = fields.Char(
+    nfe40_dhRecbto = fields.Datetime(
         string="Data e hora de processamento",
         xsd_required=True,
         xsd_type="TDateTimeUTC",
@@ -1762,7 +1762,7 @@ class Ide(models.AbstractModel):
         string="Número do Documento Fiscal", xsd_required=True, xsd_type="TNF"
     )
 
-    nfe40_dhEmi = fields.Char(
+    nfe40_dhEmi = fields.Datetime(
         string="Data e Hora de emissão",
         xsd_required=True,
         xsd_type="TDateTimeUTC",
@@ -1772,7 +1772,7 @@ class Ide(models.AbstractModel):
         ),
     )
 
-    nfe40_dhSaiEnt = fields.Char(
+    nfe40_dhSaiEnt = fields.Datetime(
         string="Data e Hora da saída ou de entrada",
         xsd_type="TDateTimeUTC",
         help=(
@@ -1911,7 +1911,7 @@ class Ide(models.AbstractModel):
         help="versão do aplicativo utilizado no processo de\nemissão",
     )
 
-    nfe40_dhCont = fields.Char(
+    nfe40_dhCont = fields.Datetime(
         string="data e hora de entrada",
         xsd_type="TDateTimeUTC",
         help=(
@@ -2192,7 +2192,7 @@ class Avulsa(models.AbstractModel):
         help="Número do Documento de Arrecadação de Receita",
     )
 
-    nfe40_dEmi = fields.Char(
+    nfe40_dEmi = fields.Date(
         string="Data de emissão do DAR (AAAA-MM-DD)", xsd_type="TData"
     )
 
@@ -2204,7 +2204,7 @@ class Avulsa(models.AbstractModel):
 
     nfe40_repEmi = fields.Char(string="Repartição Fiscal emitente", xsd_required=True)
 
-    nfe40_dPag = fields.Char(
+    nfe40_dPag = fields.Date(
         string="Data de pagamento do DAR",
         xsd_type="TData",
         help="Data de pagamento do DAR (AAAA-MM-DD)",
@@ -2615,7 +2615,7 @@ class Di(models.AbstractModel):
         ),
     )
 
-    nfe40_dDI = fields.Char(
+    nfe40_dDI = fields.Date(
         string="Data de registro da DI/DSI/DA",
         xsd_required=True,
         xsd_type="TData",
@@ -2633,7 +2633,7 @@ class Di(models.AbstractModel):
         xsd_type="TUfEmi",
     )
 
-    nfe40_dDesemb = fields.Char(
+    nfe40_dDesemb = fields.Date(
         string="Data do desembaraço aduaneiro",
         xsd_required=True,
         xsd_type="TData",
@@ -2796,14 +2796,14 @@ class Rastro(models.AbstractModel):
         ),
     )
 
-    nfe40_dFab = fields.Char(
+    nfe40_dFab = fields.Date(
         string="Data de fabricação/produção",
         xsd_required=True,
         xsd_type="TData",
         help="Data de fabricação/produção. Formato 'AAAA-MM-DD'.",
     )
 
-    nfe40_dVal = fields.Char(
+    nfe40_dVal = fields.Date(
         string="Data de validade",
         xsd_required=True,
         xsd_type="TData",
@@ -4766,7 +4766,7 @@ class Issqntot(models.AbstractModel):
         currency_field="brl_currency_id",
     )
 
-    nfe40_dCompet = fields.Char(
+    nfe40_dCompet = fields.Date(
         string="Data da prestação do serviço",
         xsd_required=True,
         xsd_type="TData",
@@ -5085,7 +5085,7 @@ class Dup(models.AbstractModel):
     )
     nfe40_nDup = fields.Char(string="Número da duplicata")
 
-    nfe40_dVenc = fields.Char(
+    nfe40_dVenc = fields.Date(
         string="Data de vencimento da duplicata",
         xsd_type="TData",
         help="Data de vencimento da duplicata (AAAA-MM-DD)",
@@ -5545,7 +5545,7 @@ class TretConsReciNfe(models.AbstractModel):
         xsd_type="TCodUfIBGE",
     )
 
-    nfe40_dhRecbto = fields.Char(
+    nfe40_dhRecbto = fields.Datetime(
         string="Data e hora de processamento",
         xsd_required=True,
         xsd_type="TDateTimeUTC",
@@ -5621,7 +5621,7 @@ class TretEnviNfe(models.AbstractModel):
         xsd_type="TCodUfIBGE",
     )
 
-    nfe40_dhRecbto = fields.Char(
+    nfe40_dhRecbto = fields.Datetime(
         string="Data e hora do recebimento",
         xsd_required=True,
         xsd_type="TDateTimeUTC",
