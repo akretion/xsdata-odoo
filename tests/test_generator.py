@@ -147,5 +147,3 @@ class ClassC(models.AbstractModel):
             with open("generated/nfe/v4_0/models.py") as f:
                 generated = f.read()
             self.assertEqual(expected, generated)
-
-
