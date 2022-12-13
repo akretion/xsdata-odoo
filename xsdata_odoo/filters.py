@@ -329,12 +329,14 @@ class OdooFilters(Filters):
             # messing with existing Odoo modules.
             kwargs["xsd_required"] = True
 
-        xsd_type = self._simple_type_from_xsd(obj, attr)
+        xsd_type, xsd_choice = self._simple_type_and_choice_from_xsd(obj, attr)
         if xsd_type and xsd_type not in [
             "xsd:string",
             "xsd:date",
         ]:  # (not in trivial types)
             kwargs["xsd_type"] = xsd_type
+        if xsd_choice is not None:
+            kwargs["xsd_choice"] = xsd_choice
 
         if help_attr:
             kwargs["help"] = help_attr
@@ -367,11 +369,11 @@ class OdooFilters(Filters):
                         "currency_field"
                     ] = "brl_currency_id"  # TODO use company_curreny_id
 
-    def _simple_type_from_xsd(self, obj: Class, attr: Attr):
+    def _simple_type_and_choice_from_xsd(self, obj: Class, attr: Attr):
         location = (obj.location or "").replace("file://", "")
         attr_name = attr.name
         if not os.path.isfile(location):
-            return None
+            return None, None
 
         if not self.files_to_etree.get(location):  # yes it can still happen
             xsd_tree = etree.parse(location)
@@ -394,8 +396,15 @@ class OdooFilters(Filters):
                 },
             )
             if xpath_matches:
-                return xpath_matches[0].get("type")
-        return None
+                choice = None
+                p = xpath_matches[0].getparent()
+                # (here we don't try to group items by choice, but eventually we could)
+                while p.tag == "{http://www.w3.org/2001/XMLSchema}sequence":
+                    p = p.getparent()
+                if p.tag == "{http://www.w3.org/2001/XMLSchema}choice":
+                    choice = obj.name.lower()  # assuming only 1 choice per cpx type
+                return xpath_matches[0].get("type"), choice
+        return None, None
 
     def _simple_field_definition(
         self, obj: Class, attr: Attr, type_names: str, kwargs: Dict
