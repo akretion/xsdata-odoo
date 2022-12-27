@@ -169,23 +169,35 @@ class OdooFilters(Filters):
                     for idx, item in enumerate(obj.attrs):
                         for field in klass.attrs:
                             if field.name == field_name and field.help:
-                                split = field.help.split(f"{item.default} - ")
-                                help = False
-                                if len(split) > 1:
-                                    # TODO sometimes the line may continue
-                                    # until the next value or may end at next value...
-                                    help = split[1].splitlines()[0].split(";")[0]
-                                else:
-                                    split = field.help.split(f"{item.default}-")
+                                item_help = False
+                                separators = (" - ", "-", " – ", "–")
+                                for separator in separators:
+                                    split = field.help.split(
+                                        f"{item.default}{separator}"
+                                    )
                                     if len(split) > 1:
-                                        help = split[1].splitlines()[0].split(";")[0]
-                                if help:
-                                    item.help = help
-                                    # FIXME it doesn't always work
-                                    if idx == 0 and not obj.help and len(split) > 1:
-                                        obj.help = split[0]
+                                        # TODO sometimes the line may continue
+                                        # until the next value or may end at next value...
+                                        item_help = (
+                                            split[1].splitlines()[0].split(";")[0]
+                                        )
+                                        break
+                                if item_help:
+                                    item.help = item_help
+                                    if idx == 0 and len(split) > 1:
+                                        obj.help, help_trash = extract_string_and_help(
+                                            obj.name, field.name, split[0], set(), 1024
+                                        )
                                 else:
                                     item.help = item.default
+                                if (
+                                    idx == 0
+                                    and not obj.help
+                                    and not field.help.startswith(item.default)
+                                ):
+                                    obj.help = (
+                                        field.help
+                                    )  # no split but better than no docstring
 
         return self.clean_docstring(obj.help)
 
