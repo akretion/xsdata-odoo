@@ -102,6 +102,7 @@ class OdooFilters(Filters):
         super().register(env)
         env.filters.update(
             {
+                "enum_skip": self.enum_skip,
                 "pattern_skip": self.pattern_skip,
                 "registry_name": self.registry_name,
                 "odoo_python_inherit_model": self.odoo_python_inherit_model,
@@ -116,6 +117,27 @@ class OdooFilters(Filters):
                 "enum_docstring": self.enum_docstring,
             }
         )
+
+    def enum_skip(self, obj: Class, name: str) -> bool:
+        """
+        Avoids Postgres errors with fields.Selection
+        by disabling case insensitive duplicates.
+        For instance:
+        TENDEREMI_XPAIS = [
+            ("Brasil", "Brasil"),
+        # ("BRASIL", "BRASIL"),
+        ]
+        """
+        lower_vals = set()
+        allowed_vals = set()
+        for attr in obj.attrs:
+            if attr.default.lower() not in lower_vals:
+                lower_vals.add(attr.default.lower())
+                allowed_vals.add(attr.default)
+        if name in allowed_vals:
+            return False
+        else:
+            return True
 
     def pattern_skip(self, name: str, parents: List[Class] = None) -> bool:
         """Should class or field be skipped?"""

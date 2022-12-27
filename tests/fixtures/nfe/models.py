@@ -838,7 +838,7 @@ TENDEREMI_CPAIS = [
 "Nome do país"
 TENDEREMI_XPAIS = [
     ("Brasil", "Brasil"),
-    ("BRASIL", "BRASIL"),
+    # ("BRASIL", "BRASIL"),
 ]
 
 "Indicador de processamento síncrono. 0=NÃO; 1=SIM=Síncrono"
