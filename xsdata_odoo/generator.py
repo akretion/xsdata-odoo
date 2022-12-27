@@ -192,25 +192,44 @@ class OdooGenerator(DataclassGenerator):
 
     def _collect_extra_data(self, obj: Class):
         """Collect extra field data from the xsd file or another file"""
+
+        location = (obj.location or "").replace("file://", "")
+        if not os.path.isfile(location):
+            return
+
+        if not self.filters.files_to_etree.get(location):  # yes it can still happen
+            xsd_tree = etree.parse(location)
+            self.filters.files_to_etree[location] = xsd_tree
+        else:
+            xsd_tree = self.filters.files_to_etree[location]
+
+        # if ComplexType has no description,
+        # take it from the element declaration:
+        if not obj.help:
+            xpath_matches = xsd_tree.getroot().xpath(
+                f"//xs:element[@name='{obj.name}']",
+                namespaces={
+                    "xs": "http://www.w3.org/2001/XMLSchema",
+                    "xsd": "http://www.w3.org/2001/XMLSchema",
+                },
+            )
+            if xpath_matches:
+                children = xpath_matches[0].getchildren()
+                if (
+                    len(children) > 0
+                    and children[0].tag
+                    == "{http://www.w3.org/2001/XMLSchema}annotation"
+                ):
+                    obj.help = "".join(children[0].itertext())
+
+        # extract fields choice attributes and types using xpath:
         for attr in obj.attrs:
             field_data = {}
-            self.filters.xsd_extra_info[f"{obj.name}#{attr.name}"] = field_data
-            location = (obj.location or "").replace("file://", "")
-            attr_name = attr.name
-            if not os.path.isfile(location):
-                continue
-
-            if not self.filters.files_to_etree.get(location):  # yes it can still happen
-                xsd_tree = etree.parse(location)
-                self.filters.files_to_etree[location] = xsd_tree
-            else:
-                xsd_tree = self.filters.files_to_etree[location]
-
             type_lookups = (
-                f"//xs:element[@name='{obj.name}']//xs:element[@name='{attr_name}']",
-                f"//xs:element[@name='{obj.name}']//xs:attribute[@name='{attr_name}']",
-                f"//xs:complexType[@name='{obj.name}']//xs:element[@name='{attr_name}']",
-                f"//xs:complexType[@name='{obj.name}']//xs:attribute[@name='{attr_name}']",
+                f"//xs:element[@name='{obj.name}']//xs:element[@name='{attr.name}']",
+                f"//xs:element[@name='{obj.name}']//xs:attribute[@name='{attr.name}']",
+                f"//xs:complexType[@name='{obj.name}']//xs:element[@name='{attr.name}']",
+                f"//xs:complexType[@name='{obj.name}']//xs:attribute[@name='{attr.name}']",
             )
             for lookup in type_lookups:
                 xpath_matches = xsd_tree.getroot().xpath(
@@ -225,18 +244,6 @@ class OdooGenerator(DataclassGenerator):
                     xsd_choice_required = None
                     parent = xpath_matches[0].getparent()
                     # (here we don't try to group items by choice, but eventually we could)
-
-                    children = xpath_matches[0].getchildren()
-                    if (
-                        not obj.help
-                        and len(children) > 0
-                        and children[0].tag
-                        == "{http://www.w3.org/2001/XMLSchema}annotation"
-                    ):
-                        txt = "".join(children[0].itertext())
-                        if not obj.help:
-                            obj.help = txt
-
                     while parent.tag == "{http://www.w3.org/2001/XMLSchema}sequence":
                         if (
                             parent.get("minOccurs", "1") == "0"
@@ -245,7 +252,7 @@ class OdooGenerator(DataclassGenerator):
                         parent = parent.getparent()
                     if parent.tag == "{http://www.w3.org/2001/XMLSchema}choice":
                         # here we assume only 1 choice per complexType
-                        # but eventually we could count them and number them...
+                        # but evexntually we could count them and number them...
                         field_data[
                             "choice"
                         ] = (

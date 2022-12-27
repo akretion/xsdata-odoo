@@ -365,7 +365,7 @@ class OdooFilters(Filters):
             # messing with existing Odoo modules.
             kwargs["xsd_required"] = True
 
-        kwargs.update(self.xsd_extra_info[f"{obj.name}#{attr.name}"])
+        kwargs.update(self.xsd_extra_info.get(f"{obj.name}#{attr.name}", {}))
         if help_attr and not kwargs.get("help"):
             kwargs["help"] = help_attr  # (help as the last attribute)
 
