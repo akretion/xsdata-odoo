@@ -115,6 +115,9 @@ class OdooGenerator(DataclassGenerator):
 
                     self.all_complex_types.append(klass)
 
+            for klass in all_file_classes:
+                self._collect_extra_data(klass)
+
         # Generate modules
         for path, cluster in self.group_by_module(classes).items():
             should_skip = False
@@ -186,3 +189,80 @@ class OdooGenerator(DataclassGenerator):
             return string
 
         return "\n\n".join(map(render_class, classes)) + "\n"
+
+    def _collect_extra_data(self, obj: Class):
+        """Collect extra field data from the xsd file or another file"""
+        for attr in obj.attrs:
+            field_data = {}
+            self.filters.xsd_extra_info[f"{obj.name}#{attr.name}"] = field_data
+            location = (obj.location or "").replace("file://", "")
+            attr_name = attr.name
+            if not os.path.isfile(location):
+                continue
+
+            if not self.filters.files_to_etree.get(location):  # yes it can still happen
+                xsd_tree = etree.parse(location)
+                self.filters.files_to_etree[location] = xsd_tree
+            else:
+                xsd_tree = self.filters.files_to_etree[location]
+
+            type_lookups = (
+                f"//xs:element[@name='{obj.name}']//xs:element[@name='{attr_name}']",
+                f"//xs:element[@name='{obj.name}']//xs:attribute[@name='{attr_name}']",
+                f"//xs:complexType[@name='{obj.name}']//xs:element[@name='{attr_name}']",
+                f"//xs:complexType[@name='{obj.name}']//xs:attribute[@name='{attr_name}']",
+            )
+            for lookup in type_lookups:
+                xpath_matches = xsd_tree.getroot().xpath(
+                    lookup,
+                    namespaces={
+                        "xs": "http://www.w3.org/2001/XMLSchema",
+                        "xsd": "http://www.w3.org/2001/XMLSchema",
+                    },
+                )
+                if xpath_matches:
+                    choice = None
+                    xsd_choice_required = None
+                    parent = xpath_matches[0].getparent()
+                    # (here we don't try to group items by choice, but eventually we could)
+
+                    children = xpath_matches[0].getchildren()
+                    if (
+                        not obj.help
+                        and len(children) > 0
+                        and children[0].tag
+                        == "{http://www.w3.org/2001/XMLSchema}annotation"
+                    ):
+                        txt = "".join(children[0].itertext())
+                        if not obj.help:
+                            obj.help = txt
+
+                    while parent.tag == "{http://www.w3.org/2001/XMLSchema}sequence":
+                        if (
+                            parent.get("minOccurs", "1") == "0"
+                        ):  # example veicTransp in Brazilian NFe
+                            xsd_choice_required = False
+                        parent = parent.getparent()
+                    if parent.tag == "{http://www.w3.org/2001/XMLSchema}choice":
+                        # here we assume only 1 choice per complexType
+                        # but eventually we could count them and number them...
+                        field_data[
+                            "choice"
+                        ] = (
+                            obj.name.lower()
+                        )  # TODO consider changing choice -> xsd_choice
+                        if (
+                            parent.get("minOccurs", "1") != "0"
+                            and xsd_choice_required is None
+                        ):
+                            # important feature we had in generateDS:
+                            # if the element is part of <choice> tag without minOccurs="0"
+                            # then it is required!
+                            field_data["xsd_choice_required"] = True
+                    xsd_type = xpath_matches[0].get("type")
+                    if xsd_type and xsd_type not in [
+                        "xsd:string",
+                        "xsd:date",
+                    ]:
+                        field_data["xsd_type"] = xsd_type
+                    self.filters.xsd_extra_info[f"{obj.name}#{attr.name}"] = field_data
