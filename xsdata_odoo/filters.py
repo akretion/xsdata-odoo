@@ -70,6 +70,7 @@ class OdooFilters(Filters):
         "version",
         "python_inherit_model",
         "inherit_model",
+        "xsd_extra_info",
     )
 
     def __init__(
@@ -95,6 +96,7 @@ class OdooFilters(Filters):
         if inherit_model is None:
             inherit_model = f"spec.mixin.{schema}"
         self.inherit_model = inherit_model
+        self.xsd_extra_info = {}
 
     def register(self, env: Environment):
         super().register(env)
@@ -329,15 +331,9 @@ class OdooFilters(Filters):
             # messing with existing Odoo modules.
             kwargs["xsd_required"] = True
 
-        xsd_type = self._simple_type_from_xsd(obj, attr)
-        if xsd_type and xsd_type not in [
-            "xsd:string",
-            "xsd:date",
-        ]:  # (not in trivial types)
-            kwargs["xsd_type"] = xsd_type
-
-        if help_attr:
-            kwargs["help"] = help_attr
+        kwargs.update(self.xsd_extra_info[f"{obj.name}#{attr.name}"])
+        if help_attr and not kwargs.get("help"):
+            kwargs["help"] = help_attr  # (help as the last attribute)
 
         return kwargs
 
@@ -365,37 +361,7 @@ class OdooFilters(Filters):
                 else:
                     kwargs[
                         "currency_field"
-                    ] = "brl_currency_id"  # TODO use company_curreny_id
-
-    def _simple_type_from_xsd(self, obj: Class, attr: Attr):
-        location = (obj.location or "").replace("file://", "")
-        attr_name = attr.name
-        if not os.path.isfile(location):
-            return None
-
-        if not self.files_to_etree.get(location):  # yes it can still happen
-            xsd_tree = etree.parse(location)
-            self.files_to_etree[location] = xsd_tree
-        else:
-            xsd_tree = self.files_to_etree[location]
-
-        type_lookups = (
-            f"//xs:element[@name='{obj.name}']//xs:element[@name='{attr_name}']",
-            f"//xs:element[@name='{obj.name}']//xs:attribute[@name='{attr_name}']",
-            f"//xs:complexType[@name='{obj.name}']//xs:element[@name='{attr_name}']",
-            f"//xs:complexType[@name='{obj.name}']//xs:attribute[@name='{attr_name}']",
-        )
-        for lookup in type_lookups:
-            xpath_matches = xsd_tree.getroot().xpath(
-                lookup,
-                namespaces={
-                    "xs": "http://www.w3.org/2001/XMLSchema",
-                    "xsd": "http://www.w3.org/2001/XMLSchema",
-                },
-            )
-            if xpath_matches:
-                return xpath_matches[0].get("type")
-        return None
+                    ] = "brl_currency_id"  # TODO use spec_curreny_id
 
     def _simple_field_definition(
         self, obj: Class, attr: Attr, type_names: str, kwargs: Dict
