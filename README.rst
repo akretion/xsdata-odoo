@@ -10,8 +10,9 @@ Odoo abstract model generator from xsd schemas using xsdata
 .. image:: https://img.shields.io/pypi/v/xsdata-odoo.svg
     :target: https://pypi.org/pypi/xsdata-odoo/
 
-- [xsdata](https://xsdata.readthedocs.io) based replacement of https://github.com/akretion/generateds-odoo
-- heavily inspired by https://github.com/akretion/xsdata-plantuml
+- `xsdata <https://xsdata.readthedocs.io/>`_ based replacement of https://github.com/akretion/generateds-odoo
+- heavily inspired by https://github.com/tefra/xsdata-plantuml
+- explanations https://www.youtube.com/watch?v=6gFOe7Wh8uA
 
 Install
 =======
