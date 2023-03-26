@@ -3,8 +3,8 @@
 {%- for attr in obj.attrs %}
   {% if not obj|enum_skip(attr.default) -%}
   ("{{ attr.default }}", "{{ attr.help|replace('\n', ' ')  or attr.default }}"),
-  {% else -%}
+  {%- else -%}
   # ("{{ attr.default }}", "{{ attr.help|replace('\n', ' ')  or attr.default }}"),
-  {% endif -%}
+  {%- endif -%}
 {%- endfor %}
 ]
