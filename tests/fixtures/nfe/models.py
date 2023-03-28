@@ -1051,7 +1051,7 @@ IDE_TPNF = [
     ("1", "saída)"),
 ]
 
-"Origem do processo, informar com"
+"Origem do processo, informar"
 PROCREF_INDPROC = [
     ("0", "SEFAZ"),
     ("1", "Justiça Federal"),
@@ -1065,7 +1065,7 @@ PROD_INDESCALA = [
     ("N", "None"),
 ]
 
-"Este campo deverá ser preenchido com"
+"Este campo deverá ser preenchido"
 PROD_INDTOT = [
     ("0", "o valor do item (vProd) não compõe o valor total da NF-e (vProd)"),
     ("1", "1"),
@@ -1542,7 +1542,7 @@ class InfProt(models.AbstractModel):
     )
 
     nfe40_verAplic = fields.Char(
-        string="Versão do Aplicativo",
+        string="Versão do Aplicativo que processou",
         xsd_required=True,
         xsd_type="TVerAplic",
         help="Versão do Aplicativo que processou a NF-e",
@@ -1760,7 +1760,7 @@ class InfNfe(models.AbstractModel):
 
     nfe40_infRespTec = fields.Many2one(
         comodel_name="nfe.40.tinfresptec",
-        string="Informações",
+        string="Informações do Responsável Técnico",
         xsd_type="TInfRespTec",
         help="Informações do Responsável Técnico pela emissão do DF-e",
     )
@@ -1963,7 +1963,7 @@ class Ide(models.AbstractModel):
 
     nfe40_procEmi = fields.Selection(
         TPROCEMI,
-        string="Processo",
+        string="Processo de emissão utilizado",
         xsd_required=True,
         xsd_type="TProcEmi",
         help=(
@@ -2040,7 +2040,7 @@ class Nfref(models.AbstractModel):
     )
 
     nfe40_refCTe = fields.Char(
-        string="Utilizar esta TAG",
+        string="Utilizar esta TAG para referenciar",
         choice="nfref",
         xsd_choice_required=True,
         xsd_type="TChNFe",
@@ -2642,7 +2642,7 @@ class Prod(models.AbstractModel):
 
     nfe40_indTot = fields.Selection(
         PROD_INDTOT,
-        string="Este campo deverá ser preenchido com",
+        string="Este campo deverá ser preenchido",
         xsd_required=True,
         help=(
             "Este campo deverá ser preenchido com:\n 0 – o valor do item "
@@ -2720,7 +2720,7 @@ class Prod(models.AbstractModel):
 
     nfe40_comb = fields.Many2one(
         comodel_name="nfe.40.comb",
-        string="Informar apenas",
+        string="Informar apenas para operações",
         choice="prod",
         help="Informar apenas para operações com combustíveis líquidos",
     )
@@ -2797,7 +2797,7 @@ class Di(models.AbstractModel):
 
     nfe40_tpIntermedio = fields.Selection(
         DI_TPINTERMEDIO,
-        string="Forma",
+        string="Forma de Importação quanto",
         xsd_required=True,
         help=(
             "Forma de Importação quanto a "
@@ -3376,12 +3376,12 @@ class Encerrante(models.AbstractModel):
     )
 
     nfe40_nBomba = fields.Char(
-        string="Numero de identificação (nBomba)",
+        string="Numero de identificação da bomba",
         help=("Numero de identificação da bomba ao qual o bico está interligado"),
     )
 
     nfe40_nTanque = fields.Char(
-        string="Numero de identificação (nTanque)",
+        string="Numero de identificação do tanque",
         xsd_required=True,
         help=("Numero de identificação do tanque ao qual o bico está interligado"),
     )
@@ -3783,7 +3783,7 @@ class Pisst(models.AbstractModel):
 
     nfe40_indSomaPISST = fields.Selection(
         PISST_INDSOMAPISST,
-        string="Indica se o valor",
+        string="Indica se o valor do PISST compõe",
         help="Indica se o valor do PISST compõe o valor total da NF-e",
     )
 
@@ -4200,7 +4200,7 @@ class Cofinsst(models.AbstractModel):
 
     nfe40_indSomaCOFINSST = fields.Selection(
         COFINSST_INDSOMACOFINSST,
-        string="Indica se o valor",
+        string="Indica se o valor da COFINS ST compõe",
         help="Indica se o valor da COFINS ST compõe o valor total da NFe",
     )
 
@@ -4258,7 +4258,7 @@ class Icmsufdest(models.AbstractModel):
 
     nfe40_pICMSInter = fields.Selection(
         ICMSUFDEST_PICMSINTER,
-        string="Alíquota interestadual das UF envolvidas",
+        string="Alíquota interestadual",
         xsd_required=True,
         help=(
             "Alíquota interestadual das UF envolvidas: - 4% alíquota "
@@ -4335,7 +4335,7 @@ class Icms(models.AbstractModel):
 
     nfe40_ICMSST = fields.Many2one(
         comodel_name="nfe.40.icmsst",
-        string="Grupo de informação do ICMSST devido",
+        string="Grupo de informação",
         choice="icms",
         xsd_choice_required=True,
         help=(
@@ -4573,7 +4573,7 @@ class Icmsst(models.AbstractModel):
     )
 
     nfe40_pFCPSTRet = fields.Float(
-        string="Percentual relativo ao Fundo",
+        string="Percentual relativo ao Fundo de Combate",
         xsd_type="TDec_0302a04Opc",
         digits=(
             3,
@@ -4720,7 +4720,7 @@ class Issqn(models.AbstractModel):
 
     nfe40_cListServ = fields.Selection(
         TCLISTSERV,
-        string="Item da lista de serviços",
+        string="Item da lista de serviços da LC 116/03",
         xsd_required=True,
         xsd_type="TCListServ",
         help=(
@@ -5052,7 +5052,7 @@ class Issqntot(models.AbstractModel):
     _binding_type = "Tnfe.InfNfe.Total.Issqntot"
 
     nfe40_vServ = fields.Monetary(
-        string="vServ",
+        string="Valor Total",
         xsd_type="TDec_1302Opc",
         currency_field="brl_currency_id",
         help=(
@@ -5654,7 +5654,7 @@ class ProcRef(models.AbstractModel):
 
     nfe40_indProc = fields.Selection(
         PROCREF_INDPROC,
-        string="Origem do processo, informar com",
+        string="Origem do processo, informar",
         xsd_required=True,
         help=(
             "Origem do processo, informar com:\n0 - SEFAZ;\n1 - Justiça "
@@ -5878,7 +5878,7 @@ class TretConsReciNfe(models.AbstractModel):
     )
 
     nfe40_verAplic = fields.Char(
-        string="Versão do Aplicativo",
+        string="Versão do Aplicativo que processou",
         xsd_required=True,
         xsd_type="TVerAplic",
         help="Versão do Aplicativo que processou a NF-e",
