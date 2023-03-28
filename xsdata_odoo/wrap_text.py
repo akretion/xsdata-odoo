@@ -1,26 +1,13 @@
+import babel
+import nltk
+from nltk.corpus import stopwords
+import os
+import locale
 import textwrap
 from typing import Tuple
 
 # where to stop when trying to extract the beginning of a text
 STRONG_PONCT_TOKENS = (". ", ", ", " (", " - ", ".", ",", ": ", "|")
-
-# adpositions separator
-# works for Brazilian fiscal documents, you may need to adapt for your language
-PONCT_TOKENS = (
-    " e ",
-    " da ",
-    " do ",
-    " de ",
-    " na ",
-    " no ",
-    " nas ",
-    " nos ",
-    " ou ",
-    " que ",
-    " em ",
-    " para ",
-)
-
 STRING_MIN_LEN = 36  # agressive cuts
 STRING_MAX_LEN = 40  # progressive cuts
 
@@ -34,45 +21,23 @@ def extract_string_and_help(
     unique_labels: set,
     max_len: int = STRING_MAX_LEN,
 ) -> Tuple[str, str]:
-    """Eventually attr_name is technical and a better string/label can be
-    extracted from the beginning of the help text."""
-
-    def remove_after(string, token):
-        return token.join(string.split(token)[:-1])
+    """
+    Try to extract a proper field string from any (xsd) longest field documentation.
+    Eventually attr_name is technical and a better string/label can be
+    extracted from the beginning of the help text.
+    Giving good results 95% of the time is fine because one can override
+    in Odoo fields in the 5% of cases where the extracted string isn't nice.
+    Labels duplicates are avoided using the unique_labels set param and by
+    appending the field name in the description eventually if required.
+    """
 
     string = attr_name
     if doc:
         doc = doc.strip().replace('"', "'")
-        for start in USELESS_STARTS:
-            if doc.lower().startswith(start.lower()):
-                doc = doc[len(start) :]
+        string, doc = _aggressive_cut(doc)
+        string = _progressive_cut(string, max_len)
 
-        string = " ".join(doc.splitlines()[0].split())  # avoids double spaces
-
-        for token in STRONG_PONCT_TOKENS:  # cut aggressively
-            while token in string:
-                if len(string) > STRING_MIN_LEN:
-                    string = remove_after(string, token)
-                else:
-                    break
-
-        while len(string) > max_len:
-            max_index = 0
-            max_token = None
-            for token in PONCT_TOKENS:  # cut progressively
-                if token in string and string.rindex(token) > max_index:
-                    max_index = string.rindex(token)
-                    max_token = token
-            if max_token:
-                string = remove_after(string, max_token)
-            else:
-                break
-
-        for token in PONCT_TOKENS + STRONG_PONCT_TOKENS:
-            if string.endswith(token.rstrip()):
-                string = string[: string.rindex(token.rstrip())]
-
-        if "(" in string and not ")" in string:
+        if "(" in string and ")" not in string:
             string = string.split("(")[0].strip()
         if len(string) > max_len:
             string = attr_name
@@ -86,8 +51,90 @@ def extract_string_and_help(
             string = attr_name
 
     unique_labels.add(string)
+    return string, doc
+
+
+def _aggressive_cut(doc):
+    """
+    Use ponctuation to cut the string.
+    Remove non relevant starting strings from a field string.
+    non relevant starting strings can be forced through the USELESS_STARTS env var.
+    """
+
+    def remove_after(string, token):
+        return token.join(string.split(token)[:-1])
+
+    if os.environ.get("USLESS_STARTS"):
+        useless_starts = os.environ["USELESS_STARTS"].split("|")
+    else:
+        useless_starts = USELESS_STARTS  # a good default for us in Brazil
+    for start in useless_starts:
+        if doc.lower().startswith(start.lower()):
+            doc = doc[len(start) :]
+
+    string = " ".join(doc.splitlines()[0].split())  # avoid double spaces
+
+    for token in STRONG_PONCT_TOKENS:  # cut aggressively
+        while token in string:
+            if len(string) > STRING_MIN_LEN:
+                string = remove_after(string, token)
+            else:
+                break
 
     return string, doc
+
+
+def _progressive_cut(string, max_len):
+    """
+    Try to cut the field string progressively using language specific stopwords.
+    language is detected with locale.getdefaultlocale() but can be forced
+    through the LANGUAGE ENV var. This will work well for some languages like
+    Latin languages. For some other languages (German?), may be customization
+    would be required.
+    """
+    if os.environ.get("XSDATA_LANG"):
+        lang = os.environ["XSDATA_LANG"]
+    else:
+        os_locale = locale.getdefaultlocale()
+        lang = (
+            babel.Locale.parse(os_locale[0])
+            .get_display_name("en")
+            .split("(")[0]
+            .lower()
+            .strip()
+        )
+    try:
+        lang_stopwords = stopwords.words(lang)
+    except LookupError:
+        nltk.download("stopwords")
+        lang_stopwords = stopwords.words(lang)
+
+    while len(string) > max_len:
+        max_index = 0
+        max_token = None
+        for stopword in lang_stopwords:  # cut progressively
+            token = f" {stopword} "
+            if token in string and string.rindex(token) > max_index:
+                max_index = string.rindex(token)
+                max_token = token
+        if max_token:
+            string = max_token.join(string.split(max_token)[:-1])
+        else:
+            break
+
+    should_try_cut = True
+    while should_try_cut:
+        for token in STRONG_PONCT_TOKENS + tuple(
+            [f" {w} " for w in stopwords.words(lang)]
+        ):
+            if string.endswith(token.rstrip()):
+                string = string[: string.rindex(token.rstrip())]
+                should_try_cut = True
+                break
+            else:
+                should_try_cut = False
+
+    return string
 
 
 def wrap_text(
@@ -112,14 +159,14 @@ def wrap_text(
 
     wrapped_lines = []
     first = True
-    for l in text.splitlines():
+    for line in text.splitlines():
         if first:
             w = width - initial_indent
             first = False
         else:
             w = width
         lines = textwrap.fill(
-            " ".join(l.strip().split()),
+            " ".join(line.strip().split()),
             width=w,
             subsequent_indent=" " * indent,
             replace_whitespace=False,
