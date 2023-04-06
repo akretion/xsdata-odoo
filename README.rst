@@ -46,7 +46,7 @@ Odoo Models for the Brazilian Electronic Invoices:
 .. code:: console
 
     $ # Generate Odoo models
-    $ export XSDATA_SCHEMA=nfe; export XSDATA_VERSION=40; export XSDATA_SKIP="^ICMS.ICMS\d+|^ICMS.ICMSSN\d+"
+    $ export XSDATA_SCHEMA=nfe; export XSDATA_VERSION=40; export XSDATA_SKIP="^ICMS.ICMS\d+|^ICMS.ICMSSN\d+"; export XSDATA_LANG="portuguese"
     $ # assuming you are in an akretion/nfelib clone or you downloaded the NFe schemas in nfelib/schemas/nfe/v4_0:
     $ xsdata generate nfelib/schemas/nfe/v4_0 --package nfelib.odoo.nfe.v4_0 --output=odoo
     Generating package: init
