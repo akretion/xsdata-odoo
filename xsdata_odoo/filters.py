@@ -17,8 +17,8 @@ from xsdata.models.config import ObjectType
 from xsdata.utils import collections
 from xsdata.utils import namespaces
 
-from .wrap_text import extract_string_and_help
-from .wrap_text import wrap_text
+from .text_utils import extract_string_and_help
+from .text_utils import wrap_text
 
 
 INTEGER_TYPES = ("integer", "positiveInteger")
