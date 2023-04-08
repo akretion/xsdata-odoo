@@ -378,24 +378,52 @@ class OdooFilters(Filters):
         Detection tends to be brittle but in general it doesn't impact
         XML serialization/desrialization as both types are floats and we
         usually take the xsd_type into account.
+
+        You can somewhat customize the default behavior with ENV VARs:
+        XSDATA_MONETARY_TYPE: xsd type to force fields.Monetary
+        XSDATA_NUM_TYPE: xsd type for fields.Float or fields.Monetary eventually
+        you can use a prefix followed by brackets to indicate where to take the
+        floor part and the decimal part like Prefix[in_start:int_stop.dec_start:dec_stop]
         """
         python_type = attr.types[0].datatype.code
         if python_type in FLOAT_TYPES or python_type in CHAR_TYPES:
             xsd_type = kwargs.get("xsd_type", "")
 
-            # Brazilian fiscal documents:
-            if xsd_type.startswith("TDec_"):  # TODO make pluggable. ENV?
-                if int(xsd_type[7:9]) != MONETARY_DIGITS or (
-                    attr.name[0] == "p" and attr.name[1].isupper()
-                ):
-                    kwargs["digits"] = (
-                        int(xsd_type[5:7]),
-                        int(xsd_type[7:9]),
-                    )
+            monetary_type = os.environ.get("XSDATA_MONETARY_TYPE")
+
+            num_type_complete = os.environ.get("XSDATA_NUM_TYPE", "TDec_[5:7.7:9]")
+            if "[" in num_type_complete:
+                int_part = num_type_complete.split("[")[1].split(".")[0]
+                int_start = int(int_part.split(":")[0])
+                int_stop = int(int_part.split(":")[1])
+                dec_part = num_type_complete.split(".")[1].split("]")[0]
+                dec_start = int(dec_part.split(":")[0])
+                dec_stop = int(dec_part.split(":")[1])
+                num_type = num_type_complete.split("[")[0]
+                conditional_monetary = True
+            else:
+                num_type = num_type_complete
+                conditional_monetary = False
+
+            if monetary_type and xsd_type.startswith(monetary_type):
+                kwargs["currency_field"] = "brl_currency_id"  # TODO use spec_curreny_id
+            elif xsd_type.startswith(num_type):
+                if conditional_monetary:
+                    if int(xsd_type[dec_start:dec_stop]) != MONETARY_DIGITS or (
+                        # for Brazilian edocs, pSomething means percentualSomething ->Float
+                        attr.name[0] == "p"
+                        and attr.name[1].isupper()
+                    ):
+                        kwargs["digits"] = (
+                            int(xsd_type[int_start:int_stop]),
+                            int(xsd_type[dec_start:dec_stop]),
+                        )
+                    else:
+                        kwargs[
+                            "currency_field"
+                        ] = "brl_currency_id"  # TODO use spec_curreny_id
                 else:
-                    kwargs[
-                        "currency_field"
-                    ] = "brl_currency_id"  # TODO use spec_curreny_id
+                    kwargs["digits"] = (16, 4)
 
     def _simple_field_definition(
         self, obj: Class, attr: Attr, type_names: str, kwargs: Dict
