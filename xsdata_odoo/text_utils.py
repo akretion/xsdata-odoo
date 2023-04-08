@@ -6,6 +6,9 @@ import locale
 import textwrap
 from typing import Tuple
 
+import pandas as pd
+import requests
+
 # where to stop when trying to extract the beginning of a text
 STRONG_PONCT_TOKENS = (". ", ", ", " (", " - ", ".", ",", ": ", "|")
 STRING_MIN_LEN = 36  # agressive cuts
@@ -13,6 +16,18 @@ STRING_MAX_LEN = 40  # progressive cuts
 
 USELESS_STARTS = ("Informar o ", "Informar a ", "Preencher com ")
 
+ESOCIAL_DOC_URL = "https://www.gov.br/esocial/pt-br/documentacao-tecnica/leiautes-esocial-v-s1.1-nt-01-2023/index.html"
+page = requests.get(ESOCIAL_DOC_URL)
+page.encoding = page.apparent_encoding
+dfs = pd.read_html(page.text.replace("<br />", " LINE_BREAK"))
+
+def _extract_field_spec(dfs, object_name, field_name):
+    for df in dfs:
+        if df.columns[1] == "Grupo/Campo":
+            for row in df.values:
+                if row[2] == object_name and row[1] == field_name:
+                    return row
+    return []
 
 def extract_string_and_help(
     obj_name: str,
@@ -31,9 +46,15 @@ def extract_string_and_help(
     appending the field name in the description eventually if required.
     """
 
+    row = _extract_field_spec(dfs, obj_name, attr_name)
+    if len(row) > 7:
+#        print(row)
+        doc = row[8].replace("LINE_BREAK", "\n")
+
     string = attr_name
     if doc:
-        doc = doc.strip().replace('"', "'")
+#        doc = doc.strip().replace('"', "'")
+        doc = doc.strip().replace('"', "")
         string, doc = _aggressive_cut(doc)
         string = _progressive_cut(string, max_len)
 
