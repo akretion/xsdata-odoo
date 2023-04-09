@@ -1,5 +1,5 @@
 import babel
-import nltk
+from nltk import download
 from nltk.corpus import stopwords
 import os
 import locale
@@ -106,7 +106,7 @@ def _progressive_cut(string, max_len):
     try:
         lang_stopwords = stopwords.words(lang)
     except LookupError:
-        nltk.download("stopwords")
+        download("stopwords")
         lang_stopwords = stopwords.words(lang)
 
     while len(string) > max_len:
