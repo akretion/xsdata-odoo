@@ -357,7 +357,7 @@ class OdooFilters(Filters):
         string, help_attr = extract_string_and_help(
             obj.name, attr.name, attr.help, obj.unique_labels
         )
-        kwargs["string"] = string
+        kwargs["string"] = attr.name if string is None else string
 
         metadata = self.field_metadata(attr, {}, [p.name for p in parents])
         if metadata.get("required"):
