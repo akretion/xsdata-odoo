@@ -4,7 +4,7 @@
 class {{ obj.name|class_name }}({{ obj|odoo_python_inherit_model }}):
     {{- obj.help|clean_docstring }}
     _description = {{ obj|odoo_class_description }}
-    _name = "{{ obj.name|registry_name }}"
+    _name = "{{ obj|unique_class_name|registry_name }}"
     _inherit = "{{ obj|odoo_inherit_model }}"
     {{ obj|class_properties(parents) }}
 
@@ -17,11 +17,11 @@ class {{ obj.name|class_name }}({{ obj|odoo_python_inherit_model }}):
     {% endif -%}
     {%- endif -%}
     {%- endfor -%}
-{%- for inner in obj.inner -%}
+    {%- for inner in obj.inner -%}
     {%- set tpl = "enum.jinja2" if inner.is_enumeration else "class.jinja2" -%}
     {%- set inner_parents = parents + [inner] -%}
     {%- with obj=inner, parents=inner_parents, level=(level + 1) -%}
         {%- include tpl -%}
     {%- endwith -%}
-{%- endfor -%}
+    {%- endfor -%}
 {%- endif -%}

@@ -66,6 +66,7 @@ class OdooFilters(Filters):
         "all_simple_types",
         "all_complex_types",
         "implicit_many2ones",
+        "unique_class_names",
         "schema",
         "version",
         "python_inherit_model",
@@ -79,6 +80,7 @@ class OdooFilters(Filters):
         all_simple_types: List[Class],
         all_complex_types: List[Class],
         implicit_many2ones: Dict,
+        unique_class_names: Dict,
         schema: str = "spec",
         version: str = "10",
         python_inherit_model: str = "models.AbstractModel",
@@ -88,6 +90,7 @@ class OdooFilters(Filters):
         self.all_simple_types = all_simple_types
         self.all_complex_types = all_complex_types
         self.implicit_many2ones = implicit_many2ones
+        self.unique_class_names = unique_class_names
         self.files_to_etree: Dict[str, Any] = {}
         self.relative_imports = True
         self.schema = schema
@@ -105,6 +108,7 @@ class OdooFilters(Filters):
                 "enum_skip": self.enum_skip,
                 "pattern_skip": self.pattern_skip,
                 "registry_name": self.registry_name,
+                "unique_class_name": self.unique_class_name,
                 "odoo_python_inherit_model": self.odoo_python_inherit_model,
                 "odoo_inherit_model": self.odoo_inherit_model,
                 "clean_docstring": self.clean_docstring,
@@ -227,6 +231,10 @@ class OdooFilters(Filters):
         name = self.class_name(name)
         return f"{self.schema}.{self.version}.{name.lower()}"
 
+    def unique_class_name(self, obj: Class) -> str:
+        """Return the name of the xsdata class for a given Odoo model."""
+        return f"{self.unique_class_names[obj.ref]}"
+
     def odoo_inherit_model(self, obj: Class) -> str:
         return self.inherit_model
 
@@ -234,9 +242,7 @@ class OdooFilters(Filters):
         return self.python_inherit_model
 
     def registry_comodel(self, type_names: List[str]):
-        # NOTE: we take only the last part of inner Types with .split(".")[-1]
-        # but if that were to create Type duplicates we could change that.
-        return self.registry_name(type_names[-1].split(".")[-1])
+        return self.registry_name(type_names[-1])
 
     def clean_docstring(self, string: Optional[str], escape: bool = True) -> str:
         """Prepare string for docstring generation."""
