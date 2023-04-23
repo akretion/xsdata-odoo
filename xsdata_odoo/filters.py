@@ -250,7 +250,13 @@ class OdooFilters(Filters):
         parents: List[Class],
     ) -> str:
         """Return the name of the xsdata class for a given Odoo model."""
-        return f'_binding_type = "{self.binding_type(obj, parents)}"'
+        if os.environ.get("XSDATA_GENDS"):
+            return (
+                f'_binding_type = "{self.binding_type(obj, parents)}"\n'
+                f'    _generateds_type = "{self.generateds_type(obj, parents)}"'
+            )
+        else:
+            return f'_binding_type = "{self.binding_type(obj, parents)}"\n'
 
     def binding_type(
         self,
@@ -259,6 +265,22 @@ class OdooFilters(Filters):
     ) -> str:
         """Return the name of the xsdata class for a given Odoo model."""
         return ".".join([self.class_name(p.name) for p in parents])
+
+    def generateds_type(
+        self,
+        obj: Class,
+        parents: List[Class],
+    ) -> str:
+        """
+        DEPRECATED!
+        Return the name of the GenerateDS class for a given Odoo model.
+        This is for backward compatibility: it allows to use Odoo mixins
+        generated with xsdata along with legacy GenerateDS Python bindings.
+        """
+        if len(parents) > 1:
+            return obj.qname.split("}")[1] + "Type"
+        else:
+            return obj.qname.split("}")[1]
 
     def odoo_implicit_many2ones(self, obj: Class) -> str:
         """The m2o fields for the o2m keys."""
