@@ -23,7 +23,6 @@ from xsdata.utils import collections
 from .codegen.resolver import OdooDependenciesResolver
 from .filters import OdooFilters
 from .filters import SIGNATURE_CLASS_SKIP
-from .merge_attributes import MergeAttributes as PatchedMergeAttributes
 
 # only put this header in files with complex types (not in tipos_basico_v4_00.py for instance)
 # import textwrap
@@ -37,15 +36,8 @@ class OdooGenerator(DataclassGenerator):
     """Odoo generator."""
 
     def __init__(self, config: GeneratorConfig):
-        if not os.environ.get("XSDATA_NO_PATCH"):
-            # see the evil detail: https://github.com/tefra/xsdata/issues/666
-            # for instance with this patch the Brazilian Invoicing nfe40_IPI
-            # in Imposto class is a Many2one as expected
-            MergeAttributes.process = PatchedMergeAttributes.process
-
         schema = os.environ.get("XSDATA_SCHEMA", "spec")
         version = os.environ.get("XSDATA_VERSION", "10")
-
         # if field prefix is not set via the config (default is "value")
         # then set it with SCHEMA and VERSION env vars
         if config.conventions.field_name.safe_prefix == "value":
