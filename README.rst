@@ -48,24 +48,24 @@ Odoo Models for the Brazilian Electronic Invoices:
     $ # Generate Odoo models
     $ export XSDATA_SCHEMA=nfe; export XSDATA_VERSION=40; export XSDATA_SKIP="^ICMS.ICMS\d+|^ICMS.ICMSSN\d+"; export XSDATA_LANG="portuguese"
     $ # assuming you are in an akretion/nfelib clone or you downloaded the NFe schemas in nfelib/schemas/nfe/v4_0:
-    $ xsdata generate nfelib/nfe/schemas/v4_0 --package nfelib.nfe.bindings.v4_0
+    $ xsdata generate nfelib/nfe/schemas/v4_0 --package nfelib.nfe.odoo.v4_0 --output=odoo
     Generating package: init
-    Generating package: nfelib.nfe.bindings.v4_0.xmldsig_core_schema_v1_01
-    Generating package: nfelib.nfe.bindings.v4_0.tipos_basico_v4_00
-    Generating package: nfelib.nfe.bindings.v4_0.leiaute_nfe_v4_00
-    Generating package: nfelib.nfe.bindings.v4_0.leiaute_cons_sit_nfe_v4_00
-    Generating package: nfelib.nfe.bindings.v4_0.cons_reci_nfe_v4_00
-    Generating package: nfelib.nfe.bindings.v4_0.cons_sit_nfe_v4_00
-    Generating package: nfelib.nfe.bindings.v4_0.leiaute_cons_stat_serv_v4_00
-    Generating package: nfelib.nfe.bindings.v4_0.cons_stat_serv_v4_00
-    Generating package: nfelib.nfe.bindings.v4_0.envi_nfe_v4_00
-    Generating package: nfelib.nfe.bindings.v4_0.leiaute_inut_nfe_v4_00
-    Generating package: nfelib.nfe.bindings.v4_0.inut_nfe_v4_00
-    Generating package: nfelib.nfe.bindings.v4_0.nfe_v4_00
-    Generating package: nfelib.nfe.bindings.v4_0.proc_inut_nfe_v4_00
-    Generating package: nfelib.nfe.bindings.v4_0.proc_nfe_v4_00
-    Generating package: nfelib.nfe.bindings.v4_0.ret_cons_reci_nfe_v4_00
-    Generating package: nfelib.nfe.bindings.v4_0.ret_cons_sit_nfe_v4_00
-    Generating package: nfelib.nfe.bindings.v4_0.ret_cons_stat_serv_v4_00
-    Generating package: nfelib.nfe.bindings.v4_0.ret_envi_nfe_v4_00
-    Generating package: nfelib.nfe.bindings.v4_0.ret_inut_nfe_v4_0
+    Generating package: nfelib.nfe.odoo.v4_0.xmldsig_core_schema_v1_01
+    Generating package: nfelib.nfe.odoo.v4_0.tipos_basico_v4_00
+    Generating package: nfelib.nfe.odoo.v4_0.leiaute_nfe_v4_00
+    Generating package: nfelib.nfe.odoo.v4_0.leiaute_cons_sit_nfe_v4_00
+    Generating package: nfelib.nfe.odoo.v4_0.cons_reci_nfe_v4_00
+    Generating package: nfelib.nfe.odoo.v4_0.cons_sit_nfe_v4_00
+    Generating package: nfelib.nfe.odoo.v4_0.leiaute_cons_stat_serv_v4_00
+    Generating package: nfelib.nfe.odoo.v4_0.cons_stat_serv_v4_00
+    Generating package: nfelib.nfe.odoo.v4_0.envi_nfe_v4_00
+    Generating package: nfelib.nfe.odoo.v4_0.leiaute_inut_nfe_v4_00
+    Generating package: nfelib.nfe.odoo.v4_0.inut_nfe_v4_00
+    Generating package: nfelib.nfe.odoo.v4_0.nfe_v4_00
+    Generating package: nfelib.nfe.odoo.v4_0.proc_inut_nfe_v4_00
+    Generating package: nfelib.nfe.odoo.v4_0.proc_nfe_v4_00
+    Generating package: nfelib.nfe.odoo.v4_0.ret_cons_reci_nfe_v4_00
+    Generating package: nfelib.nfe.odoo.v4_0.ret_cons_sit_nfe_v4_00
+    Generating package: nfelib.nfe.odoo.v4_0.ret_cons_stat_serv_v4_00
+    Generating package: nfelib.nfe.odoo.v4_0.ret_envi_nfe_v4_00
+    Generating package: nfelib.nfe.odoo.v4_0.ret_inut_nfe_v4_0
