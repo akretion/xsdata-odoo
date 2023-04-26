@@ -354,13 +354,13 @@ class OdooFilters(Filters):
             return self._simple_field_definition(obj, attr, type_names, kwargs)
 
         else:  # relational field
-            field = self._try_many2one_field_definition(obj, attr, type_names, kwargs)
+            field = self._try_one2many_field_definition(obj, attr, type_names, kwargs)
             if field is None:
                 field = self._try_selection_field_definition(
                     obj, attr, type_names, kwargs
                 )
                 if field is None:
-                    field = self._try_one2many_field_definition(
+                    field = self._try_many2one_field_definition(
                         obj, attr, type_names, kwargs
                     )
 
@@ -474,7 +474,7 @@ class OdooFilters(Filters):
             )
             return ""
 
-    def _try_many2one_field_definition(
+    def _try_one2many_field_definition(
         self, obj: Class, attr: Attr, type_names: str, kwargs: Dict
     ):
         if attr.is_list:
@@ -488,7 +488,7 @@ class OdooFilters(Filters):
             if attr.types[0].qname == klass.qname:
                 return f"fields.Selection({klass.name.upper()},{self.format_arguments(kwargs, 4)})"
 
-    def _try_one2many_field_definition(
+    def _try_many2one_field_definition(
         self, obj: Class, attr: Attr, type_names: str, kwargs: Dict
     ):
         for klass in self.all_complex_types:
