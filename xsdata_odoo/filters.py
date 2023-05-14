@@ -7,7 +7,6 @@ from typing import List
 from typing import Optional
 
 from jinja2 import Environment
-from lxml import etree
 from xsdata.codegen.models import Attr
 from xsdata.codegen.models import Class
 from xsdata.formats.dataclass.filters import Filters
@@ -65,6 +64,7 @@ class OdooFilters(Filters):
         "files_to_etree",
         "all_simple_types",
         "all_complex_types",
+        "registry_names",
         "implicit_many2ones",
         "schema",
         "version",
@@ -78,6 +78,7 @@ class OdooFilters(Filters):
         config: GeneratorConfig,
         all_simple_types: List[Class],
         all_complex_types: List[Class],
+        registry_names: Dict,
         implicit_many2ones: Dict,
         schema: str = "spec",
         version: str = "10",
@@ -87,6 +88,7 @@ class OdooFilters(Filters):
         super().__init__(config)
         self.all_simple_types = all_simple_types
         self.all_complex_types = all_complex_types
+        self.registry_names = registry_names
         self.implicit_many2ones = implicit_many2ones
         self.files_to_etree: Dict[str, Any] = {}
         self.relative_imports = True
@@ -109,6 +111,7 @@ class OdooFilters(Filters):
                 "odoo_inherit_model": self.odoo_inherit_model,
                 "clean_docstring": self.clean_docstring,
                 "binding_type": self.binding_type,
+                "odoo_class_name": self.odoo_class_name,
                 "class_properties": self.class_properties,
                 "odoo_class_description": self.odoo_class_description,
                 "odoo_field_definition": self.odoo_field_definition,
@@ -170,7 +173,7 @@ class OdooFilters(Filters):
 
     def odoo_class_description(self, obj: Class) -> str:
         if obj.help:
-            return f"""textwrap.dedent("    %s" % (__doc__,))"""
+            return """textwrap.dedent("    %s" % (__doc__,))"""
         else:
             # TODO some inner classes have no obj.help
             # but we can read the XML annotations. Ex: "TretEnviNfe.InfRec", "Tnfe.InfNfe"...
@@ -223,9 +226,28 @@ class OdooFilters(Filters):
 
         return self.clean_docstring(obj.help)
 
-    def registry_name(self, name: str) -> str:
-        name = self.class_name(name)
-        return f"{self.schema}.{self.version}.{name.lower()}"
+    def odoo_class_name(self, obj: Class, parents: List[Class] = []):
+        """
+        Same as class_name with the --unnest-classes option but without the
+        option side effects.
+        """
+        full_name = ".".join([self.class_name(c.name) for c in parents])
+        return self.registry_names[full_name].replace(".", "")
+
+    def registry_name(
+        self, name: str = "", parents: List[Class] = [], type_names: List[str] = []
+    ) -> str:
+        if parents:
+            full_name = ".".join([self.class_name(c.name) for c in parents])
+        else:
+            if type_names:
+                full_name = ".".join(type_names)
+            else:
+                full_name = self.class_name(name)
+        # NOTE we cannot use the class ref as a key because only type names
+        # are provided by xsdata for fields
+        unique_name = self.registry_names[full_name].replace(".", "_")
+        return f"{self.schema}.{self.version}.{unique_name.lower()}"
 
     def odoo_inherit_model(self, obj: Class) -> str:
         return self.inherit_model
@@ -236,7 +258,8 @@ class OdooFilters(Filters):
     def registry_comodel(self, type_names: List[str]):
         # NOTE: we take only the last part of inner Types with .split(".")[-1]
         # but if that were to create Type duplicates we could change that.
-        return self.registry_name(type_names[-1].split(".")[-1])
+        clean_type_names = type_names[-1].replace('"', "").split(".")
+        return self.registry_name(clean_type_names[-1], type_names=clean_type_names)
 
     def clean_docstring(self, string: Optional[str], escape: bool = True) -> str:
         """Prepare string for docstring generation."""
@@ -282,11 +305,11 @@ class OdooFilters(Filters):
         else:
             return obj.qname.split("}")[1]
 
-    def odoo_implicit_many2ones(self, obj: Class) -> str:
+    def odoo_implicit_many2ones(self, obj: Class, parents: List[Class]) -> str:
         """The m2o fields for the o2m keys."""
         fields = []
         implicit_many2ones = self.implicit_many2ones.get(
-            self.registry_name(obj.name), []
+            self.binding_type(obj, parents), []
         )
         for implicit_many2one_data in implicit_many2ones:
             kwargs = {}
@@ -431,14 +454,15 @@ class OdooFilters(Filters):
                 kwargs["currency_field"] = "brl_currency_id"  # TODO use spec_curreny_id
             elif xsd_type.startswith(num_type):
                 if conditional_monetary:
-                    if int(xsd_type[dec_start:dec_stop]) != MONETARY_DIGITS or (
+                    if not xsd_type[dec_start:dec_stop].isdigit():
+                    if int(xsd_type.replace("03v", "03")[dec_start:dec_stop]) != MONETARY_DIGITS or (
                         # for Brazilian edocs, pSomething means percentualSomething ->Float
                         attr.name[0] == "p"
                         and attr.name[1].isupper()
                     ):
                         kwargs["digits"] = (
-                            int(xsd_type[int_start:int_stop]),
-                            int(xsd_type[dec_start:dec_stop]),
+                            int(xsd_type.replace("03v", "03")[int_start:int_stop]),
+                            int(xsd_type.replace("03v", "03")[dec_start:dec_stop]),
                         )
                     else:
                         kwargs[

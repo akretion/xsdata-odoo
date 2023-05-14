@@ -113,6 +113,44 @@ class ClassC(models.AbstractModel):
                 generated = f.read()
             self.assertEqual(expected, generated)
 
+    def test_complete_po_with_nesting(self):
+        if os.environ.get("XSDATA_SCHEMA"):
+            del os.environ["XSDATA_SCHEMA"]
+        if os.environ.get("XSDATA_VERSION"):
+            del os.environ["XSDATA_VERSION"]
+
+        runner = CliRunner()
+        schema = Path(__file__).parent.joinpath("fixtures/po_with_nesting/po.xsd")
+        os.chdir(Path(__file__).parent.parent)
+
+        result = runner.invoke(
+            cli,
+            [
+                str(schema),
+                "--package",
+                "generated.po_with_nesting.models",
+                "--structure-style=single-package",
+                "--output",
+                "odoo",
+#                "--config",
+#                "tests/fixtures/odoo.conf.xml",
+            ],
+            catch_exceptions=True,
+        )
+
+        self.assertIsNone(result.exception)
+
+        if "win" not in sys.platform.lower():
+            expected = "to be read 1"
+            generated = "to be read 2"
+            with open("tests/fixtures/po_with_nesting/models.py") as f:
+                expected = f.read()
+            with open("generated/po_with_nesting/models.py") as f:
+                generated = f.read()
+            self.assertEqual(expected, generated)
+
+ 
+
     def test_complete_nfe(self):
         os.environ["XSDATA_SCHEMA"] = "nfe"
         os.environ["XSDATA_VERSION"] = "40"
