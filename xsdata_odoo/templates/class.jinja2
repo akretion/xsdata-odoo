@@ -1,14 +1,14 @@
 {% set level = level|default(0) %}
 {% set parents = parents|default([obj]) %}
 {%- if not obj.name|pattern_skip(parents) %}
-class {{ obj.name|class_name }}({{ obj|odoo_python_inherit_model }}):
+class {{ obj|odoo_class_name(parents) }}({{ obj|odoo_python_inherit_model }}):
     {{- obj.help|clean_docstring }}
     _description = {{ obj|odoo_class_description }}
-    _name = "{{ obj.name|registry_name }}"
+    _name = "{{ obj.name|registry_name(parents) }}"
     _inherit = "{{ obj|odoo_inherit_model }}"
     {{ obj|class_properties(parents) }}
 
-    {{ obj|odoo_implicit_many2ones }}
+    {{ obj|odoo_implicit_many2ones(parents) }}
     {%- for attr in obj.attrs -%}
     {%- if not attr.name|pattern_skip(parents) -%}
     {%- set odoo_field_definition = attr|odoo_field_definition(parents) %}

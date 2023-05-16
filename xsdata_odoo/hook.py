@@ -75,7 +75,7 @@ def merge_duplicate_attrs(self, target: Class):
             attr_max_occurs = a_res.max_occurs or 1
 
             e_res.min_occurs = min(min_occurs, attr_min_occurs)
-            if os.environ.get("XSDATA_SCHEMA") in ("nfe",):
+            if os.environ.get("XSDATA_SCHEMA") in ("nfe", "cte"):
                 e_res.max_occurs = min(max_occurs, attr_max_occurs)  # this is the patch
             else:
                 e_res.max_occurs = max_occurs + attr_max_occurs
