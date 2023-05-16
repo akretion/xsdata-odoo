@@ -2,7 +2,6 @@ import os
 import re
 from collections import defaultdict
 from pathlib import Path
-from random import random
 from typing import Dict
 from typing import Iterator
 from typing import List
@@ -13,7 +12,6 @@ from black import format_str
 from jinja2 import Environment
 from jinja2 import FileSystemLoader
 from lxml import etree
-from xsdata.codegen.handlers import MergeAttributes
 from xsdata.codegen.models import Class
 from xsdata.codegen.resolver import DependenciesResolver
 from xsdata.formats.dataclass.generator import DataclassGenerator
@@ -24,7 +22,6 @@ from xsdata.utils import collections
 from .codegen.resolver import OdooDependenciesResolver
 from .filters import OdooFilters
 from .filters import SIGNATURE_CLASS_SKIP
-
 
 # only put this header in files with complex types (not in tipos_basico_v4_00.py for instance)
 # import textwrap
@@ -48,20 +45,109 @@ class OdooGenerator(DataclassGenerator):
         super().__init__(config)
         self.all_simple_types: List[Class] = []
         self.all_complex_types: List[Class] = []
+        self.registry_names: Dict = {}
         self.implicit_many2ones: Dict = defaultdict(list)
-        self.class_names: Dict = defaultdict(str)
         tpl_dir = Path(__file__).parent.joinpath("templates")
         self.env = Environment(loader=FileSystemLoader(str(tpl_dir)), autoescape=False)
         self.filters = OdooFilters(
             config,
             self.all_simple_types,
             self.all_complex_types,
+            self.registry_names,
             self.implicit_many2ones,
-            self.class_names,
             schema,
             version,
         )
         self.filters.register(self.env)
+
+    def deepened_class_names(self, all_file_classes, klass, parents, level):
+        all_class_names = []
+        for klass, parents, path in all_file_classes:
+            all_class_names.append(
+                "".join(
+                    self.filters.class_name(c.name) for c in parents[0:level] + [klass]
+                )
+            )
+        return all_class_names
+
+    def _find_duplicated_names(self, class_paths):
+        duplicates = set()
+        names = set()
+
+        for ref, path in class_paths.items():
+            path_parts = path.split("|")
+            name = path_parts[-1]
+            if name in names:
+                duplicates.add(name)
+            names.add(name)
+
+        return duplicates
+
+    def _find_minimal_unique_name(self, class_paths, path_parts):
+        """
+        Find minimal unique name for class
+        Minimal unique name is found by prepending the first uncommon parent to class name.
+        """
+
+        name = path_parts[-1]
+        orig_path = "|".join(path_parts)
+        duplicates = list()
+
+        for ref, path in class_paths.items():
+            if path.endswith(name) and path != orig_path:
+                duplicates.append(path.split("|"))
+
+        # remove parts of path that are common to other classes
+        reduced_path = set(path_parts[:-1])
+        for path in duplicates:
+            reduced_path = reduced_path.difference(set(path[:-1]))
+
+        prefix = ""
+        if len(reduced_path) != 0:
+            # use first unique parent found
+            for entry in reversed(path_parts):
+                if entry in reduced_path:
+                    prefix = entry
+                    break
+
+        if prefix:
+            # Is it possible to exist more than two nodes with the same name and parents ?
+            # If so we may need to add some random text here.
+            name = f"{prefix}.{name}"
+
+        return name
+
+    def _find_minimal_unique_names(self, class_paths, duplicates):
+        """
+        Find minimal unique names for classes
+        """
+
+        class_names = dict()
+
+        for ref, path in class_paths.items():
+            path_parts = path.split("|")
+            name = path_parts[-1]
+            if name in duplicates:
+                name = self._find_minimal_unique_name(class_paths, path_parts)
+
+            class_names[ref] = name
+        return class_names
+
+    def _generate_unique_class_names(self, class_paths):
+        """
+        Generate unique class name
+        Class names must be unique in the module, so we find the minimum
+        unique name for each class using a depth-first search and
+        prepending the parent class name.
+        """
+        duplicates = self._find_duplicated_names(class_paths)
+        class_names = self._find_minimal_unique_names(class_paths, duplicates)
+        return {
+            ".".join([self.filters.class_name(i) for i in v.split("|")]): ".".join(
+                [self.filters.class_name(name) for name in class_names[k].split(".")]
+            )
+            for k, v in class_paths.items()
+        }
 
     def render(self, classes: List[Class]) -> Iterator[GeneratorResult]:
         """Return a iterator of the generated results."""
@@ -72,23 +158,34 @@ class OdooGenerator(DataclassGenerator):
         for path, cluster in self.group_by_package(classes).items():
             yield from self.ensure_packages(path.parent)
 
-            def dfs(visited, graph, node):
-                if node not in visited:
-                    visited.append(node)
+            class_paths = dict()
+
+            def dfs(visited, graph, node, path=""):
+                if (node, path) not in visited:
+                    visited.append((node, path))
+                    if path:
+                        path = path + f"|{node.name}"
+                    else:
+                        path = node.name
+                    class_paths[node.ref] = path
                     for neighbour in node.inner:  # in graph[node]:
-                        dfs(visited, graph, neighbour)
+                        # FIXME is this parent collecting buggy??
+                        dfs(visited, graph, neighbour, path)
 
-            all_file_classes: List[Class] = []
+            all_file_classes: List[(Class, List(Class))] = []
             for c in cluster:
-                dfs(all_file_classes, cluster, c)
+                dfs(all_file_classes, cluster, c)  # , c.name)
 
-            class_names = self._generate_unique_class_names(cluster)
-            self.class_names.update(class_names)
+            unique_class_names = self._generate_unique_class_names(class_paths)
+            for _ref, name in class_paths.items():
+                full_name = ".".join(
+                    [self.filters.class_name(i) for i in name.split("|")]
+                )
+                self.registry_names[full_name] = unique_class_names[full_name]
 
-            # collect relation dependencies from other files/includes:
-            for klass in all_file_classes:
+            for klass, path in all_file_classes:
                 if not self.filters.files_to_etree.get(
-                        klass.location
+                    klass.location
                 ) and os.path.isfile(klass.location):
                     xsd_tree = etree.parse(klass.location)
                     self.filters.files_to_etree[klass.location] = xsd_tree
@@ -100,22 +197,34 @@ class OdooGenerator(DataclassGenerator):
                 elif klass not in self.all_complex_types:
                     for field in klass.attrs:
                         if not field.types[0].datatype and field.is_list:
+                            if path:
+                                parent_names = [
+                                    self.filters.class_name(i) for i in path.split("|")
+                                ] + [self.filters.class_name(klass.name)]
+                            else:
+                                parent_names = [self.filters.class_name(klass.name)]
+
                             type_names = collections.unique_sequence(
-                                self.filters.field_type_name(x, []) for x in field.types
+                                self.filters.field_type_name(x, parent_names)
+                                for x in field.types
                             )
-                            class_name = self.class_names[klass.ref]
-                            comodel = self.filters.registry_comodel([class_name])
                             target_field = self.filters.field_name(
-                                f"{field.name}_{class_name}_id",
-                                class_name,
+                                f"{field.name}_{klass.name}_id",
+                                klass.name,
                             )
-                            self.implicit_many2ones[comodel].append(
-                                (self.filters.registry_name(class_name), target_field)
+                            comodel_type = type_names[0].replace('"', "")
+                            self.implicit_many2ones[comodel_type].append(
+                                (
+                                    self.filters.registry_name(
+                                        klass.name, type_names=parent_names
+                                    ),
+                                    target_field,
+                                )
                             )
 
                     self.all_complex_types.append(klass)
 
-            for klass in all_file_classes:
+            for klass, path in all_file_classes:
                 self._collect_extra_data(klass)
 
         # Generate modules
@@ -136,7 +245,7 @@ class OdooGenerator(DataclassGenerator):
             )
 
     def render_module(
-            self, resolver: DependenciesResolver, classes: List[Class]
+        self, resolver: DependenciesResolver, classes: List[Class]
     ) -> str:
         res = super().render_module(resolver, classes)
 
@@ -160,7 +269,7 @@ class OdooGenerator(DataclassGenerator):
         return res
 
     def render_classes(
-            self, classes: List[Class], module_namespace: Optional[str]
+        self, classes: List[Class], module_namespace: Optional[str]
     ) -> str:
         """
         Render the source code of the classes.
@@ -172,7 +281,9 @@ class OdooGenerator(DataclassGenerator):
 
         def render_class(obj: Class) -> str:
             """Render class or enumeration."""
-
+            if [ext.type for ext in obj.extensions]:
+                # this is used only to change tag names, no Odoo model is required
+                return ""
             if obj.is_enumeration:
                 template = load("enum.jinja2")
             elif obj.is_service:
@@ -216,9 +327,9 @@ class OdooGenerator(DataclassGenerator):
             if xpath_matches:
                 children = xpath_matches[0].getchildren()
                 if (
-                        len(children) > 0
-                        and children[0].tag
-                        == "{http://www.w3.org/2001/XMLSchema}annotation"
+                    len(children) > 0
+                    and children[0].tag
+                    == "{http://www.w3.org/2001/XMLSchema}annotation"
                 ):
                     obj.help = "".join(children[0].itertext())
 
@@ -240,13 +351,12 @@ class OdooGenerator(DataclassGenerator):
                     },
                 )
                 if xpath_matches:
-                    choice = None
                     xsd_choice_required = None
                     parent = xpath_matches[0].getparent()
                     # (here we don't try to group items by choice, but eventually we could)
                     while parent.tag == "{http://www.w3.org/2001/XMLSchema}sequence":
                         if (
-                                parent.get("minOccurs", "1") == "0"
+                            parent.get("minOccurs", "1") == "0"
                         ):  # example veicTransp in Brazilian NFe
                             xsd_choice_required = False
                         parent = parent.getparent()
@@ -259,8 +369,8 @@ class OdooGenerator(DataclassGenerator):
                             obj.name.lower()
                         )  # TODO consider changing choice -> xsd_choice
                         if (
-                                parent.get("minOccurs", "1") != "0"
-                                and xsd_choice_required is None
+                            parent.get("minOccurs", "1") != "0"
+                            and xsd_choice_required is None
                         ):
                             # important feature we had in generateDS:
                             # if the element is part of <choice> tag without minOccurs="0"
@@ -273,94 +383,3 @@ class OdooGenerator(DataclassGenerator):
                     ]:
                         field_data["xsd_type"] = xsd_type
                     self.filters.xsd_extra_info[f"{obj.name}#{attr.name}"] = field_data
-
-    def _generate_unique_class_names(self, cluster):
-        """
-        Generate unique class name
-
-        Class names must be unique in the module, so we find the minimum
-        unique name for each class using a depth-first search and
-        prepending the parent class name.
-        """
-
-        class_paths = self._map_class_paths(cluster)
-
-        duplicates = self._find_duplicated_names(class_paths)
-        class_names = self._find_minimal_unique_names(class_paths, duplicates)
-        return class_names
-
-    def _map_class_paths(self, cluster):
-        # map class paths using depth-first search
-        class_paths = dict()
-
-        def dfs(node, path):
-            path = path + f"|{node.name}"
-            class_paths[node.ref] = path
-            for child in node.inner:
-                dfs(child, path)
-
-        for c in cluster:
-            dfs(c, c.name)
-        return class_paths
-
-    def _find_duplicated_names(self, class_paths):
-        duplicates = set()
-        names = set()
-
-        for ref, path in class_paths.items():
-            path_parts = path.split("|")
-            name = path_parts[-1]
-            if name in names:
-                duplicates.add(name)
-            names.add(name)
-
-        return duplicates
-
-    def _find_minimal_unique_names(self, class_paths, duplicates):
-        """
-        Find minimal unique names for classes
-        """
-
-        class_names = dict()
-
-        for ref, path in class_paths.items():
-            path_parts = path.split("|")
-            name = path_parts[-1]
-            if name in duplicates:
-                name = self._find_minimal_unique_name(class_paths, path_parts)
-
-            class_names[ref] = name
-        return class_names
-
-    def _find_minimal_unique_name(self, class_paths, path_parts):
-        """
-        Find minimal unique name for class
-
-        Minimal unique name is found by prepending the first uncommon parent to class name.
-        """
-
-        name = path_parts[-1]
-        orig_path = "|".join(path_parts)
-        duplicates = list()
-
-        for ref, path in class_paths.items():
-            if path.endswith(name) and path != orig_path:
-                duplicates.append(path.split("|"))
-
-        # remove parts of path that are common to other classes
-        reduced_path = set(path_parts[:-1])
-        for path in duplicates:
-            reduced_path = reduced_path.difference(set(path[:-1]))
-
-        prefix = ""
-        if len(reduced_path) != 0:
-            # use first unique parent found
-            for entry in reversed(path_parts):
-                if entry in reduced_path:
-                    prefix = entry
-                    break
-
-        if prefix:
-            name = f"{prefix}{name}"
-
-        return name
