@@ -143,7 +143,7 @@ class OdooFilters(Filters):
         """Should class or field be skipped?"""
         if parents is None:
             parents = []
-        class_skip = SIGNATURE_CLASS_SKIP
+        class_skip = SIGNATURE_CLASS_SKIP.copy()
         if os.environ.get("XSDATA_SKIP"):
             class_skip += os.environ["XSDATA_SKIP"].split("|")
         for pattern in class_skip:
