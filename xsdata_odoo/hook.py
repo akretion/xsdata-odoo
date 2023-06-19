@@ -1,15 +1,15 @@
 import os
-
 from typing import List
 
-from xsdata.codegen.mixins import HandlerInterface
-from xsdata.codegen.models import Attr
-from xsdata.codegen.models import Class
-from xsdata.codegen.utils import ClassUtils
-from xsdata.utils import collections
-
-from xsdata.codegen.writer import CodeWriter
 from xsdata.codegen.handlers.merge_attributes import MergeAttributes
+from xsdata.codegen.handlers.update_attributes_effective_choice import (
+    UpdateAttributesEffectiveChoice,
+)
+from xsdata.codegen.mixins import HandlerInterface
+from xsdata.codegen.models import Attr, Class
+from xsdata.codegen.utils import ClassUtils
+from xsdata.codegen.writer import CodeWriter
+from xsdata.utils import collections
 
 from xsdata_odoo.generator import OdooGenerator
 
@@ -55,49 +55,44 @@ def process(cls, target: Class):
 
 
 @classmethod
-def merge_duplicate_attrs(self, target: Class):
-    result: List[Attr] = []
-    for attr in target.attrs:
-        pos = collections.find(result, attr)
-        existing = result[pos] if pos > -1 else None
+def merge_attrs(cls, target: Class, groups: List[List[int]]) -> List[Attr]:
+    attrs = []
 
-        if not existing:
-            result.append(attr)
-        elif not (attr.is_attribute or attr.is_enumeration):
-            existing.help = existing.help or attr.help
+    for index, attr in enumerate(target.attrs):
+        group = collections.find_connected_component(groups, index)
 
-            e_res = existing.restrictions
-            a_res = attr.restrictions
+        if group == -1:
+            attrs.append(attr)
+            continue
 
-            min_occurs = e_res.min_occurs or 0
-            max_occurs = e_res.max_occurs or 1
-            attr_min_occurs = a_res.min_occurs or 0
-            attr_max_occurs = a_res.max_occurs or 1
+        pos = collections.find(attrs, attr)
+        if pos == -1:
+            attr.restrictions.choice = (group * -1) - 1
+            attrs.append(attr)
+        else:
+            existing = attrs[pos]
+            assert existing.restrictions.min_occurs is not None
+            assert existing.restrictions.max_occurs is not None
 
-            e_res.min_occurs = min(min_occurs, attr_min_occurs)
+            existing.restrictions.min_occurs += attr.restrictions.min_occurs or 0
             if os.environ.get("XSDATA_SCHEMA") in ("nfe",):
-                e_res.max_occurs = min(max_occurs, attr_max_occurs)  # this is the patch
+                existing.restrictions.max_occurs = min(
+                    attr.restrictions.max_occurs or 0, existing.restrictions.max_occurs
+                )
             else:
-                e_res.max_occurs = max_occurs + attr_max_occurs
+                existing.restrictions.max_occurs += attr.restrictions.max_occurs or 0
 
-            if a_res.sequence is not None:
-                e_res.sequence = a_res.sequence
-
-            existing.fixed = False
-            existing.types.extend(attr.types)
-
-    target.attrs = result
-    ClassUtils.cleanup_class(target)
+    return attrs
 
 
 # workaround for the Brazilian NFe https://github.com/akretion/nfelib/issues/40
 # another option would be to use the --compound-fields option but that would
 # force us to rework a bit the spec_driven_model module logic a bit.
 # see https://github.com/akretion/nfelib/issues/40
-if hasattr(MergeAttributes, "merge_duplicate_attrs"):
+if hasattr(UpdateAttributesEffectiveChoice, "merge_attrs"):
     # xsdata > 22.12
-    merge_duplicate_attrs._original_method = MergeAttributes.merge_duplicate_attrs
-    MergeAttributes.merge_duplicate_attrs = merge_duplicate_attrs
+    merge_attrs._original_method = UpdateAttributesEffectiveChoice.merge_attrs
+    UpdateAttributesEffectiveChoice.merge_attrs = merge_attrs
 else:
     process._original_method = MergeAttributes.process
     MergeAttributes.process = process
