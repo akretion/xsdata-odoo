@@ -83,6 +83,29 @@ class OdooGenerator(DataclassGenerator):
 
         return duplicates
 
+    def simplify_name_sets(self, d):
+        initial_length = len(d.keys())
+        max = min(map(lambda i: len(i.split("|")), d.keys()))
+        i = 1
+        while i < max - 1:
+            test = {
+                k: ""
+                for k in map(
+                    lambda path: len(path.split("|")) > 2
+                    and "|".join(path.split("|")[:1] + path.split("|")[1 + 1 :])
+                    or path,
+                    d.keys(),
+                )
+            }
+            i += 1
+            if len(test.keys()) == initial_length:
+                d = test
+            else:
+                print("bad", test)
+                break
+#            print(d)
+        return d
+
     def _find_minimal_unique_name(self, class_paths, path_parts):
         """
         Find minimal unique name for class
@@ -94,8 +117,18 @@ class OdooGenerator(DataclassGenerator):
         duplicates = list()
 
         for ref, path in class_paths.items():
-            if path.endswith(name) and path != orig_path:
-                duplicates.append(path.split("|"))
+            if path.endswith("|" + name) and path != orig_path:
+#                print("pppppp", path, name)
+                duplicates.append(path)#.split("|"))
+
+#        PATTERN = ""
+#        if orig_path == 'TCTeOS|infCte|vPrest|Comp':
+
+#        if name == "Comp":
+#        print("--------", name, [orig_path] + duplicates)
+        res = self.simplify_name_sets({k: "" for k in [orig_path] + duplicates})
+#        print("res ***********", res)
+        return list(res.keys())[0].replace("|", ".")
 
         # remove parts of path that are common to other classes
         reduced_path = set(path_parts[:-1])
