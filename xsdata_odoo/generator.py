@@ -60,16 +60,6 @@ class OdooGenerator(DataclassGenerator):
         )
         self.filters.register(self.env)
 
-    def deepened_class_names(self, all_file_classes, klass, parents, level):
-        all_class_names = []
-        for klass, parents, path in all_file_classes:
-            all_class_names.append(
-                "".join(
-                    self.filters.class_name(c.name) for c in parents[0:level] + [klass]
-                )
-            )
-        return all_class_names
-
     def _find_duplicated_names(self, class_paths):
         duplicates = set()
         names = set()
@@ -83,9 +73,12 @@ class OdooGenerator(DataclassGenerator):
 
         return duplicates
 
-    def simplify_name_sets(self, d):
-        initial_length = len(d.keys())
-        max = min(map(lambda i: len(i.split("|")), d.keys()))
+    def simplify_name_sets(self, names_dict):
+        """
+        Find minimal unique name for class. We use dict keys as an ordered set.
+        """
+        initial_length = len(names_dict.keys())
+        max = min(map(lambda i: len(i.split("|")), names_dict.keys()))
         i = 1
         while i < max - 1:
             test = {
@@ -94,17 +87,15 @@ class OdooGenerator(DataclassGenerator):
                     lambda path: len(path.split("|")) > 2
                     and "|".join(path.split("|")[:1] + path.split("|")[1 + 1 :])
                     or path,
-                    d.keys(),
+                    names_dict.keys(),
                 )
             }
             i += 1
             if len(test.keys()) == initial_length:
-                d = test
+                names_dict = test
             else:
-                print("bad", test)
                 break
-#            print(d)
-        return d
+        return names_dict
 
     def _find_minimal_unique_name(self, class_paths, path_parts):
         """
@@ -118,37 +109,10 @@ class OdooGenerator(DataclassGenerator):
 
         for ref, path in class_paths.items():
             if path.endswith("|" + name) and path != orig_path:
-#                print("pppppp", path, name)
-                duplicates.append(path)#.split("|"))
+                duplicates.append(path)  # .split("|"))
 
-#        PATTERN = ""
-#        if orig_path == 'TCTeOS|infCte|vPrest|Comp':
-
-#        if name == "Comp":
-#        print("--------", name, [orig_path] + duplicates)
         res = self.simplify_name_sets({k: "" for k in [orig_path] + duplicates})
-#        print("res ***********", res)
         return list(res.keys())[0].replace("|", ".")
-
-        # remove parts of path that are common to other classes
-        reduced_path = set(path_parts[:-1])
-        for path in duplicates:
-            reduced_path = reduced_path.difference(set(path[:-1]))
-
-        prefix = ""
-        if len(reduced_path) != 0:
-            # use first unique parent found
-            for entry in reversed(path_parts):
-                if entry in reduced_path:
-                    prefix = entry
-                    break
-
-        if prefix:
-            # Is it possible to exist more than two nodes with the same name and parents ?
-            # If so we may need to add some random text here.
-            name = f"{prefix}.{name}"
-
-        return name
 
     def _find_minimal_unique_names(self, class_paths, duplicates):
         """
