@@ -525,8 +525,7 @@ class OdooFilters(Filters):
         """Convert import class name with alias support."""
         if alias:
             return f"{self.class_name(name)} as {self.class_name(alias)}"
-
         if name in [klass.name for klass in self.all_simple_types]:
-            return self.class_name(name).upper()  # const are upcase in Odoo
+            return name.upper()  # const are upcase in Odoo
         else:
             return self.class_name(name)
