@@ -309,7 +309,9 @@ class OdooFilters(Filters):
         """The m2o fields for the o2m keys."""
         fields = []
         implicit_many2ones = self.implicit_many2ones.get(
-            self.binding_type(obj, parents), []
+            self.binding_type(obj, parents).lower(),
+            []
+            # NOTE: strangely lower is required (Brazilian CTe)
         )
         for implicit_many2one_data in implicit_many2ones:
             kwargs = {}
@@ -454,7 +456,9 @@ class OdooFilters(Filters):
                 kwargs["currency_field"] = "brl_currency_id"  # TODO use spec_curreny_id
             elif xsd_type.startswith(num_type):
                 if conditional_monetary:
-                    if int(xsd_type.replace("03v", "03")[dec_start:dec_stop]) != MONETARY_DIGITS or (
+                    if int(
+                        xsd_type.replace("03v", "03")[dec_start:dec_stop]
+                    ) != MONETARY_DIGITS or (
                         # for Brazilian edocs, pSomething means percentualSomething ->Float
                         attr.name[0] == "p"
                         and attr.name[1].isupper()
