@@ -78,23 +78,22 @@ class OdooGenerator(DataclassGenerator):
         Find minimal unique name for class. We use dict keys as an ordered set.
         """
         initial_length = len(names_dict.keys())
-        max = min(map(lambda i: len(i.split("|")), names_dict.keys()))
-        i = 1
-        while i < max - 1:
+        max_positions = max(map(lambda i: len(i.split("|")), names_dict.keys()))
+        i = max_positions - 2
+        while i >= 0:
+            # try to remove each path part while ensuring no path collision (shorter len)
             test = {
                 k: ""
                 for k in map(
-                    lambda path: len(path.split("|")) > 2
-                    and "|".join(path.split("|")[:1] + path.split("|")[1 + 1 :])
+                    lambda path: len(path.split("|")) > i + 1
+                    and "|".join(path.split("|")[:i] + path.split("|")[i + 1 :])
                     or path,
                     names_dict.keys(),
                 )
             }
-            i += 1
+            i -= 1
             if len(test.keys()) == initial_length:
                 names_dict = test
-            else:
-                break
         return names_dict
 
     def _find_minimal_unique_name(self, class_paths, path_parts):
@@ -191,34 +190,34 @@ class OdooGenerator(DataclassGenerator):
                     self.all_simple_types.append(
                         klass
                     )  # TODO add module name/path for import?
-                elif klass not in self.all_complex_types:
-                    for field in klass.attrs:
-                        if not field.types[0].datatype and field.is_list:
-                            if path:
-                                parent_names = [
-                                    self.filters.class_name(i) for i in path.split("|")
-                                ] + [self.filters.class_name(klass.name)]
-                            else:
-                                parent_names = [self.filters.class_name(klass.name)]
+                for field in klass.attrs:
+                    if not field.types[0].datatype and field.is_list:
+                        if path:
+                            parent_names = [
+                                self.filters.class_name(i) for i in path.split("|")
+                            ] + [self.filters.class_name(klass.name)]
+                        else:
+                            parent_names = [self.filters.class_name(klass.name)]
 
-                            type_names = collections.unique_sequence(
-                                self.filters.field_type_name(x, parent_names)
-                                for x in field.types
+                        type_names = collections.unique_sequence(
+                            self.filters.field_type_name(x, parent_names)
+                            for x in field.types
+                        )
+                        target_field = self.filters.field_name(
+                            f"{field.name}_{klass.name}_id",
+                            klass.name,
+                        )
+                        comodel_type = type_names[0].replace('"', "").lower()
+                        # NOTE strangely lower is required (Brazilian CTe)
+                        self.implicit_many2ones[comodel_type].append(
+                            (
+                                self.filters.registry_name(
+                                    klass.name, type_names=parent_names
+                                ),
+                                target_field,
                             )
-                            target_field = self.filters.field_name(
-                                f"{field.name}_{klass.name}_id",
-                                klass.name,
-                            )
-                            comodel_type = type_names[0].replace('"', "")
-                            self.implicit_many2ones[comodel_type].append(
-                                (
-                                    self.filters.registry_name(
-                                        klass.name, type_names=parent_names
-                                    ),
-                                    target_field,
-                                )
-                            )
-
+                        )
+                if klass not in self.all_complex_types:
                     self.all_complex_types.append(klass)
 
             for klass, path in all_file_classes:
