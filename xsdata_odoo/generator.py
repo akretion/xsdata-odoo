@@ -73,7 +73,7 @@ class OdooGenerator(DataclassGenerator):
 
         return duplicates
 
-    def simplify_name_sets(self, names_dict):
+    def simplify_name_sets(self, names_dict, class_names):
         """
         Find minimal unique name for class. We use dict keys as an ordered set.
         """
@@ -86,6 +86,8 @@ class OdooGenerator(DataclassGenerator):
                 k: ""
                 for k in map(
                     lambda path: len(path.split("|")) > i + 1
+                    and "|".join(path.split("|")[:i] + path.split("|")[i + 1 :])
+                    not in class_names
                     and "|".join(path.split("|")[:i] + path.split("|")[i + 1 :])
                     or path,
                     names_dict.keys(),
@@ -110,7 +112,9 @@ class OdooGenerator(DataclassGenerator):
             if path.endswith("|" + name) and path != orig_path:
                 duplicates.append(path)  # .split("|"))
 
-        res = self.simplify_name_sets({k: "" for k in [orig_path] + duplicates})
+        res = self.simplify_name_sets(
+            {k: "" for k in [orig_path] + duplicates}, class_paths.values()
+        )
         return list(res.keys())[0].replace("|", ".")
 
     def _find_minimal_unique_names(self, class_paths, duplicates):
@@ -119,7 +123,6 @@ class OdooGenerator(DataclassGenerator):
         """
 
         class_names = dict()
-
         for ref, path in class_paths.items():
             path_parts = path.split("|")
             name = path_parts[-1]
