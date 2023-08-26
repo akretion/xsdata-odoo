@@ -14,12 +14,14 @@ class Items(models.AbstractModel):
     _inherit = "spec.mixin.spec"
     _binding_type = "Items"
 
-    spec10_item = fields.One2many("spec.10.item", "spec10_item_Items_id", string="item")
+    spec10_item = fields.One2many(
+        "spec.10.items_item", "spec10_item_Items_id", string="item"
+    )
 
 
-class Item(models.AbstractModel):
+class ItemsItem(models.AbstractModel):
     _description = "item"
-    _name = "spec.10.item"
+    _name = "spec.10.items_item"
     _inherit = "spec.mixin.spec"
     _binding_type = "Items.Item"
 
@@ -67,6 +69,15 @@ class Comment(models.AbstractModel):
     _binding_type = "Comment"
 
     spec10_value = fields.Char(string="value", xsd_required=True)
+
+
+class Item(models.AbstractModel):
+    _description = "item"
+    _name = "spec.10.item"
+    _inherit = "spec.mixin.spec"
+    _binding_type = "Item"
+
+    spec10_name = fields.Char(string="name", xsd_required=True)
 
 
 class PurchaseOrderType(models.AbstractModel):

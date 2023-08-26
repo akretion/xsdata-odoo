@@ -33,7 +33,11 @@ def extract_string_and_help(
 
     string = attr_name
     if doc:
-        doc = doc.strip().replace('"', "'")
+        if "Tomador do Serviço" in doc and "Preencher com" in doc:
+            print("*********", obj_name, doc)
+            doc = doc.strip().replace('"', "'").replace("\\", "/").replace("\t", " ")
+        else:
+            doc = doc.strip().replace('"', "'")
         string, doc = _aggressive_cut(doc)
         string = _progressive_cut(string, max_len)
 
