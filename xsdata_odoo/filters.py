@@ -353,7 +353,7 @@ class OdooFilters(Filters):
 
         # 1st some checks inspired from xsdata Filters:
         type_names = collections.unique_sequence(
-            self.field_type_name(x, [p.name for p in parents]) for x in attr.types
+            self._field_type_name(x, [p.name for p in parents]) for x in attr.types
         )
         obj = parents[-1]
         if len(type_names) > 1:
