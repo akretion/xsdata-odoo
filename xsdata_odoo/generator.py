@@ -150,8 +150,8 @@ class OdooGenerator(DataclassGenerator):
 
     def render(self, classes: List[Class]) -> Iterator[GeneratorResult]:
         """Return a iterator of the generated results."""
-        packages = {obj.qname: obj.target_module for obj in classes}
-        resolver = OdooDependenciesResolver(packages=packages)
+        registry = {obj.qname: obj.target_module for obj in classes}
+        resolver = OdooDependenciesResolver(registry=registry)
 
         # Generate packages
         for path, cluster in self.group_by_package(classes).items():
@@ -203,7 +203,7 @@ class OdooGenerator(DataclassGenerator):
                             parent_names = [self.filters.class_name(klass.name)]
 
                         type_names = collections.unique_sequence(
-                            self.filters.field_type_name(x, parent_names)
+                            self.filters._field_type_name(x, parent_names)
                             for x in field.types
                         )
                         target_field = self.filters.field_name(

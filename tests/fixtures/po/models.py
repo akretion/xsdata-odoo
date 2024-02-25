@@ -14,7 +14,9 @@ class Items(models.AbstractModel):
     _inherit = "spec.mixin.spec"
     _binding_type = "Items"
 
-    spec10_item = fields.One2many("spec.10.item", "spec10_item_Items_id", string="item")
+    spec10_item = fields.One2many(
+        "spec.10.item", "spec10_item_Items_id", string="item"
+    )
 
 
 class Item(models.AbstractModel):
@@ -38,7 +40,9 @@ class Item(models.AbstractModel):
 
     spec10_shipDate = fields.Date(string="shipDate")
 
-    spec10_partNum = fields.Char(string="partNum", xsd_required=True, xsd_type="x:SKU")
+    spec10_partNum = fields.Char(
+        string="partNum", xsd_required=True, xsd_type="x:SKU"
+    )
 
 
 class Usaddress(models.AbstractModel):
@@ -55,7 +59,9 @@ class Usaddress(models.AbstractModel):
 
     spec10_state = fields.Char(string="state", xsd_required=True)
 
-    spec10_zip = fields.Float(string="zip", xsd_required=True, xsd_type="xsd:decimal")
+    spec10_zip = fields.Float(
+        string="zip", xsd_required=True, xsd_type="xsd:decimal"
+    )
 
     spec10_country = fields.Char(string="country", xsd_type="xsd:NMTOKEN")
 
