@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "xsdata_odoo"
 dynamic = ["version"]
 description = "xsdata Odoo abstract model generator plugin"
-readme = "README.md" # Replaces long_description and long_description_content_type
+readme = "README.md"
 requires-python = ">=3.8"
 license = {text = "MIT"}
 authors = [
