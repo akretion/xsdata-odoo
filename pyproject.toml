@@ -1,7 +1,6 @@
 [build-system]
 requires = ["setuptools>=61.0"] # Specify a modern setuptools version
 build-backend = "setuptools.build_meta"
-backend-path = ["."] # Optional, but good practice if setup.py is simple
 
 [project]
 name = "xsdata_odoo"
@@ -9,7 +8,7 @@ dynamic = ["version"]
 description = "xsdata Odoo abstract model generator plugin"
 readme = "README.md" # Replaces long_description and long_description_content_type
 requires-python = ">=3.8"
-license = { file = "LICENSE", text = "MIT" } # Or just text = "MIT" if LICENSE file is standard
+license = {text = "MIT"}
 authors = [
     { name = "Raphaël Valyi", email = "raphael.valyi@akretion.com" },
 ]
@@ -52,25 +51,17 @@ test = [
     "pre-commit",
     "pytest",
     "pytest-cov",
-    "tox",
 ]
 
 # Tool-specific configurations
 [tool.setuptools]
-packages = ["xsdata_odoo"] # Or use find: for auto-discovery if preferred
+packages = ["xsdata_odoo"]
 include-package-data = true
+package-data = { "xsdata_odoo" = ["templates/*.jinja2"] }
 
-# Note: Flake8 is listed, but 'ruff' is in dependencies.
-# Ruff can replace Flake8, isort, black, etc.
-# If you are moving to Ruff, you might configure Ruff instead.
-# For a direct conversion of the existing Flake8 config:
-[tool.flake8]
-exclude = ["tests/*"] # or "tests/" depending on exact interpretation
-max-line-length = 88
-ignore = ["W503", "ANN101", "ANN102", "E203"]
+[tool.setuptools.dynamic]
+version = {attr = "xsdata_odoo.__version__"}
 
-[tool.doc8]
-max-line-length = 88
-
-[tool.pytest.ini_options]
-addopts = "--color=yes"
+# Configure Ruff if you're standardizing on it. Example:
+[tool.ruff]
+line-length = 88
