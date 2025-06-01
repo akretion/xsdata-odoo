@@ -1,0 +1,76 @@
+[build-system]
+requires = ["setuptools>=61.0"] # Specify a modern setuptools version
+build-backend = "setuptools.build_meta"
+backend-path = ["."] # Optional, but good practice if setup.py is simple
+
+[project]
+name = "xsdata_odoo"
+dynamic = ["version"]
+description = "xsdata Odoo abstract model generator plugin"
+readme = "README.md" # Replaces long_description and long_description_content_type
+requires-python = ">=3.8"
+license = { file = "LICENSE", text = "MIT" } # Or just text = "MIT" if LICENSE file is standard
+authors = [
+    { name = "Raphaël Valyi", email = "raphael.valyi@akretion.com" },
+]
+keywords = ["xsd", "wsdl", "schema", "xml", "uml", "odoo", "generator", "cli"]
+classifiers = [
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: Implementation :: CPython",
+    "Programming Language :: Python :: Implementation :: PyPy",
+    "Topic :: Software Development :: Code Generators",
+    "Topic :: Text Processing :: Markup :: XML",
+]
+
+dependencies = [
+    "babel",
+    "nltk",
+    "ruff",
+    "lxml>=4.4.1",
+    "xsdata[cli]>=25.0",
+]
+
+[project.urls]
+Source = "https://github.com/akretion/xsdata-odoo"
+# Homepage = "https://github.com/akretion/xsdata-odoo" # Often the same as Source or a dedicated project page
+
+[project.entry-points."xsdata.plugins.cli"]
+xsdata_odoo = "xsdata_odoo.hook"
+
+[project.optional-dependencies]
+test = [
+    "codecov",
+    "pre-commit",
+    "pytest",
+    "pytest-cov",
+    "tox",
+]
+
+# Tool-specific configurations
+[tool.setuptools]
+packages = ["xsdata_odoo"] # Or use find: for auto-discovery if preferred
+include-package-data = true
+
+# Note: Flake8 is listed, but 'ruff' is in dependencies.
+# Ruff can replace Flake8, isort, black, etc.
+# If you are moving to Ruff, you might configure Ruff instead.
+# For a direct conversion of the existing Flake8 config:
+[tool.flake8]
+exclude = ["tests/*"] # or "tests/" depending on exact interpretation
+max-line-length = 88
+ignore = ["W503", "ANN101", "ANN102", "E203"]
+
+[tool.doc8]
+max-line-length = 88
+
+[tool.pytest.ini_options]
+addopts = "--color=yes"
