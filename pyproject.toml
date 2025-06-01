@@ -1,0 +1,67 @@
+[build-system]
+requires = ["setuptools>=61.0"] # Specify a modern setuptools version
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "xsdata_odoo"
+dynamic = ["version"]
+description = "xsdata Odoo abstract model generator plugin"
+readme = "README.md" # Replaces long_description and long_description_content_type
+requires-python = ">=3.8"
+license = {text = "MIT"}
+authors = [
+    { name = "Raphaël Valyi", email = "raphael.valyi@akretion.com" },
+]
+keywords = ["xsd", "wsdl", "schema", "xml", "uml", "odoo", "generator", "cli"]
+classifiers = [
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: Implementation :: CPython",
+    "Programming Language :: Python :: Implementation :: PyPy",
+    "Topic :: Software Development :: Code Generators",
+    "Topic :: Text Processing :: Markup :: XML",
+]
+
+dependencies = [
+    "babel",
+    "nltk",
+    "ruff",
+    "lxml>=4.4.1",
+    "xsdata[cli]>=25.0",
+]
+
+[project.urls]
+Source = "https://github.com/akretion/xsdata-odoo"
+# Homepage = "https://github.com/akretion/xsdata-odoo" # Often the same as Source or a dedicated project page
+
+[project.entry-points."xsdata.plugins.cli"]
+xsdata_odoo = "xsdata_odoo.hook"
+
+[project.optional-dependencies]
+test = [
+    "codecov",
+    "pre-commit",
+    "pytest",
+    "pytest-cov",
+]
+
+# Tool-specific configurations
+[tool.setuptools]
+packages = ["xsdata_odoo"]
+include-package-data = true
+package-data = { "xsdata_odoo" = ["templates/*.jinja2"] }
+
+[tool.setuptools.dynamic]
+version = {attr = "xsdata_odoo.__version__"}
+
+# Configure Ruff if you're standardizing on it. Example:
+[tool.ruff]
+line-length = 88

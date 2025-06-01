@@ -2,15 +2,9 @@ import os
 import re
 from collections import defaultdict
 from pathlib import Path
-from typing import Dict
-from typing import Iterator
-from typing import List
-from typing import Optional
+from typing import Any, Dict, Iterator, List, Optional
 
-from black import FileMode
-from black import format_str
-from jinja2 import Environment
-from jinja2 import FileSystemLoader
+from jinja2 import Environment, FileSystemLoader
 from lxml import etree
 from xsdata.codegen.models import Class
 from xsdata.codegen.resolver import DependenciesResolver
@@ -20,8 +14,7 @@ from xsdata.models.config import GeneratorConfig
 from xsdata.utils import collections
 
 from .codegen.resolver import OdooDependenciesResolver
-from .filters import OdooFilters
-from .filters import SIGNATURE_CLASS_SKIP
+from .filters import SIGNATURE_CLASS_SKIP, OdooFilters
 
 # only put this header in files with complex types (not in tipos_basico_v4_00.py for instance)
 # import textwrap
@@ -150,8 +143,8 @@ class OdooGenerator(DataclassGenerator):
 
     def render(self, classes: List[Class]) -> Iterator[GeneratorResult]:
         """Return a iterator of the generated results."""
-        packages = {obj.qname: obj.target_module for obj in classes}
-        resolver = OdooDependenciesResolver(packages=packages)
+        registry = {obj.qname: obj.target_module for obj in classes}
+        resolver = OdooDependenciesResolver(registry=registry)
 
         # Generate packages
         for path, cluster in self.group_by_package(classes).items():
@@ -171,7 +164,7 @@ class OdooGenerator(DataclassGenerator):
                         # FIXME is this parent collecting buggy??
                         dfs(visited, graph, neighbour, path)
 
-            all_file_classes: List[(Class, List(Class))] = []
+            all_file_classes: List[Any] = []
             for c in cluster:
                 dfs(all_file_classes, cluster, c)  # , c.name)
 
@@ -203,8 +196,7 @@ class OdooGenerator(DataclassGenerator):
                             parent_names = [self.filters.class_name(klass.name)]
 
                         type_names = collections.unique_sequence(
-                            self.filters.field_type_name(x, parent_names)
-                            for x in field.types
+                            self.filters._field_type_name(klass, x) for x in field.types
                         )
                         target_field = self.filters.field_name(
                             f"{field.name}_{klass.name}_id",
@@ -226,6 +218,8 @@ class OdooGenerator(DataclassGenerator):
             for klass, path in all_file_classes:
                 self._collect_extra_data(klass)
 
+        package_dirs = set()
+
         # Generate modules
         for path, cluster in self.group_by_module(classes).items():
             should_skip = False
@@ -237,11 +231,14 @@ class OdooGenerator(DataclassGenerator):
             if should_skip:
                 continue
 
+            package_dirs.add(str(Path(path).parent))
             yield GeneratorResult(
                 path=path.with_suffix(".py"),
                 title=cluster[0].target_module,
                 source=self.render_module(resolver, cluster),
             )
+
+        self.ruff_code(list(package_dirs))
 
     def render_module(
         self, resolver: DependenciesResolver, classes: List[Class]
@@ -251,21 +248,12 @@ class OdooGenerator(DataclassGenerator):
         # for some reason, when generating several files at once,
         # some field can loose their indention, we fix them here:
         field_prefix = self.filters.field_safe_prefix
-        res = "\n".join(
+        return "\n".join(
             [
                 re.sub("^%s" % (field_prefix), "    %s" % (field_prefix), line)
                 for line in res.splitlines()
             ]
         )
-
-        # the overall formatting is not too bad but there are a few
-        # glitches with line breaks, so we apply Black formatting.
-        if not os.environ.get("XSDATA_NO_BLACK"):
-            try:
-                res = format_str(res, mode=FileMode())
-            except Exception as e:
-                print(e)
-        return res
 
     def render_classes(
         self, classes: List[Class], module_namespace: Optional[str]
@@ -362,9 +350,7 @@ class OdooGenerator(DataclassGenerator):
                     if parent.tag == "{http://www.w3.org/2001/XMLSchema}choice":
                         # here we assume only 1 choice per complexType
                         # but evexntually we could count them and number them...
-                        field_data[
-                            "choice"
-                        ] = (
+                        field_data["choice"] = (
                             obj.name.lower()
                         )  # TODO consider changing choice -> xsd_choice
                         if (

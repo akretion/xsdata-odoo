@@ -39,8 +39,8 @@ Odoo Models for the Microsoft Purchase Order demo schema:
     Analyzer input: 6 main and 1 inner classes
     Analyzer output: 5 main and 1 inner classes
     Generating package: generated.po
-    
-    
+
+
 Odoo Models for the Brazilian Electronic Invoices:
 
 .. code:: console

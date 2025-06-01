@@ -1,24 +1,16 @@
 import os
 import re
 from collections import OrderedDict
-from typing import Any
-from typing import Dict
-from typing import List
-from typing import Optional
+from typing import Any, Dict, List, Optional
 
 from jinja2 import Environment
-from xsdata.codegen.models import Attr
-from xsdata.codegen.models import Class
+from xsdata.codegen.models import Attr, Class
 from xsdata.formats.dataclass.filters import Filters
 from xsdata.logger import logger
-from xsdata.models.config import GeneratorConfig
-from xsdata.models.config import ObjectType
-from xsdata.utils import collections
+from xsdata.models.config import GeneratorConfig, ObjectType
 from xsdata.utils import namespaces
 
-from .text_utils import extract_string_and_help
-from .text_utils import wrap_text
-
+from .text_utils import extract_string_and_help, wrap_text
 
 INTEGER_TYPES = ("integer", "positiveInteger")
 FLOAT_TYPES = ("float", "decimal")
@@ -59,7 +51,6 @@ SIGNATURE_CLASS_SKIP = [
 
 
 class OdooFilters(Filters):
-
     __slots__ = (
         "files_to_etree",
         "all_simple_types",
@@ -91,14 +82,13 @@ class OdooFilters(Filters):
         self.registry_names = registry_names
         self.implicit_many2ones = implicit_many2ones
         self.files_to_etree: Dict[str, Any] = {}
-        self.relative_imports = True
         self.schema = schema
         self.version = version
         self.python_inherit_model = python_inherit_model
         if inherit_model is None:
             inherit_model = f"spec.mixin.{schema}"
         self.inherit_model = inherit_model
-        self.xsd_extra_info = {}
+        self.xsd_extra_info: Dict[str, Any] = {}
 
     def register(self, env: Environment):
         super().register(env)
@@ -142,7 +132,7 @@ class OdooFilters(Filters):
         else:
             return True
 
-    def pattern_skip(self, name: str, parents: List[Class] = None) -> bool:
+    def pattern_skip(self, name: str, parents: List[Class]) -> bool:
         """Should class or field be skipped?"""
         if parents is None:
             parents = []
@@ -211,7 +201,11 @@ class OdooFilters(Filters):
                                     item.help = item_help
                                     if idx == 0 and len(split) > 1:
                                         obj.help, help_trash = extract_string_and_help(
-                                            obj.name, field.name, split[0], set(), 1024
+                                            obj.name,
+                                            field.name,
+                                            split[0],
+                                            set(),
+                                            1024,
                                         )
                                 else:
                                     item.help = item.default
@@ -235,7 +229,10 @@ class OdooFilters(Filters):
         return self.registry_names[full_name].replace(".", "")
 
     def registry_name(
-        self, name: str = "", parents: List[Class] = [], type_names: List[str] = []
+        self,
+        name: str = "",
+        parents: List[Class] = [],
+        type_names: List[str] = [],
     ) -> str:
         if parents:
             full_name = ".".join([self.class_name(c.name) for c in parents])
@@ -255,10 +252,10 @@ class OdooFilters(Filters):
     def odoo_python_inherit_model(self, obj: Class) -> str:
         return self.python_inherit_model
 
-    def registry_comodel(self, type_names: List[str]):
+    def registry_comodel(self, type_name: str):
         # NOTE: we take only the last part of inner Types with .split(".")[-1]
         # but if that were to create Type duplicates we could change that.
-        clean_type_names = type_names[-1].replace('"', "").split(".")
+        clean_type_names = type_name.replace('"', "").split(".")
         return self.registry_name(clean_type_names[-1], type_names=clean_type_names)
 
     def clean_docstring(self, string: Optional[str], escape: bool = True) -> str:
@@ -310,11 +307,11 @@ class OdooFilters(Filters):
         fields = []
         implicit_many2ones = self.implicit_many2ones.get(
             self.binding_type(obj, parents).lower(),
-            []
+            [],
             # NOTE: strangely lower is required (Brazilian CTe)
         )
         for implicit_many2one_data in implicit_many2ones:
-            kwargs = {}
+            kwargs = OrderedDict()
             kwargs["comodel_name"] = implicit_many2one_data[0]
             kwargs["xsd_implicit"] = True
             # kwargs["required"] = True  # FIXME seems it creates ORM issues
@@ -352,10 +349,11 @@ class OdooFilters(Filters):
         """Return the Odoo field definition."""
 
         # 1st some checks inspired from xsdata Filters:
-        type_names = collections.unique_sequence(
-            self.field_type_name(x, [p.name for p in parents]) for x in attr.types
-        )
         obj = parents[-1]
+        type_names = self._field_type_names(obj, attr)
+        # collections.unique_sequence(
+        #    self._field_type_name(x, [p.name for p in parents]) for x in attr.types
+        # )
         if len(type_names) > 1:
             logger.warning(
                 f"len(type_names) > 1 (Union) not implemented yet! class: {obj.name} attr: {attr}"
@@ -396,9 +394,11 @@ class OdooFilters(Filters):
             logger.warning(message)
             return message
 
-    def _extract_field_attributes(self, parents: List[Class], attr: Attr):
+    def _extract_field_attributes(
+        self, parents: List[Class], attr: Attr
+    ) -> OrderedDict[str, Any]:
         obj = parents[-1]
-        kwargs = OrderedDict()
+        kwargs: OrderedDict[str, Any] = OrderedDict()
         if not hasattr(obj, "unique_labels"):
             obj.unique_labels = set()  # will avoid repeating field labels
         string, help_attr = extract_string_and_help(
@@ -406,7 +406,7 @@ class OdooFilters(Filters):
         )
         kwargs["string"] = string
 
-        metadata = self.field_metadata(attr, {}, [p.name for p in parents])
+        metadata = self.field_metadata(obj, attr, None)
         if metadata.get("required"):
             # we choose not to put required=True (required in database) to avoid
             # messing with existing Odoo modules.
@@ -418,7 +418,9 @@ class OdooFilters(Filters):
 
         return kwargs
 
-    def _extract_number_attrs(self, obj: Class, attr: Attr, kwargs: Dict[str, Dict]):
+    def _extract_number_attrs(
+        self, obj: Class, attr: Attr, kwargs: OrderedDict[str, Any]
+    ):
         """
         Monetary vs Float field detection.
 
@@ -460,22 +462,21 @@ class OdooFilters(Filters):
                         xsd_type.replace("03v", "03")[dec_start:dec_stop]
                     ) != MONETARY_DIGITS or (
                         # for Brazilian edocs, pSomething means percentualSomething ->Float
-                        attr.name[0] == "p"
-                        and attr.name[1].isupper()
+                        attr.name[0] == "p" and attr.name[1].isupper()
                     ):
                         kwargs["digits"] = (
                             int(xsd_type.replace("03v", "03")[int_start:int_stop]),
                             int(xsd_type.replace("03v", "03")[dec_start:dec_stop]),
                         )
                     else:
-                        kwargs[
-                            "currency_field"
-                        ] = "brl_currency_id"  # TODO use spec_curreny_id
+                        kwargs["currency_field"] = (
+                            "brl_currency_id"  # TODO use spec_curreny_id
+                        )
                 else:
                     kwargs["digits"] = (16, 4)
 
     def _simple_field_definition(
-        self, obj: Class, attr: Attr, type_names: str, kwargs: Dict
+        self, obj: Class, attr: Attr, type_names: str, kwargs: OrderedDict
     ):
         self._extract_number_attrs(obj, attr, kwargs)
         if kwargs.get("help"):
@@ -502,21 +503,21 @@ class OdooFilters(Filters):
             return ""
 
     def _try_one2many_field_definition(
-        self, obj: Class, attr: Attr, type_names: str, kwargs: Dict
+        self, obj: Class, attr: Attr, type_names: str, kwargs: OrderedDict
     ):
         if attr.is_list:
             comodel_key = self.field_name(f"{attr.name}_{obj.name}_id", obj.name)
             return f"""fields.One2many("{self.registry_comodel(type_names)}", "{comodel_key}",{self.format_arguments(kwargs, 4)})"""
 
     def _try_selection_field_definition(
-        self, obj: Class, attr: Attr, type_names: str, kwargs: Dict
+        self, obj: Class, attr: Attr, type_names: str, kwargs: OrderedDict
     ):
         for klass in self.all_simple_types:
             if attr.types[0].qname == klass.qname:
                 return f"fields.Selection({klass.name.upper()},{self.format_arguments(kwargs, 4)})"
 
     def _try_many2one_field_definition(
-        self, obj: Class, attr: Attr, type_names: str, kwargs: Dict
+        self, obj: Class, attr: Attr, type_names: str, kwargs: OrderedDict
     ):
         for klass in self.all_complex_types:
             if attr.types[0].qname == klass.qname:

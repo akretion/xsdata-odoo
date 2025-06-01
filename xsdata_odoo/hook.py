@@ -5,7 +5,6 @@ from xsdata.codegen.handlers.merge_attributes import MergeAttributes
 from xsdata.codegen.handlers.update_attributes_effective_choice import (
     UpdateAttributesEffectiveChoice,
 )
-from xsdata.codegen.mixins import HandlerInterface
 from xsdata.codegen.models import Attr, Class
 from xsdata.codegen.utils import ClassUtils
 from xsdata.codegen.writer import CodeWriter
@@ -14,7 +13,7 @@ from xsdata.utils import collections
 from xsdata_odoo.generator import OdooGenerator
 
 
-@classmethod
+@classmethod  # type: ignore[misc]  # Suppresses "classmethod used with a non-method"
 def process(cls, target: Class):
     """
     Detect same type attributes in order to merge them together with their
@@ -54,7 +53,7 @@ def process(cls, target: Class):
     ClassUtils.cleanup_class(target)
 
 
-@classmethod
+@classmethod  # type: ignore[misc]  # Suppresses "classmethod used with a non-method"
 def merge_attrs(cls, target: Class, groups: List[List[int]]) -> List[Attr]:
     attrs = []
 
@@ -77,7 +76,8 @@ def merge_attrs(cls, target: Class, groups: List[List[int]]) -> List[Attr]:
             existing.restrictions.min_occurs += attr.restrictions.min_occurs or 0
             if os.environ.get("XSDATA_SCHEMA") in ("nfe",):
                 existing.restrictions.max_occurs = min(
-                    attr.restrictions.max_occurs or 0, existing.restrictions.max_occurs
+                    attr.restrictions.max_occurs or 0,
+                    existing.restrictions.max_occurs,
                 )
             else:
                 existing.restrictions.max_occurs += attr.restrictions.max_occurs or 0
@@ -91,10 +91,10 @@ def merge_attrs(cls, target: Class, groups: List[List[int]]) -> List[Attr]:
 # see https://github.com/akretion/nfelib/issues/40
 if hasattr(UpdateAttributesEffectiveChoice, "merge_attrs"):
     # xsdata > 22.12
-    merge_attrs._original_method = UpdateAttributesEffectiveChoice.merge_attrs
+    merge_attrs._original_method = UpdateAttributesEffectiveChoice.merge_attrs  # type: ignore[attr-defined]
     UpdateAttributesEffectiveChoice.merge_attrs = merge_attrs
 else:
-    process._original_method = MergeAttributes.process
+    process._original_method = MergeAttributes.process  # type: ignore[attr-defined]
     MergeAttributes.process = process
 
 CodeWriter.register_generator("odoo", OdooGenerator)
