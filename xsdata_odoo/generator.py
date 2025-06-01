@@ -2,7 +2,7 @@ import os
 import re
 from collections import defaultdict
 from pathlib import Path
-from typing import Dict, Iterator, List, Optional
+from typing import Any, Dict, Iterator, List, Optional
 
 from jinja2 import Environment, FileSystemLoader
 from lxml import etree
@@ -164,7 +164,7 @@ class OdooGenerator(DataclassGenerator):
                         # FIXME is this parent collecting buggy??
                         dfs(visited, graph, neighbour, path)
 
-            all_file_classes: List[(Class, List(Class))] = []
+            all_file_classes: List[Any] = []
             for c in cluster:
                 dfs(all_file_classes, cluster, c)  # , c.name)
 

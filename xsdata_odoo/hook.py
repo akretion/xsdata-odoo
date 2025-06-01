@@ -13,7 +13,7 @@ from xsdata.utils import collections
 from xsdata_odoo.generator import OdooGenerator
 
 
-@classmethod
+@classmethod  # type: ignore[misc]  # Suppresses "classmethod used with a non-method"
 def process(cls, target: Class):
     """
     Detect same type attributes in order to merge them together with their
@@ -53,7 +53,7 @@ def process(cls, target: Class):
     ClassUtils.cleanup_class(target)
 
 
-@classmethod
+@classmethod  # type: ignore[misc]  # Suppresses "classmethod used with a non-method"
 def merge_attrs(cls, target: Class, groups: List[List[int]]) -> List[Attr]:
     attrs = []
 
@@ -91,10 +91,10 @@ def merge_attrs(cls, target: Class, groups: List[List[int]]) -> List[Attr]:
 # see https://github.com/akretion/nfelib/issues/40
 if hasattr(UpdateAttributesEffectiveChoice, "merge_attrs"):
     # xsdata > 22.12
-    merge_attrs._original_method = UpdateAttributesEffectiveChoice.merge_attrs
+    merge_attrs._original_method = UpdateAttributesEffectiveChoice.merge_attrs  # type: ignore[attr-defined]
     UpdateAttributesEffectiveChoice.merge_attrs = merge_attrs
 else:
-    process._original_method = MergeAttributes.process
+    process._original_method = MergeAttributes.process  # type: ignore[attr-defined]
     MergeAttributes.process = process
 
 CodeWriter.register_generator("odoo", OdooGenerator)

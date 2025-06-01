@@ -48,7 +48,7 @@ def extract_string_and_help(
             string = attr_name
 
         if string == doc or doc[:-1] == string:  # doc might end with '.'
-            doc = None
+            doc = ""
 
     if string in unique_labels:
         string = f"{string} ({attr_name})"
@@ -70,7 +70,7 @@ def _aggressive_cut(doc):
         return token.join(string.split(token)[:-1])
 
     if os.environ.get("USLESS_STARTS"):
-        useless_starts = os.environ["USELESS_STARTS"].split("|")
+        useless_starts = tuple(os.environ["USELESS_STARTS"].split("|"))
     else:
         useless_starts = USELESS_STARTS  # a good default for us in Brazil
     for start in useless_starts:
