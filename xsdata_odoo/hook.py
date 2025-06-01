@@ -5,7 +5,6 @@ from xsdata.codegen.handlers.merge_attributes import MergeAttributes
 from xsdata.codegen.handlers.update_attributes_effective_choice import (
     UpdateAttributesEffectiveChoice,
 )
-from xsdata.codegen.mixins import HandlerInterface
 from xsdata.codegen.models import Attr, Class
 from xsdata.codegen.utils import ClassUtils
 from xsdata.codegen.writer import CodeWriter
@@ -77,7 +76,8 @@ def merge_attrs(cls, target: Class, groups: List[List[int]]) -> List[Attr]:
             existing.restrictions.min_occurs += attr.restrictions.min_occurs or 0
             if os.environ.get("XSDATA_SCHEMA") in ("nfe",):
                 existing.restrictions.max_occurs = min(
-                    attr.restrictions.max_occurs or 0, existing.restrictions.max_occurs
+                    attr.restrictions.max_occurs or 0,
+                    existing.restrictions.max_occurs,
                 )
             else:
                 existing.restrictions.max_occurs += attr.restrictions.max_occurs or 0

@@ -1,10 +1,11 @@
+import locale
+import os
+import textwrap
+from typing import Tuple
+
 import babel
 from nltk import download
 from nltk.corpus import stopwords
-import os
-import locale
-import textwrap
-from typing import Tuple
 
 # where to stop when trying to extract the beginning of a text
 STRONG_PONCT_TOKENS = (". ", ", ", " (", " - ", ".", ",", ": ", "|")

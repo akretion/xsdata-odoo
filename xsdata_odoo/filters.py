@@ -1,24 +1,16 @@
 import os
 import re
 from collections import OrderedDict
-from typing import Any
-from typing import Dict
-from typing import List
-from typing import Optional
+from typing import Any, Dict, List, Optional
 
 from jinja2 import Environment
-from xsdata.codegen.models import Attr
-from xsdata.codegen.models import Class
+from xsdata.codegen.models import Attr, Class
 from xsdata.formats.dataclass.filters import Filters
 from xsdata.logger import logger
-from xsdata.models.config import GeneratorConfig
-from xsdata.models.config import ObjectType
-from xsdata.utils import collections
+from xsdata.models.config import GeneratorConfig, ObjectType
 from xsdata.utils import namespaces
 
-from .text_utils import extract_string_and_help
-from .text_utils import wrap_text
-
+from .text_utils import extract_string_and_help, wrap_text
 
 INTEGER_TYPES = ("integer", "positiveInteger")
 FLOAT_TYPES = ("float", "decimal")
@@ -59,7 +51,6 @@ SIGNATURE_CLASS_SKIP = [
 
 
 class OdooFilters(Filters):
-
     __slots__ = (
         "files_to_etree",
         "all_simple_types",
@@ -211,7 +202,11 @@ class OdooFilters(Filters):
                                     item.help = item_help
                                     if idx == 0 and len(split) > 1:
                                         obj.help, help_trash = extract_string_and_help(
-                                            obj.name, field.name, split[0], set(), 1024
+                                            obj.name,
+                                            field.name,
+                                            split[0],
+                                            set(),
+                                            1024,
                                         )
                                 else:
                                     item.help = item.default
@@ -235,7 +230,10 @@ class OdooFilters(Filters):
         return self.registry_names[full_name].replace(".", "")
 
     def registry_name(
-        self, name: str = "", parents: List[Class] = [], type_names: List[str] = []
+        self,
+        name: str = "",
+        parents: List[Class] = [],
+        type_names: List[str] = [],
     ) -> str:
         if parents:
             full_name = ".".join([self.class_name(c.name) for c in parents])
@@ -255,10 +253,10 @@ class OdooFilters(Filters):
     def odoo_python_inherit_model(self, obj: Class) -> str:
         return self.python_inherit_model
 
-    def registry_comodel(self, type_names: List[str]):
+    def registry_comodel(self, type_name: List[str]):
         # NOTE: we take only the last part of inner Types with .split(".")[-1]
         # but if that were to create Type duplicates we could change that.
-        clean_type_names = type_names[-1].replace('"', "").split(".")
+        clean_type_names = type_name.replace('"', "").split(".")
         return self.registry_name(clean_type_names[-1], type_names=clean_type_names)
 
     def clean_docstring(self, string: Optional[str], escape: bool = True) -> str:
@@ -310,7 +308,7 @@ class OdooFilters(Filters):
         fields = []
         implicit_many2ones = self.implicit_many2ones.get(
             self.binding_type(obj, parents).lower(),
-            []
+            [],
             # NOTE: strangely lower is required (Brazilian CTe)
         )
         for implicit_many2one_data in implicit_many2ones:
@@ -352,10 +350,11 @@ class OdooFilters(Filters):
         """Return the Odoo field definition."""
 
         # 1st some checks inspired from xsdata Filters:
-        type_names = collections.unique_sequence(
-            self._field_type_name(x, [p.name for p in parents]) for x in attr.types
-        )
         obj = parents[-1]
+        type_names = self._field_type_names(obj, attr)
+        # collections.unique_sequence(
+        #    self._field_type_name(x, [p.name for p in parents]) for x in attr.types
+        # )
         if len(type_names) > 1:
             logger.warning(
                 f"len(type_names) > 1 (Union) not implemented yet! class: {obj.name} attr: {attr}"
@@ -406,7 +405,7 @@ class OdooFilters(Filters):
         )
         kwargs["string"] = string
 
-        metadata = self.field_metadata(attr, {}, [p.name for p in parents])
+        metadata = self.field_metadata(obj, attr, None)
         if metadata.get("required"):
             # we choose not to put required=True (required in database) to avoid
             # messing with existing Odoo modules.
@@ -460,17 +459,16 @@ class OdooFilters(Filters):
                         xsd_type.replace("03v", "03")[dec_start:dec_stop]
                     ) != MONETARY_DIGITS or (
                         # for Brazilian edocs, pSomething means percentualSomething ->Float
-                        attr.name[0] == "p"
-                        and attr.name[1].isupper()
+                        attr.name[0] == "p" and attr.name[1].isupper()
                     ):
                         kwargs["digits"] = (
                             int(xsd_type.replace("03v", "03")[int_start:int_stop]),
                             int(xsd_type.replace("03v", "03")[dec_start:dec_stop]),
                         )
                     else:
-                        kwargs[
-                            "currency_field"
-                        ] = "brl_currency_id"  # TODO use spec_curreny_id
+                        kwargs["currency_field"] = (
+                            "brl_currency_id"  # TODO use spec_curreny_id
+                        )
                 else:
                     kwargs["digits"] = (16, 4)
 
