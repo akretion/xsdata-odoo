@@ -354,7 +354,7 @@ class OdooFilters(Filters):
         # collections.unique_sequence(
         #    self._field_type_name(x, [p.name for p in parents]) for x in attr.types
         # )
-        if len(type_names) > 1:
+        if len(attr.types) > 1:
             logger.warning(
                 f"len(type_names) > 1 (Union) not implemented yet! class: {obj.name} attr: {attr}"
             )
