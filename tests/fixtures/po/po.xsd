@@ -1,9 +1,7 @@
 <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
-	targetNamespace="foo"
-	xmlns:x="foo"
-	elementFormDefault="qualified"
-	attributeFormDefault="unqualified"
->
+          xmlns:tns="http://tempuri.org/PurchaseOrderSchema.xsd"
+          targetNamespace="http://tempuri.org/PurchaseOrderSchema.xsd"
+          elementFormDefault="qualified">
 
  <xsd:annotation>
   <xsd:documentation xml:lang="en">
