@@ -11,92 +11,94 @@ __NAMESPACE__ = "http://tempuri.org/PurchaseOrderSchema.xsd"
 
 class Usaddress(models.AbstractModel):
     _description = "USAddress"
-    _name = "spec.10.usaddress"
-    _inherit = "spec.mixin.spec"
+    _name = "poxsd.10.usaddress"
+    _inherit = "spec.mixin.poxsd"
     _binding_type = "Usaddress"
 
-    spec10_name = fields.Char(string="name", xsd_required=True)
+    poxsd10_name = fields.Char(string="name", xsd_required=True)
 
-    spec10_street = fields.Char(string="street", xsd_required=True)
+    poxsd10_street = fields.Char(string="street", xsd_required=True)
 
-    spec10_city = fields.Char(string="city", xsd_required=True)
+    poxsd10_city = fields.Char(string="city", xsd_required=True)
 
-    spec10_state = fields.Char(string="state", xsd_required=True)
+    poxsd10_state = fields.Char(string="state", xsd_required=True)
 
-    spec10_zip = fields.Float(string="zip", xsd_required=True, xsd_type="xsd:decimal")
+    poxsd10_zip = fields.Float(string="zip", xsd_required=True, xsd_type="xsd:decimal")
 
-    spec10_country = fields.Char(string="country", xsd_type="xsd:NMTOKEN")
+    poxsd10_country = fields.Char(string="country", xsd_type="xsd:NMTOKEN")
 
 
 class Comment(models.AbstractModel):
     _description = "comment"
-    _name = "spec.10.comment"
-    _inherit = "spec.mixin.spec"
+    _name = "poxsd.10.comment"
+    _inherit = "spec.mixin.poxsd"
     _binding_type = "Comment"
 
-    spec10_value = fields.Char(string="value", xsd_required=True)
+    poxsd10_value = fields.Char(string="value", xsd_required=True)
 
 
 class Items(models.AbstractModel):
     _description = "Items"
-    _name = "spec.10.items"
-    _inherit = "spec.mixin.spec"
+    _name = "poxsd.10.items"
+    _inherit = "spec.mixin.poxsd"
     _binding_type = "Items"
 
-    spec10_item = fields.One2many("spec.10.item", "spec10_item_Items_id", string="item")
+    poxsd10_item = fields.One2many(
+        "poxsd.10.item", "poxsd10_item_Items_id", string="item"
+    )
 
 
 class Item(models.AbstractModel):
     _description = "item"
-    _name = "spec.10.item"
-    _inherit = "spec.mixin.spec"
+    _name = "poxsd.10.item"
+    _inherit = "spec.mixin.poxsd"
     _binding_type = "Items.Item"
 
-    spec10_item_Items_id = fields.Many2one(
-        comodel_name="spec.10.items", xsd_implicit=True, ondelete="cascade"
+    poxsd10_item_Items_id = fields.Many2one(
+        comodel_name="poxsd.10.items", xsd_implicit=True, ondelete="cascade"
     )
-    spec10_productName = fields.Char(string="productName", xsd_required=True)
+    poxsd10_productName = fields.Char(string="productName", xsd_required=True)
 
-    spec10_quantity = fields.Integer(string="quantity", xsd_required=True)
+    poxsd10_quantity = fields.Integer(string="quantity", xsd_required=True)
 
-    spec10_USPrice = fields.Float(
+    poxsd10_USPrice = fields.Float(
         string="USPrice", xsd_required=True, xsd_type="xsd:decimal"
     )
 
-    spec10_comment = fields.Many2one(comodel_name="spec.10.comment", string="comment")
+    poxsd10_comment = fields.Many2one(comodel_name="poxsd.10.comment", string="comment")
 
-    spec10_shipDate = fields.Date(string="shipDate")
+    poxsd10_shipDate = fields.Date(string="shipDate")
 
-    spec10_partNum = fields.Char(string="partNum", xsd_required=True, xsd_type="x:SKU")
+    poxsd10_partNum = fields.Char(string="partNum", xsd_required=True, xsd_type="x:SKU")
 
 
 class PurchaseOrderType(models.AbstractModel):
     _description = "PurchaseOrderType"
-    _name = "spec.10.purchaseordertype"
-    _inherit = "spec.mixin.spec"
+    _name = "poxsd.10.purchaseordertype"
+    _inherit = "spec.mixin.poxsd"
     _binding_type = "PurchaseOrderType"
 
-    spec10_shipTo = fields.Many2one(
-        comodel_name="spec.10.usaddress",
+    poxsd10_shipTo = fields.Many2one(
+        comodel_name="poxsd.10.usaddress",
         string="shipTo",
         xsd_required=True,
         xsd_type="x:USAddress",
     )
 
-    spec10_billTo = fields.Many2one(
-        comodel_name="spec.10.usaddress",
+    poxsd10_billTo = fields.Many2one(
+        comodel_name="poxsd.10.usaddress",
         string="billTo",
         xsd_required=True,
         xsd_type="x:USAddress",
     )
 
-    spec10_comment = fields.Many2one(comodel_name="spec.10.comment", string="comment")
+    poxsd10_comment = fields.Many2one(comodel_name="poxsd.10.comment", string="comment")
 
-    spec10_items = fields.Many2one(
-        comodel_name="spec.10.items",
+    poxsd10_items = fields.Many2one(
+        comodel_name="poxsd.10.items",
         string="items",
         xsd_required=True,
         xsd_type="x:Items",
     )
 
-    spec10_orderDate = fields.Date(string="orderDate")
+    poxsd10_orderDate = fields.Date(string="orderDate")
