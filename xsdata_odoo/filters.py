@@ -132,7 +132,7 @@ class OdooFilters(Filters):
         else:
             return True
 
-    def pattern_skip(self, name: str, parents: List[Class]) -> bool:
+    def pattern_skip(self, name: str, parents: Optional[List[Class]] = None) -> bool:
         """Should class or field be skipped?"""
         if parents is None:
             parents = []
