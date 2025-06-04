@@ -96,8 +96,7 @@ class ClassC(models.AbstractModel):
         self.assertEqual(expected_clean, actual_clean)
 
     def test_complete_po(self):
-        if os.environ.get("XSDATA_SCHEMA"):
-            del os.environ["XSDATA_SCHEMA"]
+        os.environ["XSDATA_SCHEMA"] = "poxsd"
         if os.environ.get("XSDATA_VERSION"):
             del os.environ["XSDATA_VERSION"]
 

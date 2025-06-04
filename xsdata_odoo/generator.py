@@ -238,6 +238,7 @@ class OdooGenerator(DataclassGenerator):
                 source=self.render_module(resolver, cluster),
             )
 
+        self.config.output.max_line_length = 88  # OCA style
         self.ruff_code(list(package_dirs))
 
     def render_module(

@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     environment:
       name: release
-      url: https://pypi.org/p/nfelib
+      url: https://pypi.org/p/xsdata-odoo
     permissions:
       id-token: write
     steps:

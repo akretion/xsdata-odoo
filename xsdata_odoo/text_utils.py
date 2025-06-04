@@ -35,7 +35,7 @@ def extract_string_and_help(
     string = attr_name
     if doc:
         if "Tomador do Serviço" in doc and "Preencher com" in doc:
-            print("*********", obj_name, doc)
+            # FIXME hack for Brazilian CTe:
             doc = doc.strip().replace('"', "'").replace("\\", "/").replace("\t", " ")
         else:
             doc = doc.strip().replace('"', "'")

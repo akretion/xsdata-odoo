@@ -62,6 +62,7 @@ class OdooFilters(Filters):
         "python_inherit_model",
         "inherit_model",
         "xsd_extra_info",
+        "relative_imports",
     )
 
     def __init__(
@@ -89,6 +90,7 @@ class OdooFilters(Filters):
             inherit_model = f"spec.mixin.{schema}"
         self.inherit_model = inherit_model
         self.xsd_extra_info: Dict[str, Any] = {}
+        self.relative_imports = True
 
     def register(self, env: Environment):
         super().register(env)
@@ -132,7 +134,7 @@ class OdooFilters(Filters):
         else:
             return True
 
-    def pattern_skip(self, name: str, parents: List[Class]) -> bool:
+    def pattern_skip(self, name: str, parents: Optional[List[Class]] = None) -> bool:
         """Should class or field be skipped?"""
         if parents is None:
             parents = []
@@ -354,7 +356,7 @@ class OdooFilters(Filters):
         # collections.unique_sequence(
         #    self._field_type_name(x, [p.name for p in parents]) for x in attr.types
         # )
-        if len(type_names) > 1:
+        if len(attr.types) > 1:
             logger.warning(
                 f"len(type_names) > 1 (Union) not implemented yet! class: {obj.name} attr: {attr}"
             )
