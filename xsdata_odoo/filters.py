@@ -62,6 +62,7 @@ class OdooFilters(Filters):
         "python_inherit_model",
         "inherit_model",
         "xsd_extra_info",
+        "relative_imports",
     )
 
     def __init__(
@@ -89,6 +90,7 @@ class OdooFilters(Filters):
             inherit_model = f"spec.mixin.{schema}"
         self.inherit_model = inherit_model
         self.xsd_extra_info: Dict[str, Any] = {}
+        self.relative_imports = True
 
     def register(self, env: Environment):
         super().register(env)
