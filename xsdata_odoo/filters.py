@@ -165,7 +165,7 @@ class OdooFilters(Filters):
 
     def odoo_class_description(self, obj: Class) -> str:
         if obj.help:
-            return """textwrap.dedent("    %s" % (__doc__,))"""
+            return """textwrap.dedent(f"    {__doc__}")"""
         else:
             # TODO some inner classes have no obj.help
             # but we can read the XML annotations. Ex: "TretEnviNfe.InfRec", "Tnfe.InfNfe"...
@@ -202,7 +202,7 @@ class OdooFilters(Filters):
                                 if item_help:
                                     item.help = item_help
                                     if idx == 0 and len(split) > 1:
-                                        obj.help, help_trash = extract_string_and_help(
+                                        obj.help, _help_trash = extract_string_and_help(
                                             obj.name,
                                             field.name,
                                             split[0],
