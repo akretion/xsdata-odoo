@@ -172,55 +172,72 @@ class OdooFilters(Filters):
             return f'"{obj.name}"'
 
     def enum_docstring(self, obj: Class) -> str:
-        """Works well for Brazilian fiscal xsd, may need adaptations for your
-        xsd."""
-        # see https://github.com/akretion/generateds-odoo/blob/465539b46e4216a5b94f1b0dabf39b34e7f4624c/gends_extract_simple_types.py#L385
-        # for possible improvement
-
+        """Also format enum items. Works well for Brazilian fiscal xsd, may need adaptations for
+        your xsd."""
+        separators = (" - ", "-", " – ", "–")
         if "_" in obj.name:
             type_qname = obj.qname.split("_")[0]
             field_name = obj.name.split("_")[1]
-
             for klass in self.all_complex_types:
                 if klass.qname == type_qname:
                     for idx, item in enumerate(obj.attrs):
                         for field in klass.attrs:
-                            if field.name == field_name and field.help:
-                                item_help = False
-                                separators = (" - ", "-", " – ", "–")
-                                for separator in separators:
-                                    split = field.help.split(
-                                        f"{item.default}{separator}"
-                                    )
-                                    if len(split) > 1:
-                                        # TODO sometimes the line may continue
-                                        # until the next value or may end at next value...
-                                        item_help = (
-                                            split[1].splitlines()[0].split(";")[0]
-                                        )
-                                        break
-                                if item_help:
-                                    item.help = item_help
-                                    if idx == 0 and len(split) > 1:
-                                        obj.help, _help_trash = extract_string_and_help(
-                                            obj.name,
-                                            field.name,
-                                            split[0],
-                                            set(),
-                                            1024,
-                                        )
-                                else:
-                                    item.help = item.default
-                                if (
-                                    idx == 0
-                                    and not obj.help
-                                    and not field.help.startswith(item.default)
-                                ):
-                                    obj.help = (
-                                        field.help
-                                    )  # no split but better than no docstring
+                            if field.name != field_name or not field.help:
+                                continue
+                            item_help = False
+                            for separator in separators:
+                                split = field.help.split(f"{item.default}{separator}")
+                                if len(split) > 1:
+                                    # TODO sometimes the line may continue
+                                    # until the next value or may end at next value...
+                                    item_help = split[1].splitlines()[0].split(";")[0]
+                                    break
 
-        return self.clean_docstring(obj.help)
+                            if item_help:
+                                item.help = item_help
+                                if idx == 0 and len(split) > 1:
+                                    obj.help, _help_trash = extract_string_and_help(
+                                        obj.name,
+                                        field.name,
+                                        split[0],
+                                        set(),
+                                        1024,
+                                    )
+                            else:
+                                item.help = item.default
+                            if (
+                                idx == 0
+                                and not obj.help
+                                and not field.help.startswith(item.default)
+                            ):
+                                obj.help = (
+                                    field.help.strip()
+                                )  # no split but better than no docstring
+
+        for item in obj.attrs:  # (it also apply to simple_types)
+            if not item.help:
+                item.help = f'"{item.default}"'
+                continue
+            item.help = item.help.replace("\n", "").replace('"', "'").strip()
+            if len(item.help) > 78:
+                lines = [
+                    f'"{line.strip()} "'.replace('- "', '-"')
+                    for line in wrap_text(item.help, 8, 78)
+                    .replace('"""', "")
+                    .splitlines()
+                ]
+                lines[-1] = lines[-1].replace(' "', '"')
+                lines_str = "\n     ".join(lines)
+                item.help = f"\n    ({lines_str})"
+            else:
+                item.help = f'"{item.help}"'
+
+        if obj.help:
+            return "# " + "\n# ".join(
+                wrap_text(obj.help.strip(), 0, 78).replace('"', "").splitlines()
+            )
+        else:
+            return ""
 
     def odoo_class_name(self, obj: Class, parents: List[Class] = []):
         """
@@ -264,7 +281,7 @@ class OdooFilters(Filters):
         """Prepare string for docstring generation."""
         if not string:
             return ""  # TODO read from parent field if any
-        return "\n    {}".format(wrap_text(string, 4, 79))
+        return "\n    {}".format(wrap_text(string.strip(), 4, 79))
 
     def class_properties(
         self,

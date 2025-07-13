@@ -2,9 +2,9 @@
 {{ obj.name|upper }} = [
 {%- for attr in obj.attrs %}
   {% if not obj|enum_skip(attr.default) -%}
-  ("{{ attr.default }}", "{{ attr.help or attr.default |replace('\n', ' ')}}"),
+  ("{{ attr.default }}", {{ attr.help }}),
   {%- else -%}
-  # ("{{ attr.default }}", "{{ attr.help or attr.default |replace('\n', ' ')}}"),
+  # ("{{ attr.default }}", {{ attr.help }}),
   {%- endif -%}
 {%- endfor %}
 ]
