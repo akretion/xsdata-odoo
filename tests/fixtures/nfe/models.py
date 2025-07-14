@@ -8,19 +8,25 @@ from odoo import fields, models
 
 __NAMESPACE__ = "http://www.portalfiscal.inf.br/nfe"
 
-"Código de Situação Tributária do COFINS"
+# Código de Situação Tributária do COFINS
 COFINSALIQ_CST = [
     (
         "01",
-        "Operação Tributável - Base de Cálculo = Valor da Operação Alíquota Normal (Cumulativo/Não Cumulativo)",
+        (
+            "Operação Tributável - Base de Cálculo = Valor da Operação Alíquota "
+            "Normal (Cumulativo/Não Cumulativo)"
+        ),
     ),
     (
         "02",
-        "Operação Tributável - Base de Calculo = Valor da Operação (Alíquota Diferenciada)",
+        (
+            "Operação Tributável - Base de Calculo = Valor da Operação (Alíquota "
+            "Diferenciada)"
+        ),
     ),
 ]
 
-"Código de Situação Tributária do COFINS"
+# Código de Situação Tributária do COFINS
 COFINSNT_CST = [
     ("04", "Operação Tributável - Tributação Monofásica - (Alíquota Zero)"),
     ("05", "Operação Tributável (ST)"),
@@ -30,64 +36,106 @@ COFINSNT_CST = [
     ("09", "Operação com suspensão da contribuição"),
 ]
 
-"Código de Situação Tributária do COFINS"
+# Código de Situação Tributária do COFINS
 COFINSOUTR_CST = [
     ("49", "Outras Operações de Saída"),
     (
         "50",
-        "Operação com Direito a Crédito - Vinculada Exclusivamente a Receita Tributada no Mercado Interno",
+        (
+            "Operação com Direito a Crédito - Vinculada Exclusivamente a Receita "
+            "Tributada no Mercado Interno"
+        ),
     ),
     (
         "51",
-        "Operação com Direito a Crédito – Vinculada Exclusivamente a Receita Não Tributada no Mercado Interno",
+        (
+            "Operação com Direito a Crédito – Vinculada Exclusivamente a Receita Não "
+            "Tributada no Mercado Interno"
+        ),
     ),
     (
         "52",
-        "Operação com Direito a Crédito - Vinculada Exclusivamente a Receita de Exportação",
+        (
+            "Operação com Direito a Crédito - Vinculada Exclusivamente a Receita de "
+            "Exportação"
+        ),
     ),
     (
         "53",
-        "Operação com Direito a Crédito - Vinculada a Receitas Tributadas e Não-Tributadas no Mercado Interno",
+        (
+            "Operação com Direito a Crédito - Vinculada a Receitas Tributadas e Não-"
+            "Tributadas no Mercado Interno"
+        ),
     ),
     (
         "54",
-        "Operação com Direito a Crédito - Vinculada a Receitas Tributadas no Mercado Interno e de Exportação",
+        (
+            "Operação com Direito a Crédito - Vinculada a Receitas Tributadas no "
+            "Mercado Interno e de Exportação"
+        ),
     ),
     (
         "55",
-        "Operação com Direito a Crédito - Vinculada a Receitas Não-Tributadas no Mercado Interno e de Exportação",
+        (
+            "Operação com Direito a Crédito - Vinculada a Receitas Não-Tributadas no "
+            "Mercado Interno e de Exportação"
+        ),
     ),
     (
         "56",
-        "Operação com Direito a Crédito - Vinculada a Receitas Tributadas e Não-Tributadas no Mercado Interno, e de Exportação",
+        (
+            "Operação com Direito a Crédito - Vinculada a Receitas Tributadas e Não-"
+            "Tributadas no Mercado Interno, e de Exportação"
+        ),
     ),
     (
         "60",
-        "Crédito Presumido - Operação de Aquisição Vinculada Exclusivamente a Receita Tributada no Mercado Interno",
+        (
+            "Crédito Presumido - Operação de Aquisição Vinculada Exclusivamente a "
+            "Receita Tributada no Mercado Interno"
+        ),
     ),
     (
         "61",
-        "Crédito Presumido - Operação de Aquisição Vinculada Exclusivamente a Receita Não-Tributada no Mercado Interno",
+        (
+            "Crédito Presumido - Operação de Aquisição Vinculada Exclusivamente a "
+            "Receita Não-Tributada no Mercado Interno"
+        ),
     ),
     (
         "62",
-        "Crédito Presumido - Operação de Aquisição Vinculada Exclusivamente a Receita de Exportação",
+        (
+            "Crédito Presumido - Operação de Aquisição Vinculada Exclusivamente a "
+            "Receita de Exportação"
+        ),
     ),
     (
         "63",
-        "Crédito Presumido - Operação de Aquisição Vinculada a Receitas Tributadas e Não-Tributadas no Mercado Interno",
+        (
+            "Crédito Presumido - Operação de Aquisição Vinculada a Receitas "
+            "Tributadas e Não-Tributadas no Mercado Interno"
+        ),
     ),
     (
         "64",
-        "Crédito Presumido - Operação de Aquisição Vinculada a Receitas Tributadas no Mercado Interno e de Exportação",
+        (
+            "Crédito Presumido - Operação de Aquisição Vinculada a Receitas "
+            "Tributadas no Mercado Interno e de Exportação"
+        ),
     ),
     (
         "65",
-        "Crédito Presumido - Operação de Aquisição Vinculada a Receitas Não-Tributadas no Mercado Interno e de Exportação",
+        (
+            "Crédito Presumido - Operação de Aquisição Vinculada a Receitas Não-"
+            "Tributadas no Mercado Interno e de Exportação"
+        ),
     ),
     (
         "66",
-        "Crédito Presumido - Operação de Aquisição Vinculada a Receitas Tributadas e Não-Tributadas no Mercado Interno, e de Exportação",
+        (
+            "Crédito Presumido - Operação de Aquisição Vinculada a Receitas "
+            "Tributadas e Não-Tributadas no Mercado Interno, e de Exportação"
+        ),
     ),
     ("67", "Crédito Presumido - Outras Operações"),
     ("70", "Operação de Aquisição sem Direito a Crédito"),
@@ -100,28 +148,31 @@ COFINSOUTR_CST = [
     ("99", "Outras Operações."),
 ]
 
-"Código de Situação Tributária do COFINS"
+# Código de Situação Tributária do COFINS
 COFINSQTDE_CST = [
     (
         "03",
-        "Operação Tributável - Base de Calculo = Quantidade Vendida x Alíquota por Unidade de Produto",
+        (
+            "Operação Tributável - Base de Calculo = Quantidade Vendida x Alíquota "
+            "por Unidade de Produto"
+        ),
     ),
 ]
 
-"Indica se o valor da COFINS ST compõe o valor total da NFe"
+# Indica se o valor da COFINS ST compõe o valor total da NFe
 COFINSST_INDSOMACOFINSST = [
     ("0", "0"),
     ("1", "1"),
 ]
 
-"Forma de Importação quanto a intermediação"
+# Forma de Importação quanto a intermediação
 DI_TPINTERMEDIO = [
     ("1", "por conta propria"),
     ("2", "por conta e ordem"),
     ("3", "encomenda"),
 ]
 
-"Via de transporte internacional informada na DI"
+# Via de transporte internacional informada na DI
 DI_TPVIATRANSP = [
     ("1", "Maritima"),
     ("2", "Fluvial"),
@@ -138,12 +189,12 @@ DI_TPVIATRANSP = [
     ("13", "Por reboque."),
 ]
 
-"Tributção pelo ICMS"
+# Tributção pelo ICMS
 ICMS00_CST = [
     ("00", "Tributada integralmente"),
 ]
 
-"Modalidade de determinação da BC do ICMS"
+# Modalidade de determinação da BC do ICMS
 ICMS00_MODBC = [
     ("0", "Margem Valor Agregado (%)"),
     ("1", "Pauta (valor)"),
@@ -151,12 +202,12 @@ ICMS00_MODBC = [
     ("3", "Valor da Operação."),
 ]
 
-"CST"
+# CST
 ICMS10_CST = [
     ("10", "Tributada e com cobrança do ICMS por substituição tributária"),
 ]
 
-"Modalidade de determinação da BC do ICMS"
+# Modalidade de determinação da BC do ICMS
 ICMS10_MODBC = [
     ("0", "Margem Valor Agregado (%)"),
     ("1", "Pauta (valor)"),
@@ -164,7 +215,7 @@ ICMS10_MODBC = [
     ("3", "Valor da Operação."),
 ]
 
-"Modalidade de determinação da BC do ICMS ST"
+# Modalidade de determinação da BC do ICMS ST
 ICMS10_MODBCST = [
     ("0", "Preço tabelado ou máximo  sugerido"),
     ("1", "Lista Negativa (valor)"),
@@ -175,19 +226,19 @@ ICMS10_MODBCST = [
     ("6", "Valor da Operação"),
 ]
 
-"Motivo da desoneração do ICMS-ST"
+# Motivo da desoneração do ICMS-ST
 ICMS10_MOTDESICMSST = [
     ("3", "Uso na agropecuária"),
     ("9", "Outros"),
     ("12", "Fomento agropecuário."),
 ]
 
-"Tributção pelo ICMS"
+# Tributção pelo ICMS
 ICMS20_CST = [
     ("20", "Com redução de base de cálculo"),
 ]
 
-"Modalidade de determinação da BC do ICMS"
+# Modalidade de determinação da BC do ICMS
 ICMS20_MODBC = [
     ("0", "Margem Valor Agregado (%)"),
     ("1", "Pauta (valor)"),
@@ -195,14 +246,14 @@ ICMS20_MODBC = [
     ("3", "Valor da Operação."),
 ]
 
-"Motivo da desoneração do ICMS"
+# Motivo da desoneração do ICMS
 ICMS20_MOTDESICMS = [
     ("3", "Uso na agropecuária"),
     ("9", "Outros"),
     ("12", "Fomento agropecuário"),
 ]
 
-"Tributção pelo ICMS"
+# Tributção pelo ICMS
 ICMS30_CST = [
     (
         "30",
@@ -210,7 +261,7 @@ ICMS30_CST = [
     ),
 ]
 
-"Modalidade de determinação da BC do ICMS ST"
+# Modalidade de determinação da BC do ICMS ST
 ICMS30_MODBCST = [
     ("0", "Preço tabelado ou máximo  sugerido"),
     ("1", "Lista Negativa (valor)"),
@@ -221,21 +272,22 @@ ICMS30_MODBCST = [
     ("6", "Valor da Operação"),
 ]
 
-"Motivo da desoneração do ICMS"
+# Motivo da desoneração do ICMS
 ICMS30_MOTDESICMS = [
     ("6", "Utilitários Motocicleta AÁrea Livre"),
     ("7", "SUFRAMA"),
     ("9", "Outros"),
 ]
 
-"Tributação pelo ICMS"
+# Tributação pelo ICMS
 ICMS40_CST = [
     ("40", "Isenta"),
     ("41", "Não tributada"),
     ("50", "Suspensão"),
 ]
 
-"""Este campo será preenchido quando o campo anterior estiver preenchido"""
+# Este campo será preenchido quando o campo anterior estiver
+# preenchido
 ICMS40_MOTDESICMS = [
     ("1", "Deficiente não condutor"),
     ("3", "Produtor Agropecuário"),
@@ -251,13 +303,13 @@ ICMS40_MOTDESICMS = [
     ("90", "Solicitado pelo Fisco"),
 ]
 
-"""Tributção pelo ICMS
-    20 - Com redução de base de cálculo"""
+# Tributção pelo ICMS
+# 20 - Com redução de base de cálculo
 ICMS51_CST = [
     ("51", "51"),
 ]
 
-"Modalidade de determinação da BC do ICMS"
+# Modalidade de determinação da BC do ICMS
 ICMS51_MODBC = [
     ("0", "Margem Valor Agregado (%)"),
     ("1", "Pauta (valor)"),
@@ -265,12 +317,12 @@ ICMS51_MODBC = [
     ("3", "Valor da Operação."),
 ]
 
-"Tributação pelo ICMS"
+# Tributação pelo ICMS
 ICMS60_CST = [
     ("60", "ICMS cobrado anteriormente por substituição tributária"),
 ]
 
-"Tributção pelo ICMS"
+# Tributção pelo ICMS
 ICMS70_CST = [
     (
         "70",
@@ -278,7 +330,7 @@ ICMS70_CST = [
     ),
 ]
 
-"Modalidade de determinação da BC do ICMS"
+# Modalidade de determinação da BC do ICMS
 ICMS70_MODBC = [
     ("0", "Margem Valor Agregado (%)"),
     ("1", "Pauta (valor)"),
@@ -286,7 +338,7 @@ ICMS70_MODBC = [
     ("3", "Valor da Operação."),
 ]
 
-"Modalidade de determinação da BC do ICMS ST"
+# Modalidade de determinação da BC do ICMS ST
 ICMS70_MODBCST = [
     ("0", "Preço tabelado ou máximo  sugerido"),
     ("1", "Lista Negativa (valor)"),
@@ -297,26 +349,26 @@ ICMS70_MODBCST = [
     ("6", "Valor da Operação."),
 ]
 
-"Motivo da desoneração do ICMS"
+# Motivo da desoneração do ICMS
 ICMS70_MOTDESICMS = [
     ("3", "Uso na agropecuária"),
     ("9", "Outros"),
     ("12", "Fomento agropecuário"),
 ]
 
-"Motivo da desoneração do ICMS-ST"
+# Motivo da desoneração do ICMS-ST
 ICMS70_MOTDESICMSST = [
     ("3", "Uso na agropecuária"),
     ("9", "Outros"),
     ("12", "Fomento agropecuário."),
 ]
 
-"Tributção pelo ICMS"
+# Tributção pelo ICMS
 ICMS90_CST = [
     ("90", "Outras"),
 ]
 
-"Modalidade de determinação da BC do ICMS"
+# Modalidade de determinação da BC do ICMS
 ICMS90_MODBC = [
     ("0", "Margem Valor Agregado (%)"),
     ("1", "Pauta (valor)"),
@@ -324,7 +376,7 @@ ICMS90_MODBC = [
     ("3", "Valor da Operação."),
 ]
 
-"Modalidade de determinação da BC do ICMS ST"
+# Modalidade de determinação da BC do ICMS ST
 ICMS90_MODBCST = [
     ("0", "Preço tabelado ou máximo  sugerido"),
     ("1", "Lista Negativa (valor)"),
@@ -335,27 +387,27 @@ ICMS90_MODBCST = [
     ("6", "Valor da Operação."),
 ]
 
-"Motivo da desoneração do ICMS"
+# Motivo da desoneração do ICMS
 ICMS90_MOTDESICMS = [
     ("3", "Uso na agropecuária"),
     ("9", "Outros"),
     ("12", "Fomento agropecuário"),
 ]
 
-"Motivo da desoneração do ICMS-ST"
+# Motivo da desoneração do ICMS-ST
 ICMS90_MOTDESICMSST = [
     ("3", "Uso na agropecuária"),
     ("9", "Outros"),
     ("12", "Fomento agropecuário."),
 ]
 
-"Tributação pelo ICMS"
+# Tributação pelo ICMS
 ICMSPART_CST = [
     ("10", "Tributada e com cobrança do ICMS por substituição tributária"),
     ("90", "Outros."),
 ]
 
-"Modalidade de determinação da BC do ICMS"
+# Modalidade de determinação da BC do ICMS
 ICMSPART_MODBC = [
     ("0", "Margem Valor Agregado (%)"),
     ("1", "Pauta (valor)"),
@@ -363,7 +415,7 @@ ICMSPART_MODBC = [
     ("3", "Valor da Operação."),
 ]
 
-"Modalidade de determinação da BC do ICMS ST"
+# Modalidade de determinação da BC do ICMS ST
 ICMSPART_MODBCST = [
     ("0", "Preço tabelado ou máximo  sugerido"),
     ("1", "Lista Negativa (valor)"),
@@ -374,12 +426,12 @@ ICMSPART_MODBCST = [
     ("6", "Valor da Operação"),
 ]
 
-"CSOSN"
+# CSOSN
 ICMSSN101_CSOSN = [
     ("101", "Tributada pelo Simples Nacional com permissão de crédito. (v.2.0)"),
 ]
 
-"CSOSN"
+# CSOSN
 ICMSSN102_CSOSN = [
     ("102", "Tributada pelo Simples Nacional sem permissão de crédito."),
     ("103", "Isenção do ICMS  no Simples Nacional para faixa de receita bruta."),
@@ -387,15 +439,18 @@ ICMSSN102_CSOSN = [
     ("400", "Não tributda pelo Simples Nacional (v.2.0) (v.2.0)"),
 ]
 
-"CSOSN"
+# CSOSN
 ICMSSN201_CSOSN = [
     (
         "201",
-        "Tributada pelo Simples Nacional com permissão de crédito e com cobrança do ICMS por Substituição Tributária (v.2.0)",
+        (
+            "Tributada pelo Simples Nacional com permissão de crédito e com cobrança "
+            "do ICMS por Substituição Tributária (v.2.0)"
+        ),
     ),
 ]
 
-"Modalidade de determinação da BC do ICMS ST"
+# Modalidade de determinação da BC do ICMS ST
 ICMSSN201_MODBCST = [
     ("0", "Preço tabelado ou máximo  sugerido"),
     ("1", "Lista Negativa (valor)"),
@@ -406,19 +461,25 @@ ICMSSN201_MODBCST = [
     ("6", "Valor da Operação"),
 ]
 
-"CSOSN"
+# CSOSN
 ICMSSN202_CSOSN = [
     (
         "202",
-        "Tributada pelo Simples Nacional sem permissão de crédito e com cobrança do ICMS por Substituição Tributária",
+        (
+            "Tributada pelo Simples Nacional sem permissão de crédito e com cobrança "
+            "do ICMS por Substituição Tributária"
+        ),
     ),
     (
         "203",
-        "Isenção do ICMS nos Simples Nacional para faixa de receita bruta e com cobrança do ICMS por Substituição Tributária (v.2.0)",
+        (
+            "Isenção do ICMS nos Simples Nacional para faixa de receita bruta e com "
+            "cobrança do ICMS por Substituição Tributária (v.2.0)"
+        ),
     ),
 ]
 
-"Modalidade de determinação da BC do ICMS ST"
+# Modalidade de determinação da BC do ICMS ST
 ICMSSN202_MODBCST = [
     ("0", "Preço tabelado ou máximo  sugerido"),
     ("1", "Lista Negativa (valor)"),
@@ -429,20 +490,23 @@ ICMSSN202_MODBCST = [
     ("6", "Valor da Operação"),
 ]
 
-"CSOSN"
+# CSOSN
 ICMSSN500_CSOSN = [
     (
         "500",
-        "ICMS cobrado anterirmente por substituição tributária (substituído) ou por antecipação",
+        (
+            "ICMS cobrado anterirmente por substituição tributária (substituído) ou "
+            "por antecipação"
+        ),
     ),
 ]
 
-"Tributação pelo ICMS"
+# Tributação pelo ICMS
 ICMSSN900_CSOSN = [
     ("900", "Outros(v2.0)"),
 ]
 
-"Modalidade de determinação da BC do ICMS"
+# Modalidade de determinação da BC do ICMS
 ICMSSN900_MODBC = [
     ("0", "Margem Valor Agregado (%)"),
     ("1", "Pauta (valor)"),
@@ -450,7 +514,7 @@ ICMSSN900_MODBC = [
     ("3", "Valor da Operação."),
 ]
 
-"Modalidade de determinação da BC do ICMS ST"
+# Modalidade de determinação da BC do ICMS ST
 ICMSSN900_MODBCST = [
     ("0", "Preço tabelado ou máximo  sugerido"),
     ("1", "Lista Negativa (valor)"),
@@ -461,23 +525,23 @@ ICMSSN900_MODBCST = [
     ("6", "Valor da Operação"),
 ]
 
-"Tributção pelo ICMS"
+# Tributção pelo ICMS
 ICMSST_CST = [
     ("41", "Não Tributado."),
     ("60", "Cobrado anteriormente por substituição tributária."),
 ]
 
-"""Alíquota interestadual das UF envolvidas: - 4% alíquota interestadual
-    para produtos importados; - 7% para os Estados de origem do Sul e
-    Sudeste (exceto ES), destinado para os Estados do Norte e Nordeste ou
-    ES; - 12% para os demais casos."""
+# Alíquota interestadual das UF envolvidas: - 4% alíquota interestadual
+# para produtos importados; - 7% para os Estados de origem do Sul e Sudeste
+# (exceto ES), destinado para os Estados do Norte e Nordeste ou ES; - 12%
+# para os demais casos.
 ICMSUFDEST_PICMSINTER = [
     ("4.00", "4.00"),
     ("7.00", "7.00"),
     ("12.00", "12.00"),
 ]
 
-"Código da Situação Tributária do IPI"
+# Código da Situação Tributária do IPI
 IPINT_CST = [
     ("01", "Entrada tributada com alíquota zero"),
     ("02", "Entrada isenta"),
@@ -491,7 +555,7 @@ IPINT_CST = [
     ("55", "Saída com suspensão"),
 ]
 
-"Código da Situação Tributária do IPI"
+# Código da Situação Tributária do IPI
 IPITRIB_CST = [
     ("00", "Entrada com recuperação de crédito"),
     ("49", "Outras entradas"),
@@ -499,7 +563,7 @@ IPITRIB_CST = [
     ("99", "Outras saídas"),
 ]
 
-"Exibilidade do ISS"
+# Exibilidade do ISS
 ISSQN_INDISS = [
     ("1", "Exigível"),
     ("2", "Não incidente"),
@@ -510,13 +574,13 @@ ISSQN_INDISS = [
     ("7", "Exig.Susp. ADM"),
 ]
 
-"Indicador de Incentivo Fiscal. 1=Sim; 2=Não"
+# Indicador de Incentivo Fiscal. 1=Sim; 2=Não
 ISSQN_INDINCENTIVO = [
     ("1", "1"),
     ("2", "2"),
 ]
 
-"Código do regime especial de tributação"
+# Código do regime especial de tributação
 ISSQNTOT_CREGTRIB = [
     ("1", "1"),
     ("2", "2"),
@@ -526,19 +590,25 @@ ISSQNTOT_CREGTRIB = [
     ("6", "6"),
 ]
 
-"Código de Situação Tributária do PIS"
+# Código de Situação Tributária do PIS
 PISALIQ_CST = [
     (
         "01",
-        "Operação Tributável - Base de Cálculo = Valor da Operação Alíquota Normal (Cumulativo/Não Cumulativo)",
+        (
+            "Operação Tributável - Base de Cálculo = Valor da Operação Alíquota "
+            "Normal (Cumulativo/Não Cumulativo)"
+        ),
     ),
     (
         "02",
-        "Operação Tributável - Base de Calculo = Valor da Operação (Alíquota Diferenciada)",
+        (
+            "Operação Tributável - Base de Calculo = Valor da Operação (Alíquota "
+            "Diferenciada)"
+        ),
     ),
 ]
 
-"Código de Situação Tributária do PIS"
+# Código de Situação Tributária do PIS
 PISNT_CST = [
     ("04", "Operação Tributável - Tributação Monofásica - (Alíquota Zero)"),
     ("05", "Operação Tributável (ST)"),
@@ -548,8 +618,8 @@ PISNT_CST = [
     ("09", "Operação com suspensão da contribuição"),
 ]
 
-"""Código de Situação Tributária do PIS.
-    99 - Outras Operações."""
+# Código de Situação Tributária do PIS.
+# 99 - Outras Operações.
 PISOUTR_CST = [
     ("49", "49"),
     ("50", "50"),
@@ -577,27 +647,30 @@ PISOUTR_CST = [
     ("99", "Outras Operações."),
 ]
 
-"Código de Situação Tributária do PIS"
+# Código de Situação Tributária do PIS
 PISQTDE_CST = [
     (
         "03",
-        "Operação Tributável - Base de Calculo = Quantidade Vendida x Alíquota por Unidade de Produto",
+        (
+            "Operação Tributável - Base de Calculo = Quantidade Vendida x Alíquota "
+            "por Unidade de Produto"
+        ),
     ),
 ]
 
-"Indica se o valor do PISST compõe o valor total da NF-e"
+# Indica se o valor do PISST compõe o valor total da NF-e
 PISST_INDSOMAPISST = [
     ("0", "0"),
     ("1", "1"),
 ]
 
-"Tipo Ambiente"
+# Tipo Ambiente
 TAMB = [
     ("1", "1"),
     ("2", "2"),
 ]
 
-"Tipo Código da Lista de Serviços LC 116/2003"
+# Tipo Código da Lista de Serviços LC 116/2003
 TCLISTSERV = [
     ("01.01", "01.01"),
     ("01.02", "01.02"),
@@ -800,7 +873,7 @@ TCLISTSERV = [
     ("40.01", "40.01"),
 ]
 
-"Tipo Código da UF da tabela do IBGE"
+# Tipo Código da UF da tabela do IBGE
 TCODUFIBGE = [
     ("11", "11"),
     ("12", "12"),
@@ -831,25 +904,25 @@ TCODUFIBGE = [
     ("53", "53"),
 ]
 
-"Código do país"
+# Código do país
 TENDEREMI_CPAIS = [
     ("1058", "1058"),
 ]
 
-"Nome do país"
+# Nome do país
 TENDEREMI_XPAIS = [
     ("Brasil", "Brasil"),
     # ("BRASIL", "BRASIL"),
 ]
 
-"Indicador de processamento síncrono. 0=NÃO; 1=SIM=Síncrono"
+# Indicador de processamento síncrono. 0=NÃO; 1=SIM=Síncrono
 TENVINFE_INDSINC = [
     ("0", "0"),
     ("1", "1"),
 ]
 
-"""Tipo Finalidade da NF-e (1=Normal; 2=Complementar; 3=Ajuste;
-    4=Devolução/Retorno)"""
+# Tipo Finalidade da NF-e (1=Normal; 2=Complementar; 3=Ajuste;
+# 4=Devolução/Retorno)
 TFINNFE = [
     ("1", "1"),
     ("2", "2"),
@@ -857,13 +930,13 @@ TFINNFE = [
     ("4", "4"),
 ]
 
-"Tipo Modelo Documento Fiscal"
+# Tipo Modelo Documento Fiscal
 TMOD = [
     ("55", "55"),
     ("65", "65"),
 ]
 
-"Tipo processo de emissão da NF-e"
+# Tipo processo de emissão da NF-e
 TPROCEMI = [
     ("0", "0"),
     ("1", "1"),
@@ -871,7 +944,7 @@ TPROCEMI = [
     ("3", "3"),
 ]
 
-"Tipo Sigla da UF"
+# Tipo Sigla da UF
 TUF = [
     ("AC", "AC"),
     ("AL", "AL"),
@@ -903,7 +976,7 @@ TUF = [
     ("EX", "EX"),
 ]
 
-"Tipo Sigla da UF de emissor // acrescentado em 24/10/08"
+# Tipo Sigla da UF de emissor // acrescentado em 24/10/08
 TUFEMI = [
     ("AC", "AC"),
     ("AL", "AL"),
@@ -934,14 +1007,14 @@ TUFEMI = [
     ("TO", "TO"),
 ]
 
-"""Tipo Origem da mercadoria CST ICMS origem da mercadoria: 0-Nacional
-    exceto as indicadas nos códigos 3, 4, 5 e 8;
-    1-Estrangeira - Importação direta; 2-Estrangeira - Adquirida no mercado
-    interno; 3-Nacional, conteudo superior 40% e inferior ou igual a 70%;
-    4-Nacional, processos produtivos básicos; 5-Nacional, conteudo inferior
-    40%; 6-Estrangeira - Importação direta, com similar nacional, lista CAMEX;
-    7-Estrangeira - mercado interno, sem simular,lista CAMEX;8-Nacional,
-    Conteúdo de Importação superior a 70%."""
+# Tipo Origem da mercadoria CST ICMS origem da mercadoria: 0-Nacional
+# exceto as indicadas nos códigos 3, 4, 5 e 8;
+# 1-Estrangeira - Importação direta; 2-Estrangeira - Adquirida no mercado
+# interno; 3-Nacional, conteudo superior 40% e inferior ou igual a 70%;
+# 4-Nacional, processos produtivos básicos; 5-Nacional, conteudo inferior 40%;
+# 6-Estrangeira - Importação direta, com similar nacional, lista CAMEX;
+# 7-Estrangeira - mercado interno, sem simular,lista CAMEX;8-Nacional, Conteúdo
+# de Importação superior a 70%.
 TORIG = [
     ("0", "0"),
     ("1", "1"),
@@ -954,66 +1027,66 @@ TORIG = [
     ("8", "8"),
 ]
 
-"Indicador do tipo de arma de fogo"
+# Indicador do tipo de arma de fogo
 ARMA_TPARMA = [
     ("0", "Uso permitido"),
     ("1", "Uso restrito)"),
 ]
 
-"""Tipo de Integração do processo de pagamento com o sistema de automação
-    da empresa/
-    1=Pagamento integrado com o sistema de automação da empresa Ex. equipamento TEF
-    , Comercio Eletronico
-    2=Pagamento não integrado com o sistema de automação da empresa Ex: equipamento
-    POS"""
+# Tipo de Integração do processo de pagamento com o sistema de automação
+# da empresa/
+# 1=Pagamento integrado com o sistema de automação da empresa Ex. equipamento
+# TEF , Comercio Eletronico
+# 2=Pagamento não integrado com o sistema de automação da empresa Ex:
+# equipamento POS
 CARD_TPINTEGRA = [
     ("1", "1"),
     ("2", "2"),
 ]
 
-"Indicador da IE do destinatário"
+# Indicador da IE do destinatário
 DEST_INDIEDEST = [
     ("1", "Contribuinte ICMSpagamento à vista"),
     ("2", "Contribuinte isento de inscrição"),
     ("9", "Não Contribuinte"),
 ]
 
-"Indicador da Forma de Pagamento"
+# Indicador da Forma de Pagamento
 DETPAG_INDPAG = [
     ("0", "Pagamento à Vista"),
     ("1", "Pagamento à Prazo"),
 ]
 
-"Código de Regime Tributário"
+# Código de Regime Tributário
 EMIT_CRT = [
     ("1", "Simples Nacional"),
     ("2", "Simples Nacional – excesso de sublimite de receita bruta"),
     ("3", "Regime Normal."),
 ]
 
-"Identificador de Local de destino da operação"
+# Identificador de Local de destino da operação
 IDE_IDDEST = [
     ("1", "Interna"),
     ("2", "Interestadual"),
     ("3", "Exterior)"),
 ]
 
-"Indica operação com consumidor final"
+# Indica operação com consumidor final
 IDE_INDFINAL = [
     ("0", "Não"),
     ("1", "Consumidor Final)"),
 ]
 
-"""Indicador de intermediador/marketplace
-    0=Operação sem intermediador (em site ou plataforma própria)
-    1=Operação em site ou plataforma de terceiros (intermediadores/marketplace)"""
+# Indicador de intermediador/marketplace
+# 0=Operação sem intermediador (em site ou plataforma própria)
+# 1=Operação em site ou plataforma de terceiros (intermediadores/marketplace)
 IDE_INDINTERMED = [
     ("0", "0"),
     ("1", "1"),
 ]
 
-"""Indicador de presença do comprador no estabelecimento comercial no
-    momento da oepração"""
+# Indicador de presença do comprador no estabelecimento comercial no
+# momento da oepração
 IDE_INDPRES = [
     ("0", "Não se aplica (ex.: Nota Fiscal complementar ou de ajuste"),
     ("1", "Operação presencial"),
@@ -1024,7 +1097,7 @@ IDE_INDPRES = [
     ("9", "Não presencial, outros)"),
 ]
 
-"Forma de emissão da NF-e"
+# Forma de emissão da NF-e
 IDE_TPEMIS = [
     ("1", "Normal"),
     ("2", "Contingência FS"),
@@ -1036,7 +1109,7 @@ IDE_TPEMIS = [
     ("9", "Contingência off-line NFC-e"),
 ]
 
-"Formato de impressão do DANFE"
+# Formato de impressão do DANFE
 IDE_TPIMP = [
     ("0", "sem DANFE"),
     ("1", "DANFe Retrato"),
@@ -1046,13 +1119,13 @@ IDE_TPIMP = [
     ("5", "DANFe NFC-e em mensagem eletrônica)"),
 ]
 
-"Tipo do Documento Fiscal"
+# Tipo do Documento Fiscal
 IDE_TPNF = [
     ("0", "entrada"),
     ("1", "saída)"),
 ]
 
-"Origem do processo, informar"
+# Origem do processo, informar
 PROCREF_INDPROC = [
     ("0", "SEFAZ"),
     ("1", "Justiça Federal"),
@@ -1066,37 +1139,37 @@ PROD_INDESCALA = [
     ("N", "N"),
 ]
 
-"Este campo deverá ser preenchido"
+# Este campo deverá ser preenchido
 PROD_INDTOT = [
     ("0", "o valor do item (vProd) não compõe o valor total da NF-e (vProd)"),
     ("1", "1"),
 ]
 
-"""Código do modelo do Documento Fiscal
-    Preencher com "2B", quando se tratar de Cupom Fiscal emitido por máquina
-    registradora (não ECF), com "2C", quando se tratar de Cupom Fiscal PDV, ou
-    "2D", quando se tratar de Cupom Fiscal (emitido por ECF)"""
+# Código do modelo do Documento Fiscal
+# Preencher com 2B, quando se tratar de Cupom Fiscal emitido por máquina
+# registradora (não ECF), com 2C, quando se tratar de Cupom Fiscal PDV, ou
+# 2D, quando se tratar de Cupom Fiscal (emitido por ECF)
 REFECF_MOD = [
     ("2B", "2B"),
     ("2C", "2C"),
     ("2D", "2D"),
 ]
 
-"""Código do modelo do Documento Fiscal - utilizar 04 para NF de produtor
-    ou 01 para NF Avulsa"""
+# Código do modelo do Documento Fiscal - utilizar 04 para NF de produtor
+# ou 01 para NF Avulsa
 REFNFP_MOD = [
     ("01", "01"),
     ("04", "04"),
 ]
 
-"""Código do modelo do Documento Fiscal. Utilizar 01 para NF modelo 1/1A e
-    02 para NF modelo 02"""
+# Código do modelo do Documento Fiscal. Utilizar 01 para NF modelo 1/1A e
+# 02 para NF modelo 02
 REFNF_MOD = [
     ("01", "01"),
     ("02", "02"),
 ]
 
-"Modalidade do frete"
+# Modalidade do frete
 TRANSP_MODFRETE = [
     ("0", "Contratação do Frete por conta do Remetente (CIF)"),
     ("1", "Contratação do Frete por conta do destinatário/remetente (FOB)"),
@@ -1106,20 +1179,20 @@ TRANSP_MODFRETE = [
     ("9", "Sem Ocorrência de transporte."),
 ]
 
-"Informa-se o veículo tem VIN"
+# Informa-se o veículo tem VIN
 VEICPROD_VIN = [
     ("R", "Remarcado"),
     ("N", "NormalVIN"),
 ]
 
-"Condição do veículo"
+# Condição do veículo
 VEICPROD_CONDVEIC = [
     ("1", "acabado"),
     ("2", "inacabado"),
     ("3", "semi-acabado)"),
 ]
 
-"Tipo da Operação"
+# Tipo da Operação
 VEICPROD_TPOP = [
     ("0", "Outros)"),
     ("1", "Venda concessionária"),
@@ -1127,7 +1200,7 @@ VEICPROD_TPOP = [
     ("3", "Venda direta"),
 ]
 
-"Restrição"
+# Restrição
 VEICPROD_TPREST = [
     ("0", "Não há"),
     ("1", "Alienação Fiduciária"),
