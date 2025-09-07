@@ -74,7 +74,7 @@ def merge_attrs(cls, target: Class, groups: List[List[int]]) -> List[Attr]:
             assert existing.restrictions.max_occurs is not None
 
             existing.restrictions.min_occurs += attr.restrictions.min_occurs or 0
-            if os.environ.get("XSDATA_SCHEMA") in ("nfe",):
+            if os.environ.get("XSDATA_SCHEMA") in ("nfe",) and attr.name == "IPI":
                 existing.restrictions.max_occurs = min(
                     attr.restrictions.max_occurs or 0,
                     existing.restrictions.max_occurs,

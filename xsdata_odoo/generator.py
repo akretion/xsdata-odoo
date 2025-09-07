@@ -1,5 +1,6 @@
 import os
 import re
+import subprocess
 from collections import defaultdict
 from pathlib import Path
 from typing import Any, Dict, Iterator, List, Optional
@@ -8,6 +9,7 @@ from jinja2 import Environment, FileSystemLoader
 from lxml import etree
 from xsdata.codegen.models import Class
 from xsdata.codegen.resolver import DependenciesResolver
+from xsdata.codegen.exceptions import CodegenError
 from xsdata.formats.dataclass.generator import DataclassGenerator
 from xsdata.formats.mixins import GeneratorResult
 from xsdata.models.config import GeneratorConfig
@@ -198,6 +200,8 @@ class OdooGenerator(DataclassGenerator):
                         type_names = collections.unique_sequence(
                             self.filters._field_type_name(klass, x) for x in field.types
                         )
+                        if self.filters.pattern_skip(type_names[0]):
+                            continue
                         target_field = self.filters.field_name(
                             f"{field.name}_{klass.name}_id",
                             klass.name,
@@ -222,13 +226,15 @@ class OdooGenerator(DataclassGenerator):
 
         # Generate modules
         for path, cluster in self.group_by_module(classes).items():
-            should_skip = False
+            should_skip_count = 0
             for pattern in SIGNATURE_CLASS_SKIP:
                 for klass in cluster:
                     if re.search(pattern, klass.name):
-                        should_skip = True
+                        should_skip_count += 1
                         break
-            if should_skip:
+            # a module/cluster may have some blacklisted classes
+            # we want to skip the cluster only above some threshold
+            if should_skip_count > 5:
                 continue
 
             package_dirs.add(str(Path(path).parent))
@@ -239,7 +245,7 @@ class OdooGenerator(DataclassGenerator):
             )
 
         self.config.output.max_line_length = 88  # OCA style
-        self.ruff_code(list(package_dirs))
+        self.ruff_code_oca(list(package_dirs))
 
     def render_module(
         self, resolver: DependenciesResolver, classes: List[Class]
@@ -319,7 +325,7 @@ class OdooGenerator(DataclassGenerator):
                     and children[0].tag
                     == "{http://www.w3.org/2001/XMLSchema}annotation"
                 ):
-                    obj.help = "".join(children[0].itertext())
+                    obj.help = "".join(children[0].itertext()).strip()
 
         # extract fields choice attributes and types using xpath:
         for attr in obj.attrs:
@@ -369,3 +375,52 @@ class OdooGenerator(DataclassGenerator):
                     ]:
                         field_data["xsd_type"] = xsd_type
                     self.filters.xsd_extra_info[f"{obj.name}#{attr.name}"] = field_data
+
+    def ruff_code_oca(self, file_paths: list[str]) -> None:
+        """
+        Run a custom ruff format and check process on a list of files.
+
+        This version is modified to:
+        1. Format the code first.
+        2. Check and fix for both 'F' (Pyflakes, includes unused imports)
+        and 'I' (isort) rules.
+        """
+        if not file_paths:
+            return
+
+        # First, run ruff format to handle all styling.
+        format_command = [
+            "ruff",
+            "format",
+            "--config",
+            f"line-length={self.config.output.max_line_length}",
+            *file_paths,
+        ]
+
+        # Next, run ruff check to fix code issues, including unused imports.
+        # We select both 'F' and 'I' rules.
+        check_command = [
+            "ruff",
+            "check",
+            "--config",
+            f"line-length={self.config.output.max_line_length}",
+            "--select",  # Use --select instead of --config for cleaner syntax
+            "F,I",  # Selects both F (Pyflakes) and I (isort) rules
+            "--fix",
+            "--unsafe-fixes",  # Often needed to remove unused imports
+            "--exit-zero",  # Don't fail the build if there are unfixable errors
+            *file_paths,
+        ]
+
+        try:
+            # Run formatting first
+            subprocess.run(format_command, capture_output=True, check=True, text=True)
+            # Then run linting and fixing
+            subprocess.run(check_command, capture_output=True, check=True, text=True)
+        except subprocess.CalledProcessError as e:
+            details = e.stderr.strip().replace("error: ", "")
+            raise CodegenError(f"Ruff failed\n{details}")
+        except FileNotFoundError:
+            raise CodegenError(
+                "Ruff command not found. Is it installed and in your PATH?"
+            )

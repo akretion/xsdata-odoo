@@ -47,6 +47,8 @@ SIGNATURE_CLASS_SKIP = [
     "^X509DataType$",
     "^CanonicalizationMethodType$",
     "^SignatureMethodType$",
+    "^RSAKeyValue$",
+    "^TRSAKeyValueType$",
 ]
 
 
@@ -165,62 +167,79 @@ class OdooFilters(Filters):
 
     def odoo_class_description(self, obj: Class) -> str:
         if obj.help:
-            return """textwrap.dedent("    %s" % (__doc__,))"""
+            return """textwrap.dedent(f"    {__doc__}")"""
         else:
             # TODO some inner classes have no obj.help
             # but we can read the XML annotations. Ex: "TretEnviNfe.InfRec", "Tnfe.InfNfe"...
             return f'"{obj.name}"'
 
     def enum_docstring(self, obj: Class) -> str:
-        """Works well for Brazilian fiscal xsd, may need adaptations for your
-        xsd."""
-        # see https://github.com/akretion/generateds-odoo/blob/465539b46e4216a5b94f1b0dabf39b34e7f4624c/gends_extract_simple_types.py#L385
-        # for possible improvement
-
+        """Also format enum items. Works well for Brazilian fiscal xsd, may need adaptations for
+        your xsd."""
+        separators = (" - ", "-", " – ", "–")
         if "_" in obj.name:
             type_qname = obj.qname.split("_")[0]
             field_name = obj.name.split("_")[1]
-
             for klass in self.all_complex_types:
                 if klass.qname == type_qname:
                     for idx, item in enumerate(obj.attrs):
                         for field in klass.attrs:
-                            if field.name == field_name and field.help:
-                                item_help = False
-                                separators = (" - ", "-", " – ", "–")
-                                for separator in separators:
-                                    split = field.help.split(
-                                        f"{item.default}{separator}"
-                                    )
-                                    if len(split) > 1:
-                                        # TODO sometimes the line may continue
-                                        # until the next value or may end at next value...
-                                        item_help = (
-                                            split[1].splitlines()[0].split(";")[0]
-                                        )
-                                        break
-                                if item_help:
-                                    item.help = item_help
-                                    if idx == 0 and len(split) > 1:
-                                        obj.help, help_trash = extract_string_and_help(
-                                            obj.name,
-                                            field.name,
-                                            split[0],
-                                            set(),
-                                            1024,
-                                        )
-                                else:
-                                    item.help = item.default
-                                if (
-                                    idx == 0
-                                    and not obj.help
-                                    and not field.help.startswith(item.default)
-                                ):
-                                    obj.help = (
-                                        field.help
-                                    )  # no split but better than no docstring
+                            if field.name != field_name or not field.help:
+                                continue
+                            item_help = False
+                            for separator in separators:
+                                split = field.help.split(f"{item.default}{separator}")
+                                if len(split) > 1:
+                                    # TODO sometimes the line may continue
+                                    # until the next value or may end at next value...
+                                    item_help = split[1].splitlines()[0].split(";")[0]
+                                    break
 
-        return self.clean_docstring(obj.help)
+                            if item_help:
+                                item.help = item_help
+                                if idx == 0 and len(split) > 1:
+                                    obj.help, _help_trash = extract_string_and_help(
+                                        obj.name,
+                                        field.name,
+                                        split[0],
+                                        set(),
+                                        1024,
+                                    )
+                            else:
+                                item.help = item.default
+                            if (
+                                idx == 0
+                                and not obj.help
+                                and not field.help.startswith(item.default)
+                            ):
+                                obj.help = (
+                                    field.help.strip()
+                                )  # no split but better than no docstring
+
+        for item in obj.attrs:  # (it also apply to simple_types)
+            if not item.help:
+                item.help = f'"{item.default}"'
+                continue
+            item.help = item.help.replace("\n", "").replace('"', "'").strip()
+            if len(item.help) > 78:
+                lines = [
+                    f'"{line.strip()} "'.replace('- "', '-"')
+                    for line in wrap_text(item.help, 8, 78)
+                    .replace('"""', "")
+                    .splitlines()
+                ]
+                lines[-1] = lines[-1].replace(' "', '"')
+                lines_str = "\n     ".join(lines)
+                item.help = f"\n    ({lines_str})"
+            else:
+                item.help = f'"{item.help}"'
+
+        if obj.help:
+            return "# " + "\n# ".join(
+                wrap_text(obj.help.strip(), 0, 78).replace('"', "").splitlines()
+            )
+        else:
+            return ""
 
     def odoo_class_name(self, obj: Class, parents: List[Class] = []):
         """
@@ -264,7 +283,7 @@ class OdooFilters(Filters):
         """Prepare string for docstring generation."""
         if not string:
             return ""  # TODO read from parent field if any
-        return "\n    {}".format(wrap_text(string, 4, 79))
+        return "\n    {}".format(wrap_text(string.strip(), 4, 79))
 
     def class_properties(
         self,
@@ -508,7 +527,17 @@ class OdooFilters(Filters):
         self, obj: Class, attr: Attr, type_names: str, kwargs: OrderedDict
     ):
         if attr.is_list:
+            if self.pattern_skip(attr.types[0].name):
+                return ""
             comodel_key = self.field_name(f"{attr.name}_{obj.name}_id", obj.name)
+            if type_names.split(".")[-1].lower().replace('"', "") not in [
+                t.name.lower() for t in self.all_complex_types
+            ]:
+                logger.warning(
+                    f"no complex type found for {type_names}; skipping attr {attr.name} in class {obj.name}!"
+                )
+                # example cte40_cInfManu in Brazilian CTe. Seems like a o2m to a simple type/Enum. Not implemented yet.
+                return ""
             return f"""fields.One2many("{self.registry_comodel(type_names)}", "{comodel_key}",{self.format_arguments(kwargs, 4)})"""
 
     def _try_selection_field_definition(
@@ -516,6 +545,9 @@ class OdooFilters(Filters):
     ):
         for klass in self.all_simple_types:
             if attr.types[0].qname == klass.qname:
+                if self.pattern_skip(klass.name.upper()):
+                    return ""
+
                 return f"fields.Selection({klass.name.upper()},{self.format_arguments(kwargs, 4)})"
 
     def _try_many2one_field_definition(
@@ -523,6 +555,8 @@ class OdooFilters(Filters):
     ):
         for klass in self.all_complex_types:
             if attr.types[0].qname == klass.qname:
+                if self.pattern_skip(attr.types[0].name):
+                    return ""
                 # Many2one
                 kwargs["comodel_name"] = self.registry_comodel(type_names)
                 kwargs.move_to_end("comodel_name", last=False)
