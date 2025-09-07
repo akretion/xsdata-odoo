@@ -200,6 +200,8 @@ class OdooGenerator(DataclassGenerator):
                         type_names = collections.unique_sequence(
                             self.filters._field_type_name(klass, x) for x in field.types
                         )
+                        if self.filters.pattern_skip(type_names[0]):
+                            continue
                         target_field = self.filters.field_name(
                             f"{field.name}_{klass.name}_id",
                             klass.name,
@@ -224,13 +226,15 @@ class OdooGenerator(DataclassGenerator):
 
         # Generate modules
         for path, cluster in self.group_by_module(classes).items():
-            should_skip = False
+            should_skip_count = 0
             for pattern in SIGNATURE_CLASS_SKIP:
                 for klass in cluster:
                     if re.search(pattern, klass.name):
-                        should_skip = True
+                        should_skip_count += 1
                         break
-            if should_skip:
+            # a module/cluster may have some blacklisted classes
+            # we want to skip the cluster only above some threshold
+            if should_skip_count > 5:
                 continue
 
             package_dirs.add(str(Path(path).parent))

@@ -47,6 +47,8 @@ SIGNATURE_CLASS_SKIP = [
     "^X509DataType$",
     "^CanonicalizationMethodType$",
     "^SignatureMethodType$",
+    "^RSAKeyValue$",
+    "^TRSAKeyValueType$",
 ]
 
 
@@ -525,7 +527,17 @@ class OdooFilters(Filters):
         self, obj: Class, attr: Attr, type_names: str, kwargs: OrderedDict
     ):
         if attr.is_list:
+            if self.pattern_skip(attr.types[0].name):
+                return ""
             comodel_key = self.field_name(f"{attr.name}_{obj.name}_id", obj.name)
+            if type_names.split(".")[-1].lower().replace('"', "") not in [
+                t.name.lower() for t in self.all_complex_types
+            ]:
+                logger.warning(
+                    f"no complex type found for {type_names}; skipping attr {attr.name} in class {obj.name}!"
+                )
+                # example cte40_cInfManu in Brazilian CTe. Seems like a o2m to a simple type/Enum. Not implemented yet.
+                return ""
             return f"""fields.One2many("{self.registry_comodel(type_names)}", "{comodel_key}",{self.format_arguments(kwargs, 4)})"""
 
     def _try_selection_field_definition(
@@ -533,6 +545,9 @@ class OdooFilters(Filters):
     ):
         for klass in self.all_simple_types:
             if attr.types[0].qname == klass.qname:
+                if self.pattern_skip(klass.name.upper()):
+                    return ""
+
                 return f"fields.Selection({klass.name.upper()},{self.format_arguments(kwargs, 4)})"
 
     def _try_many2one_field_definition(
@@ -540,6 +555,8 @@ class OdooFilters(Filters):
     ):
         for klass in self.all_complex_types:
             if attr.types[0].qname == klass.qname:
+                if self.pattern_skip(attr.types[0].name):
+                    return ""
                 # Many2one
                 kwargs["comodel_name"] = self.registry_comodel(type_names)
                 kwargs.move_to_end("comodel_name", last=False)
