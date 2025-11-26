@@ -8,7 +8,7 @@ from nltk import download
 from nltk.corpus import stopwords
 
 # where to stop when trying to extract the beginning of a text
-STRONG_PONCT_TOKENS = (". ", ", ", " (", " - ", ".", ",", ": ", "|")
+STRONG_PONCT_TOKENS = (". ", ", ", " (", " - ", ".", ",", ": ", "|", ":")
 STRING_MIN_LEN = 36  # agressive cuts
 STRING_MAX_LEN = 40  # progressive cuts
 

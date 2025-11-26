@@ -4356,7 +4356,7 @@ class Icmsufdest(models.AbstractModel):
 
     nfe40_pICMSInter = fields.Selection(
         ICMSUFDEST_PICMSINTER,
-        string="Alíquota interestadual",
+        string="Alíquota interestadual das UF envolvidas",
         xsd_required=True,
         help=(
             "Alíquota interestadual das UF envolvidas: - 4% alíquota "
@@ -4481,7 +4481,7 @@ class Icmspart(models.AbstractModel):
 
     nfe40_modBC = fields.Selection(
         ICMSPART_MODBC,
-        string="Modalidade de determinação da BC",
+        string="Modalidade de determinação da BC do ICMS",
         xsd_required=True,
         help=(
             "Modalidade de determinação da BC do ICMS:\n0 - Margem Valor "
@@ -4525,7 +4525,7 @@ class Icmspart(models.AbstractModel):
 
     nfe40_modBCST = fields.Selection(
         ICMSPART_MODBCST,
-        string="modBCST",
+        string="Modalidade de determinação da BC",
         xsd_required=True,
         help=(
             "Modalidade de determinação da BC do ICMS ST:\n0 – Preço tabelado "
@@ -4860,7 +4860,7 @@ class Issqn(models.AbstractModel):
 
     nfe40_indISS = fields.Selection(
         ISSQN_INDISS,
-        string="Exibilidade",
+        string="Exibilidade do ISS",
         xsd_required=True,
         help=(
             "Exibilidade do ISS:1-Exigível;2-Não "
@@ -5582,7 +5582,7 @@ class DetPag(models.AbstractModel):
     )
     nfe40_indPag = fields.Selection(
         DETPAG_INDPAG,
-        string="Indicador da Forma",
+        string="Indicador da Forma de Pagamento",
         help=(
             "Indicador da Forma de Pagamento:0-Pagamento à Vista;1-Pagamento à Prazo;"
         ),
