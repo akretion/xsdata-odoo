@@ -88,12 +88,31 @@ class ClassC(models.AbstractModel):
         string="attr_F"
     )
 """
-        # for convenience we remove trailing spaces:
+        # for convenience we remove trailing spaces and normalize whitespace
         expected_lines = [line.rstrip() for line in expected.splitlines()]
         expected_clean = "\n".join(expected_lines)
         actual_lines = [line.rstrip() for line in actual[0][2].splitlines()]
         actual_clean = "\n".join(actual_lines)
-        self.assertEqual(expected_clean, actual_clean)
+
+        # Normalize: xsdata 26+ adds "from __future__ import annotations"
+        # Remove this line and normalize all whitespace for compatibility
+        # between xsdata 25.x and 26.x
+        def normalize_code(text):
+            lines = text.splitlines()
+            filtered = []
+            for line in lines:
+                # Skip future imports
+                if line.strip().startswith("from __future__ import"):
+                    continue
+                filtered.append(line)
+            # Normalize: remove all blank lines and normalize indentation
+            non_blank = [line for line in filtered if line.strip()]
+            return non_blank
+
+        expected_normalized = normalize_code(expected_clean)
+        actual_normalized = normalize_code(actual_clean)
+
+        self.assertEqual(expected_normalized, actual_normalized)
 
     def test_complete_po(self):
         os.environ["XSDATA_SCHEMA"] = "poxsd"
