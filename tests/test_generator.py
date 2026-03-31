@@ -186,6 +186,7 @@ class ClassC(models.AbstractModel):
         os.environ["XSDATA_VERSION"] = "40"
         os.environ["XSDATA_SKIP"] = r"^ICMS.ICMS\d+|^ICMS.ICMSSN\d+"
         os.environ["XSDATA_LANG"] = "portuguese"
+        os.environ["XSDATA_CURRENCY_FIELD"] = "brl_currency_id"
 
         runner = CliRunner()
         schema = Path(__file__).parent.joinpath("fixtures/nfe/leiauteNFe_v4.00.xsd")

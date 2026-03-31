@@ -58,3 +58,16 @@ Generating package: nfelib.nfe.odoo.v4_0.ret_cons_stat_serv_v4_00
 Generating package: nfelib.nfe.odoo.v4_0.ret_envi_nfe_v4_00
 Generating package: nfelib.nfe.odoo.v4_0.ret_inut_nfe_v4_0
 ```
+
+## Environment Variables
+
+The following environment variables can be used to customize the generated code:
+
+- `XSDATA_SCHEMA`: Schema name (default: `spec`)
+- `XSDATA_VERSION`: Schema version (default: `10`)
+- `XSDATA_SKIP`: Regex patterns to skip specific classes/fields (pipe-separated)
+- `XSDATA_LANG`: Language for processing text (e.g., `portuguese`, `english`)
+- `XSDATA_MONETARY_TYPE`: XSD type to force fields.Monetary
+- `XSDATA_NUM_TYPE`: XSD type for fields.Float or fields.Monetary
+- `XSDATA_CURRENCY_FIELD`: Currency field name for fields.Monetary (default:
+  `currency_id`)
