@@ -51,6 +51,9 @@ SIGNATURE_CLASS_SKIP = [
     "^TRSAKeyValueType$",
 ]
 
+# Pre-compile signature patterns for performance
+_SIGNATURE_PATTERNS = [re.compile(p) for p in SIGNATURE_CLASS_SKIP]
+
 
 class OdooFilters(Filters):
     __slots__ = (
@@ -65,6 +68,7 @@ class OdooFilters(Filters):
         "inherit_model",
         "xsd_extra_info",
         "relative_imports",
+        "_skip_patterns",
     )
 
     def __init__(
@@ -93,6 +97,11 @@ class OdooFilters(Filters):
         self.inherit_model = inherit_model
         self.xsd_extra_info: Dict[str, Any] = {}
         self.relative_imports = True
+        self._skip_patterns: list[re.Pattern] = list(_SIGNATURE_PATTERNS)
+        # Add custom skip patterns from environment variable
+        if os.environ.get("XSDATA_SKIP"):
+            custom_patterns = os.environ["XSDATA_SKIP"].split("|")
+            self._skip_patterns.extend([re.compile(p) for p in custom_patterns])
 
     def register(self, env: Environment):
         super().register(env)
@@ -140,27 +149,25 @@ class OdooFilters(Filters):
         """Should class or field be skipped?"""
         if parents is None:
             parents = []
-        class_skip = SIGNATURE_CLASS_SKIP.copy()
-        if os.environ.get("XSDATA_SKIP"):
-            class_skip += os.environ["XSDATA_SKIP"].split("|")
-        for pattern in class_skip:
+        for compiled_pattern in self._skip_patterns:
             # do we have a simple match? (no scoping can be risky)
-            if re.search(pattern, name):
+            if compiled_pattern.search(name):
                 return True
-            part_count = pattern.count(".") + 1
+            pattern_str = compiled_pattern.pattern
+            part_count = pattern_str.count(".") + 1
             if part_count > 1:
                 # eventually we search for the class with its parents scope
                 parent_pattern = ".".join(
                     [namespaces.local_name(c.qname) for c in parents[-part_count:]]
                 )
-                if re.search(pattern, parent_pattern):
+                if compiled_pattern.search(parent_pattern):
                     return True
                 # we now search for the field_name with its parents scope
                 field_parent_pattern = ".".join(
                     [namespaces.local_name(c.qname) for c in parents[-part_count + 1 :]]
                     + [name]
                 )
-                if re.search(pattern, field_parent_pattern):
+                if compiled_pattern.search(field_parent_pattern):
                     return True
 
         return False
