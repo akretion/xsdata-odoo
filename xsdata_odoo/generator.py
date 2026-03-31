@@ -278,10 +278,11 @@ class OdooGenerator(DataclassGenerator):
             if [ext.type for ext in obj.extensions]:
                 # this is used only to change tag names, no Odoo model is required
                 return ""
+            if obj.is_service:
+                # Services (SOAP/WSDL) don't generate Odoo models
+                return ""
             if obj.is_enumeration:
                 template = load("enum.jinja2")
-            elif obj.is_service:
-                template = load("service.jinja2")
             else:
                 template = load("class.jinja2")
 
