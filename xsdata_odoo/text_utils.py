@@ -69,7 +69,7 @@ def _aggressive_cut(doc):
     def remove_after(string, token):
         return token.join(string.split(token)[:-1])
 
-    if os.environ.get("USLESS_STARTS"):
+    if os.environ.get("USELESS_STARTS"):
         useless_starts = tuple(os.environ["USELESS_STARTS"].split("|"))
     else:
         useless_starts = USELESS_STARTS  # a good default for us in Brazil
