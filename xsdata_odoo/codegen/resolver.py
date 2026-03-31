@@ -1,11 +1,9 @@
-from typing import List
-
 from xsdata.codegen.models import Class
 from xsdata.codegen.resolver import DependenciesResolver
 
 
 class OdooDependenciesResolver(DependenciesResolver):
-    def sorted_classes(self) -> List[Class]:
+    def sorted_classes(self) -> list[Class]:
         """Sorted: Enumerations 1st"""
 
         result = []

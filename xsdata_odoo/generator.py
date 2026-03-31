@@ -2,8 +2,9 @@ import os
 import re
 import subprocess
 from collections import defaultdict
+from collections.abc import Iterator
 from pathlib import Path
-from typing import Any, Dict, Iterator, List, Optional
+from typing import Any
 
 from jinja2 import Environment, FileSystemLoader
 from lxml import etree
@@ -38,10 +39,10 @@ class OdooGenerator(DataclassGenerator):
             config.conventions.field_name.safe_prefix = f"{schema}{version}_"
 
         super().__init__(config)
-        self.all_simple_types: List[Class] = []
-        self.all_complex_types: List[Class] = []
-        self.registry_names: Dict = {}
-        self.implicit_many2ones: Dict = defaultdict(list)
+        self.all_simple_types: list[Class] = []
+        self.all_complex_types: list[Class] = []
+        self.registry_names: dict = {}
+        self.implicit_many2ones: dict = defaultdict(list)
         tpl_dir = Path(__file__).parent.joinpath("templates")
         self.env = Environment(loader=FileSystemLoader(str(tpl_dir)), autoescape=False)
         self.filters = OdooFilters(
@@ -143,7 +144,7 @@ class OdooGenerator(DataclassGenerator):
             for k, v in class_paths.items()
         }
 
-    def render(self, classes: List[Class]) -> Iterator[GeneratorResult]:
+    def render(self, classes: list[Class]) -> Iterator[GeneratorResult]:
         """Return a iterator of the generated results."""
         registry = {obj.qname: obj.target_module for obj in classes}
         resolver = OdooDependenciesResolver(registry=registry)
@@ -166,7 +167,7 @@ class OdooGenerator(DataclassGenerator):
                         # FIXME is this parent collecting buggy??
                         dfs(visited, graph, neighbour, path)
 
-            all_file_classes: List[Any] = []
+            all_file_classes: list[Any] = []
             for c in cluster:
                 dfs(all_file_classes, cluster, c)  # , c.name)
 
@@ -248,7 +249,7 @@ class OdooGenerator(DataclassGenerator):
         self.ruff_code_oca(list(package_dirs))
 
     def render_module(
-        self, resolver: DependenciesResolver, classes: List[Class]
+        self, resolver: DependenciesResolver, classes: list[Class]
     ) -> str:
         res = super().render_module(resolver, classes)
 
@@ -262,9 +263,7 @@ class OdooGenerator(DataclassGenerator):
             ]
         )
 
-    def render_classes(
-        self, classes: List[Class], module_namespace: Optional[str]
-    ) -> str:
+    def render_classes(self, classes: list[Class], module_namespace: str | None) -> str:
         """
         Render the source code of the classes.
 

@@ -1,7 +1,6 @@
 import locale
 import os
 import textwrap
-from typing import Tuple
 
 import babel
 from nltk import download
@@ -21,7 +20,7 @@ def extract_string_and_help(
     doc: str,
     unique_labels: set,
     max_len: int = STRING_MAX_LEN,
-) -> Tuple[str, str]:
+) -> tuple[str, str]:
     """
     Try to extract a proper field string from any (xsd) longest field documentation.
     Eventually attr_name is technical and a better string/label can be
