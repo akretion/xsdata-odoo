@@ -17,6 +17,13 @@ from xsdata.models.config import GeneratorConfig
 from xsdata.utils import collections
 
 from .codegen.resolver import OdooDependenciesResolver
+from .constants import (
+    OCA_LINE_LENGTH,
+    XSD_ANNOTATION_TAG,
+    XSD_CHOICE_TAG,
+    XSD_NSMAP,
+    XSD_SEQUENCE_TAG,
+)
 from .filters import SIGNATURE_CLASS_SKIP, OdooFilters
 
 # only put this header in files with complex types (not in tipos_basico_v4_00.py for instance)
@@ -245,7 +252,7 @@ class OdooGenerator(DataclassGenerator):
                 source=self.render_module(resolver, cluster),
             )
 
-        self.config.output.max_line_length = 88  # OCA style
+        self.config.output.max_line_length = OCA_LINE_LENGTH
         self.ruff_code_oca(list(package_dirs))
 
     def render_module(
@@ -313,18 +320,11 @@ class OdooGenerator(DataclassGenerator):
         if not obj.help:
             xpath_matches = xsd_tree.getroot().xpath(
                 f"//xs:element[@name='{obj.name}']",
-                namespaces={
-                    "xs": "http://www.w3.org/2001/XMLSchema",
-                    "xsd": "http://www.w3.org/2001/XMLSchema",
-                },
+                namespaces=XSD_NSMAP,
             )
             if xpath_matches:
                 children = xpath_matches[0].getchildren()
-                if (
-                    len(children) > 0
-                    and children[0].tag
-                    == "{http://www.w3.org/2001/XMLSchema}annotation"
-                ):
+                if len(children) > 0 and children[0].tag == XSD_ANNOTATION_TAG:
                     obj.help = "".join(children[0].itertext()).strip()
 
         # extract fields choice attributes and types using xpath:
@@ -339,22 +339,19 @@ class OdooGenerator(DataclassGenerator):
             for lookup in type_lookups:
                 xpath_matches = xsd_tree.getroot().xpath(
                     lookup,
-                    namespaces={
-                        "xs": "http://www.w3.org/2001/XMLSchema",
-                        "xsd": "http://www.w3.org/2001/XMLSchema",
-                    },
+                    namespaces=XSD_NSMAP,
                 )
                 if xpath_matches:
                     xsd_choice_required = None
                     parent = xpath_matches[0].getparent()
                     # (here we don't try to group items by choice, but eventually we could)
-                    while parent.tag == "{http://www.w3.org/2001/XMLSchema}sequence":
+                    while parent.tag == XSD_SEQUENCE_TAG:
                         if (
                             parent.get("minOccurs", "1") == "0"
                         ):  # example veicTransp in Brazilian NFe
                             xsd_choice_required = False
                         parent = parent.getparent()
-                    if parent.tag == "{http://www.w3.org/2001/XMLSchema}choice":
+                    if parent.tag == XSD_CHOICE_TAG:
                         # here we assume only 1 choice per complexType
                         # but evexntually we could count them and number them...
                         field_data["choice"] = (
