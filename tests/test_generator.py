@@ -3,11 +3,39 @@ import sys
 from pathlib import Path
 
 from click.testing import CliRunner
+from xsdata import __version__ as xsdata_version
 from xsdata.cli import cli
 from xsdata.models.config import GeneratorConfig
 from xsdata.utils.testing import ClassFactory, FactoryTestCase
 
 from xsdata_odoo.generator import OdooGenerator
+
+XSATA_MAJOR = int(xsdata_version.split(".")[0])
+
+
+def _normalize_code(text):
+    """Normalize code for xsdata 25/26 compat.
+
+    Removes 'from __future__ import annotations' and normalizes
+    consecutive blank lines to single blank lines.
+    """
+    lines = text.splitlines()
+    filtered = [
+        line for line in lines if not line.strip().startswith("from __future__ import")
+    ]
+    # Normalize consecutive blank lines to single blank line
+    result = []
+    prev_blank = False
+    for line in filtered:
+        is_blank = not line.strip()
+        if is_blank and prev_blank:
+            continue
+        result.append(line)
+        prev_blank = is_blank
+    # Remove leading blank lines
+    while result and not result[0].strip():
+        result.pop(0)
+    return "\n".join(result)
 
 
 class OdooGeneratorTests(FactoryTestCase):
@@ -15,6 +43,12 @@ class OdooGeneratorTests(FactoryTestCase):
         super().setUp()
         config = GeneratorConfig()
         self.generator = OdooGenerator(config)
+
+    def _cli_args(self, *args):
+        """Prepend 'generate' for xsdata 26+ CLI compatibility."""
+        if XSATA_MAJOR >= 26:
+            return ["generate"] + list(args)
+        return list(args)
 
     def test_render(self):
         if os.environ.get("XSDATA_SCHEMA"):
@@ -125,26 +159,26 @@ class ClassC(models.AbstractModel):
 
         result = runner.invoke(
             cli,
-            [
+            self._cli_args(
                 str(schema),
                 "--package",
                 "generated.po.models",
                 "--structure-style=single-package",
                 "--output",
                 "odoo",
-            ],
+            ),
             catch_exceptions=True,
         )
 
         self.assertIsNone(result.exception)
 
         if "win" not in sys.platform.lower():
-            expected = "to be read 1"
-            generated = "to be read 2"
             with open("tests/fixtures/po/models.py") as f:
                 expected = f.read()
             with open("generated/po/models.py") as f:
                 generated = f.read()
+            expected = _normalize_code(expected)
+            generated = _normalize_code(generated)
             self.assertEqual(expected, generated)
 
     def test_complete_po_with_nesting(self):
@@ -159,26 +193,26 @@ class ClassC(models.AbstractModel):
 
         result = runner.invoke(
             cli,
-            [
+            self._cli_args(
                 str(schema),
                 "--package",
                 "generated.po_with_nesting.models",
                 "--structure-style=single-package",
                 "--output",
                 "odoo",
-            ],
+            ),
             catch_exceptions=True,
         )
 
         self.assertIsNone(result.exception)
 
         if "win" not in sys.platform.lower():
-            expected = "to be read 1"
-            generated = "to be read 2"
             with open("tests/fixtures/po_with_nesting/models.py") as f:
                 expected = f.read()
             with open("generated/po_with_nesting/models.py") as f:
                 generated = f.read()
+            expected = _normalize_code(expected)
+            generated = _normalize_code(generated)
             self.assertEqual(expected, generated)
 
     def test_complete_nfe(self):
@@ -194,24 +228,24 @@ class ClassC(models.AbstractModel):
 
         result = runner.invoke(
             cli,
-            [
+            self._cli_args(
                 str(schema),
                 "--package",
                 "generated.nfe.v4_0.models",
                 "--structure-style=single-package",
                 "--output",
                 "odoo",
-            ],
+            ),
             catch_exceptions=True,
         )
 
         self.assertIsNone(result.exception)
 
         if sys.version_info[:2] > (3, 9) and "win" not in sys.platform.lower():
-            expected = "to be read 1"
-            generated = "to be read 2"
             with open("tests/fixtures/nfe/models.py") as f:
                 expected = f.read()
             with open("generated/nfe/v4_0/models.py") as f:
                 generated = f.read()
+            expected = _normalize_code(expected)
+            generated = _normalize_code(generated)
             self.assertEqual(expected, generated)
