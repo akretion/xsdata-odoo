@@ -2,8 +2,9 @@ import os
 import re
 import subprocess
 from collections import defaultdict
+from collections.abc import Iterator
 from pathlib import Path
-from typing import Any, Dict, Iterator, List, Optional
+from typing import Any
 
 from jinja2 import Environment, FileSystemLoader
 from lxml import etree
@@ -16,6 +17,13 @@ from xsdata.models.config import GeneratorConfig
 from xsdata.utils import collections
 
 from .codegen.resolver import OdooDependenciesResolver
+from .constants import (
+    OCA_LINE_LENGTH,
+    XSD_ANNOTATION_TAG,
+    XSD_CHOICE_TAG,
+    XSD_NSMAP,
+    XSD_SEQUENCE_TAG,
+)
 from .filters import SIGNATURE_CLASS_SKIP, OdooFilters
 
 # only put this header in files with complex types (not in tipos_basico_v4_00.py for instance)
@@ -38,10 +46,10 @@ class OdooGenerator(DataclassGenerator):
             config.conventions.field_name.safe_prefix = f"{schema}{version}_"
 
         super().__init__(config)
-        self.all_simple_types: List[Class] = []
-        self.all_complex_types: List[Class] = []
-        self.registry_names: Dict = {}
-        self.implicit_many2ones: Dict = defaultdict(list)
+        self.all_simple_types: list[Class] = []
+        self.all_complex_types: list[Class] = []
+        self.registry_names: dict = {}
+        self.implicit_many2ones: dict = defaultdict(list)
         tpl_dir = Path(__file__).parent.joinpath("templates")
         self.env = Environment(loader=FileSystemLoader(str(tpl_dir)), autoescape=False)
         self.filters = OdooFilters(
@@ -143,7 +151,7 @@ class OdooGenerator(DataclassGenerator):
             for k, v in class_paths.items()
         }
 
-    def render(self, classes: List[Class]) -> Iterator[GeneratorResult]:
+    def render(self, classes: list[Class]) -> Iterator[GeneratorResult]:
         """Return a iterator of the generated results."""
         registry = {obj.qname: obj.target_module for obj in classes}
         resolver = OdooDependenciesResolver(registry=registry)
@@ -166,7 +174,7 @@ class OdooGenerator(DataclassGenerator):
                         # FIXME is this parent collecting buggy??
                         dfs(visited, graph, neighbour, path)
 
-            all_file_classes: List[Any] = []
+            all_file_classes: list[Any] = []
             for c in cluster:
                 dfs(all_file_classes, cluster, c)  # , c.name)
 
@@ -244,11 +252,11 @@ class OdooGenerator(DataclassGenerator):
                 source=self.render_module(resolver, cluster),
             )
 
-        self.config.output.max_line_length = 88  # OCA style
+        self.config.output.max_line_length = OCA_LINE_LENGTH
         self.ruff_code_oca(list(package_dirs))
 
     def render_module(
-        self, resolver: DependenciesResolver, classes: List[Class]
+        self, resolver: DependenciesResolver, classes: list[Class]
     ) -> str:
         res = super().render_module(resolver, classes)
 
@@ -262,9 +270,7 @@ class OdooGenerator(DataclassGenerator):
             ]
         )
 
-    def render_classes(
-        self, classes: List[Class], module_namespace: Optional[str]
-    ) -> str:
+    def render_classes(self, classes: list[Class], module_namespace: str | None) -> str:
         """
         Render the source code of the classes.
 
@@ -278,10 +284,11 @@ class OdooGenerator(DataclassGenerator):
             if [ext.type for ext in obj.extensions]:
                 # this is used only to change tag names, no Odoo model is required
                 return ""
+            if obj.is_service:
+                # Services (SOAP/WSDL) don't generate Odoo models
+                return ""
             if obj.is_enumeration:
                 template = load("enum.jinja2")
-            elif obj.is_service:
-                template = load("service.jinja2")
             else:
                 template = load("class.jinja2")
 
@@ -313,18 +320,11 @@ class OdooGenerator(DataclassGenerator):
         if not obj.help:
             xpath_matches = xsd_tree.getroot().xpath(
                 f"//xs:element[@name='{obj.name}']",
-                namespaces={
-                    "xs": "http://www.w3.org/2001/XMLSchema",
-                    "xsd": "http://www.w3.org/2001/XMLSchema",
-                },
+                namespaces=XSD_NSMAP,
             )
             if xpath_matches:
                 children = xpath_matches[0].getchildren()
-                if (
-                    len(children) > 0
-                    and children[0].tag
-                    == "{http://www.w3.org/2001/XMLSchema}annotation"
-                ):
+                if len(children) > 0 and children[0].tag == XSD_ANNOTATION_TAG:
                     obj.help = "".join(children[0].itertext()).strip()
 
         # extract fields choice attributes and types using xpath:
@@ -339,22 +339,19 @@ class OdooGenerator(DataclassGenerator):
             for lookup in type_lookups:
                 xpath_matches = xsd_tree.getroot().xpath(
                     lookup,
-                    namespaces={
-                        "xs": "http://www.w3.org/2001/XMLSchema",
-                        "xsd": "http://www.w3.org/2001/XMLSchema",
-                    },
+                    namespaces=XSD_NSMAP,
                 )
                 if xpath_matches:
                     xsd_choice_required = None
                     parent = xpath_matches[0].getparent()
                     # (here we don't try to group items by choice, but eventually we could)
-                    while parent.tag == "{http://www.w3.org/2001/XMLSchema}sequence":
+                    while parent.tag == XSD_SEQUENCE_TAG:
                         if (
                             parent.get("minOccurs", "1") == "0"
                         ):  # example veicTransp in Brazilian NFe
                             xsd_choice_required = False
                         parent = parent.getparent()
-                    if parent.tag == "{http://www.w3.org/2001/XMLSchema}choice":
+                    if parent.tag == XSD_CHOICE_TAG:
                         # here we assume only 1 choice per complexType
                         # but evexntually we could count them and number them...
                         field_data["choice"] = (

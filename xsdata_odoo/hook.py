@@ -1,5 +1,4 @@
 import os
-from typing import List
 
 from xsdata.codegen.handlers.merge_attributes import MergeAttributes
 from xsdata.codegen.handlers.update_attributes_effective_choice import (
@@ -22,7 +21,7 @@ def process(cls, target: Class):
     Two attributes are considered equal if they have the same name,
     tag and namespace.
     """
-    result: List[Attr] = []
+    result: list[Attr] = []
     for attr in target.attrs:
         pos = collections.find(result, attr)
         existing = result[pos] if pos > -1 else None
@@ -54,7 +53,7 @@ def process(cls, target: Class):
 
 
 @classmethod  # type: ignore[misc]  # Suppresses "classmethod used with a non-method"
-def merge_attrs(cls, target: Class, groups: List[List[int]]) -> List[Attr]:
+def merge_attrs(cls, target: Class, groups: list[list[int]]) -> list[Attr]:
     attrs = []
 
     for index, attr in enumerate(target.attrs):

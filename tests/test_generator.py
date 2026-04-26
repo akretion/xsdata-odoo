@@ -3,11 +3,39 @@ import sys
 from pathlib import Path
 
 from click.testing import CliRunner
+from xsdata import __version__ as xsdata_version
 from xsdata.cli import cli
 from xsdata.models.config import GeneratorConfig
 from xsdata.utils.testing import ClassFactory, FactoryTestCase
 
 from xsdata_odoo.generator import OdooGenerator
+
+XSATA_MAJOR = int(xsdata_version.split(".")[0])
+
+
+def _normalize_code(text):
+    """Normalize code for xsdata 25/26 compat.
+
+    Removes 'from __future__ import annotations' and normalizes
+    consecutive blank lines to single blank lines.
+    """
+    lines = text.splitlines()
+    filtered = [
+        line for line in lines if not line.strip().startswith("from __future__ import")
+    ]
+    # Normalize consecutive blank lines to single blank line
+    result = []
+    prev_blank = False
+    for line in filtered:
+        is_blank = not line.strip()
+        if is_blank and prev_blank:
+            continue
+        result.append(line)
+        prev_blank = is_blank
+    # Remove leading blank lines
+    while result and not result[0].strip():
+        result.pop(0)
+    return "\n".join(result)
 
 
 class OdooGeneratorTests(FactoryTestCase):
@@ -15,6 +43,12 @@ class OdooGeneratorTests(FactoryTestCase):
         super().setUp()
         config = GeneratorConfig()
         self.generator = OdooGenerator(config)
+
+    def _cli_args(self, *args):
+        """Prepend 'generate' for xsdata 26+ CLI compatibility."""
+        if XSATA_MAJOR >= 26:
+            return ["generate"] + list(args)
+        return list(args)
 
     def test_render(self):
         if os.environ.get("XSDATA_SCHEMA"):
@@ -88,12 +122,31 @@ class ClassC(models.AbstractModel):
         string="attr_F"
     )
 """
-        # for convenience we remove trailing spaces:
+        # for convenience we remove trailing spaces and normalize whitespace
         expected_lines = [line.rstrip() for line in expected.splitlines()]
         expected_clean = "\n".join(expected_lines)
         actual_lines = [line.rstrip() for line in actual[0][2].splitlines()]
         actual_clean = "\n".join(actual_lines)
-        self.assertEqual(expected_clean, actual_clean)
+
+        # Normalize: xsdata 26+ adds "from __future__ import annotations"
+        # Remove this line and normalize all whitespace for compatibility
+        # between xsdata 25.x and 26.x
+        def normalize_code(text):
+            lines = text.splitlines()
+            filtered = []
+            for line in lines:
+                # Skip future imports
+                if line.strip().startswith("from __future__ import"):
+                    continue
+                filtered.append(line)
+            # Normalize: remove all blank lines and normalize indentation
+            non_blank = [line for line in filtered if line.strip()]
+            return non_blank
+
+        expected_normalized = normalize_code(expected_clean)
+        actual_normalized = normalize_code(actual_clean)
+
+        self.assertEqual(expected_normalized, actual_normalized)
 
     def test_complete_po(self):
         os.environ["XSDATA_SCHEMA"] = "poxsd"
@@ -106,26 +159,26 @@ class ClassC(models.AbstractModel):
 
         result = runner.invoke(
             cli,
-            [
+            self._cli_args(
                 str(schema),
                 "--package",
                 "generated.po.models",
                 "--structure-style=single-package",
                 "--output",
                 "odoo",
-            ],
+            ),
             catch_exceptions=True,
         )
 
         self.assertIsNone(result.exception)
 
         if "win" not in sys.platform.lower():
-            expected = "to be read 1"
-            generated = "to be read 2"
             with open("tests/fixtures/po/models.py") as f:
                 expected = f.read()
             with open("generated/po/models.py") as f:
                 generated = f.read()
+            expected = _normalize_code(expected)
+            generated = _normalize_code(generated)
             self.assertEqual(expected, generated)
 
     def test_complete_po_with_nesting(self):
@@ -140,26 +193,26 @@ class ClassC(models.AbstractModel):
 
         result = runner.invoke(
             cli,
-            [
+            self._cli_args(
                 str(schema),
                 "--package",
                 "generated.po_with_nesting.models",
                 "--structure-style=single-package",
                 "--output",
                 "odoo",
-            ],
+            ),
             catch_exceptions=True,
         )
 
         self.assertIsNone(result.exception)
 
         if "win" not in sys.platform.lower():
-            expected = "to be read 1"
-            generated = "to be read 2"
             with open("tests/fixtures/po_with_nesting/models.py") as f:
                 expected = f.read()
             with open("generated/po_with_nesting/models.py") as f:
                 generated = f.read()
+            expected = _normalize_code(expected)
+            generated = _normalize_code(generated)
             self.assertEqual(expected, generated)
 
     def test_complete_nfe(self):
@@ -167,6 +220,7 @@ class ClassC(models.AbstractModel):
         os.environ["XSDATA_VERSION"] = "40"
         os.environ["XSDATA_SKIP"] = r"^ICMS.ICMS\d+|^ICMS.ICMSSN\d+"
         os.environ["XSDATA_LANG"] = "portuguese"
+        os.environ["XSDATA_CURRENCY_FIELD"] = "brl_currency_id"
 
         runner = CliRunner()
         schema = Path(__file__).parent.joinpath("fixtures/nfe/leiauteNFe_v4.00.xsd")
@@ -174,24 +228,24 @@ class ClassC(models.AbstractModel):
 
         result = runner.invoke(
             cli,
-            [
+            self._cli_args(
                 str(schema),
                 "--package",
                 "generated.nfe.v4_0.models",
                 "--structure-style=single-package",
                 "--output",
                 "odoo",
-            ],
+            ),
             catch_exceptions=True,
         )
 
         self.assertIsNone(result.exception)
 
         if sys.version_info[:2] > (3, 9) and "win" not in sys.platform.lower():
-            expected = "to be read 1"
-            generated = "to be read 2"
             with open("tests/fixtures/nfe/models.py") as f:
                 expected = f.read()
             with open("generated/nfe/v4_0/models.py") as f:
                 generated = f.read()
+            expected = _normalize_code(expected)
+            generated = _normalize_code(generated)
             self.assertEqual(expected, generated)

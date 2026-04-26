@@ -1,7 +1,7 @@
 import os
 import re
 from collections import OrderedDict
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from jinja2 import Environment
 from xsdata.codegen.models import Attr, Class
@@ -51,6 +51,9 @@ SIGNATURE_CLASS_SKIP = [
     "^TRSAKeyValueType$",
 ]
 
+# Pre-compile signature patterns for performance
+_SIGNATURE_PATTERNS = [re.compile(p) for p in SIGNATURE_CLASS_SKIP]
+
 
 class OdooFilters(Filters):
     __slots__ = (
@@ -65,15 +68,16 @@ class OdooFilters(Filters):
         "inherit_model",
         "xsd_extra_info",
         "relative_imports",
+        "_skip_patterns",
     )
 
     def __init__(
         self,
         config: GeneratorConfig,
-        all_simple_types: List[Class],
-        all_complex_types: List[Class],
-        registry_names: Dict,
-        implicit_many2ones: Dict,
+        all_simple_types: list[Class],
+        all_complex_types: list[Class],
+        registry_names: dict,
+        implicit_many2ones: dict,
         schema: str = "spec",
         version: str = "10",
         python_inherit_model: str = "models.AbstractModel",
@@ -84,15 +88,20 @@ class OdooFilters(Filters):
         self.all_complex_types = all_complex_types
         self.registry_names = registry_names
         self.implicit_many2ones = implicit_many2ones
-        self.files_to_etree: Dict[str, Any] = {}
+        self.files_to_etree: dict[str, Any] = {}
         self.schema = schema
         self.version = version
         self.python_inherit_model = python_inherit_model
         if inherit_model is None:
             inherit_model = f"spec.mixin.{schema}"
         self.inherit_model = inherit_model
-        self.xsd_extra_info: Dict[str, Any] = {}
+        self.xsd_extra_info: dict[str, Any] = {}
         self.relative_imports = True
+        self._skip_patterns: list[re.Pattern] = list(_SIGNATURE_PATTERNS)
+        # Add custom skip patterns from environment variable
+        if os.environ.get("XSDATA_SKIP"):
+            custom_patterns = os.environ["XSDATA_SKIP"].split("|")
+            self._skip_patterns.extend([re.compile(p) for p in custom_patterns])
 
     def register(self, env: Environment):
         super().register(env)
@@ -136,31 +145,29 @@ class OdooFilters(Filters):
         else:
             return True
 
-    def pattern_skip(self, name: str, parents: Optional[List[Class]] = None) -> bool:
+    def pattern_skip(self, name: str, parents: list[Class] | None = None) -> bool:
         """Should class or field be skipped?"""
         if parents is None:
             parents = []
-        class_skip = SIGNATURE_CLASS_SKIP.copy()
-        if os.environ.get("XSDATA_SKIP"):
-            class_skip += os.environ["XSDATA_SKIP"].split("|")
-        for pattern in class_skip:
+        for compiled_pattern in self._skip_patterns:
             # do we have a simple match? (no scoping can be risky)
-            if re.search(pattern, name):
+            if compiled_pattern.search(name):
                 return True
-            part_count = pattern.count(".") + 1
+            pattern_str = compiled_pattern.pattern
+            part_count = pattern_str.count(".") + 1
             if part_count > 1:
                 # eventually we search for the class with its parents scope
                 parent_pattern = ".".join(
                     [namespaces.local_name(c.qname) for c in parents[-part_count:]]
                 )
-                if re.search(pattern, parent_pattern):
+                if compiled_pattern.search(parent_pattern):
                     return True
                 # we now search for the field_name with its parents scope
                 field_parent_pattern = ".".join(
                     [namespaces.local_name(c.qname) for c in parents[-part_count + 1 :]]
                     + [name]
                 )
-                if re.search(pattern, field_parent_pattern):
+                if compiled_pattern.search(field_parent_pattern):
                     return True
 
         return False
@@ -241,7 +248,7 @@ class OdooFilters(Filters):
         else:
             return ""
 
-    def odoo_class_name(self, obj: Class, parents: List[Class] = []):
+    def odoo_class_name(self, obj: Class, parents: list[Class] = []):
         """
         Same as class_name with the --unnest-classes option but without the
         option side effects.
@@ -252,8 +259,8 @@ class OdooFilters(Filters):
     def registry_name(
         self,
         name: str = "",
-        parents: List[Class] = [],
-        type_names: List[str] = [],
+        parents: list[Class] = [],
+        type_names: list[str] = [],
     ) -> str:
         if parents:
             full_name = ".".join([self.class_name(c.name) for c in parents])
@@ -279,7 +286,7 @@ class OdooFilters(Filters):
         clean_type_names = type_name.replace('"', "").split(".")
         return self.registry_name(clean_type_names[-1], type_names=clean_type_names)
 
-    def clean_docstring(self, string: Optional[str], escape: bool = True) -> str:
+    def clean_docstring(self, string: str | None, escape: bool = True) -> str:
         """Prepare string for docstring generation."""
         if not string:
             return ""  # TODO read from parent field if any
@@ -288,7 +295,7 @@ class OdooFilters(Filters):
     def class_properties(
         self,
         obj: Class,
-        parents: List[Class],
+        parents: list[Class],
     ) -> str:
         """Return the name of the xsdata class for a given Odoo model."""
         if os.environ.get("XSDATA_GENDS"):
@@ -302,7 +309,7 @@ class OdooFilters(Filters):
     def binding_type(
         self,
         obj: Class,
-        parents: List[Class],
+        parents: list[Class],
     ) -> str:
         """Return the name of the xsdata class for a given Odoo model."""
         return ".".join([self.class_name(p.name) for p in parents])
@@ -310,7 +317,7 @@ class OdooFilters(Filters):
     def generateds_type(
         self,
         obj: Class,
-        parents: List[Class],
+        parents: list[Class],
     ) -> str:
         """
         DEPRECATED!
@@ -323,7 +330,7 @@ class OdooFilters(Filters):
         else:
             return obj.qname.split("}")[1]
 
-    def odoo_implicit_many2ones(self, obj: Class, parents: List[Class]) -> str:
+    def odoo_implicit_many2ones(self, obj: Class, parents: list[Class]) -> str:
         """The m2o fields for the o2m keys."""
         fields = []
         implicit_many2ones = self.implicit_many2ones.get(
@@ -365,7 +372,7 @@ class OdooFilters(Filters):
     def odoo_field_definition(
         self,
         attr: Attr,
-        parents: List[Class],
+        parents: list[Class],
     ) -> str:
         """Return the Odoo field definition."""
 
@@ -416,7 +423,7 @@ class OdooFilters(Filters):
             return message
 
     def _extract_field_attributes(
-        self, parents: List[Class], attr: Attr
+        self, parents: list[Class], attr: Attr
     ) -> OrderedDict[str, Any]:
         obj = parents[-1]
         kwargs: OrderedDict[str, Any] = OrderedDict()
@@ -427,8 +434,15 @@ class OdooFilters(Filters):
         )
         kwargs["string"] = string
 
-        metadata = self.field_metadata(obj, attr, None)
-        if metadata.get("required"):
+        # xsdata 26 strips "required" from field_metadata for non-attributes.
+        # Check restrictions directly to preserve xsd_required info.
+        restrictions = attr.restrictions
+        if (
+            restrictions.min_occurs == 1
+            and restrictions.max_occurs == 1
+            and not restrictions.nillable
+            and not restrictions.tokens
+        ):
             # we choose not to put required=True (required in database) to avoid
             # messing with existing Odoo modules.
             kwargs["xsd_required"] = True
@@ -454,12 +468,14 @@ class OdooFilters(Filters):
         XSDATA_NUM_TYPE: xsd type for fields.Float or fields.Monetary eventually
         you can use a prefix followed by brackets to indicate where to take the
         floor part and the decimal part like Prefix[in_start:int_stop.dec_start:dec_stop]
+        XSDATA_CURRENCY_FIELD: currency field name for fields.Monetary (default: "currency_id")
         """
         python_type = attr.types[0].datatype.code
         if python_type in FLOAT_TYPES or python_type in CHAR_TYPES:
             xsd_type = kwargs.get("xsd_type", "")
 
             monetary_type = os.environ.get("XSDATA_MONETARY_TYPE")
+            currency_field = os.environ.get("XSDATA_CURRENCY_FIELD", "currency_id")
 
             num_type_complete = os.environ.get("XSDATA_NUM_TYPE", "TDec_[5:7.7:9]")
             if "[" in num_type_complete:
@@ -476,7 +492,7 @@ class OdooFilters(Filters):
                 conditional_monetary = False
 
             if monetary_type and xsd_type.startswith(monetary_type):
-                kwargs["currency_field"] = "brl_currency_id"  # TODO use spec_curreny_id
+                kwargs["currency_field"] = currency_field
             elif xsd_type.startswith(num_type):
                 if conditional_monetary:
                     if int(
@@ -490,9 +506,7 @@ class OdooFilters(Filters):
                             int(xsd_type.replace("03v", "03")[dec_start:dec_stop]),
                         )
                     else:
-                        kwargs["currency_field"] = (
-                            "brl_currency_id"  # TODO use spec_curreny_id
-                        )
+                        kwargs["currency_field"] = currency_field
                 else:
                     kwargs["digits"] = (16, 4)
 
@@ -562,7 +576,7 @@ class OdooFilters(Filters):
                 kwargs.move_to_end("comodel_name", last=False)
                 return f"fields.Many2one({self.format_arguments(kwargs, 4)})"
 
-    def import_class(self, name: str, alias: Optional[str]) -> str:
+    def import_class(self, name: str, alias: str | None) -> str:
         """Convert import class name with alias support."""
         if alias:
             return f"{self.class_name(name)} as {self.class_name(alias)}"
