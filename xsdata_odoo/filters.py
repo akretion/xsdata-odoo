@@ -434,8 +434,15 @@ class OdooFilters(Filters):
         )
         kwargs["string"] = string
 
-        metadata = self.field_metadata(obj, attr, None)
-        if metadata.get("required"):
+        # xsdata 26 strips "required" from field_metadata for non-attributes.
+        # Check restrictions directly to preserve xsd_required info.
+        restrictions = attr.restrictions
+        if (
+            restrictions.min_occurs == 1
+            and restrictions.max_occurs == 1
+            and not restrictions.nillable
+            and not restrictions.tokens
+        ):
             # we choose not to put required=True (required in database) to avoid
             # messing with existing Odoo modules.
             kwargs["xsd_required"] = True
