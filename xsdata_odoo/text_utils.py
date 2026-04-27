@@ -1,5 +1,6 @@
 import locale
 import os
+import re
 import textwrap
 
 import babel
@@ -40,6 +41,9 @@ def extract_string_and_help(
             doc = doc.strip().replace('"', "'")
         string, doc = _aggressive_cut(doc)
         string = _progressive_cut(string, max_len)
+
+        if re.search(r":\s*\d$", string):
+            string = string.rsplit(":", 1)[0].strip()
 
         if "(" in string and ")" not in string:
             string = string.split("(")[0].strip()
