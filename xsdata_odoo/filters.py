@@ -12,7 +12,21 @@ from xsdata.utils import namespaces
 
 from .text_utils import extract_string_and_help, wrap_text
 
-INTEGER_TYPES = ("integer", "positiveInteger")
+INTEGER_TYPES = (
+    "integer",
+    "positiveInteger",
+    "int",
+    "long",
+    "short",
+    "byte",
+    "nonNegativeInteger",
+    "nonPositiveInteger",
+    "negativeInteger",
+    "unsignedInt",
+    "unsignedLong",
+    "unsignedShort",
+    "unsignedByte",
+)
 FLOAT_TYPES = ("float", "decimal")
 # Odoo has no Decimal field and all in all it's better to guess float by default
 # and override if required.
