@@ -124,16 +124,23 @@ The OCA l10n-brazil uses a proven two-layer architecture:
 
 ### Environment Variables
 
-| Variable                | Description                             | Default          |
-| ----------------------- | --------------------------------------- | ---------------- |
-| `XSDATA_SCHEMA`         | Schema name                             | `spec`           |
-| `XSDATA_VERSION`        | Schema version                          | `10`             |
-| `XSDATA_SKIP`           | Regex patterns to skip (pipe-separated) | `[]`             |
-| `XSDATA_LANG`           | Language for text processing            | `""`             |
-| `XSDATA_MONETARY_TYPE`  | XSD type to force `fields.Monetary`     | `""`             |
-| `XSDATA_NUM_TYPE`       | XSD type for numeric detection          | `TDec_[5:7.7:9]` |
-| `XSDATA_CURRENCY_FIELD` | Currency field name                     | `currency_id`    |
-| `XSDATA_GENDS`          | GenerateDS compatibility mode           | `false`          |
+| Variable                | Description                                            | Default          |
+| ----------------------- | ------------------------------------------------------ | ---------------- |
+| `XSDATA_SCHEMA`         | Schema name                                            | `spec`           |
+| `XSDATA_VERSION`        | Schema version                                         | `10`             |
+| `XSDATA_SKIP`           | Regex patterns to skip (pipe-separated)                | `[]`             |
+| `XSDATA_LANG`           | Language for text processing                           | `""`             |
+| `XSDATA_MONETARY_TYPE`  | XSD type to force `fields.Monetary`                    | `""`             |
+| `XSDATA_NUM_TYPE`       | XSD type for numeric detection                         | `TDec_[5:7.7:9]` |
+| `XSDATA_CURRENCY_FIELD` | Currency field name                                    | `currency_id`    |
+| `XSDATA_TIME_FIELD`     | Odoo field for `xs:time` (`Char`, `Float`)             | skip the field   |
+| `XSDATA_ANY_FIELD`      | Odoo field for `xs:anyType` (`Text`, `Char`, `Binary`) | skip the field   |
+| `XSDATA_GENDS`          | GenerateDS compatibility mode                          | `false`          |
+
+Odoo has no `Time` field, and `xs:anyType` carries arbitrary content, so neither has an
+obvious counterpart. Set the variable to pick one; leave it unset and the field is
+skipped, as before. `Char` keeps the `HH:MM:SS` lexical form of the XSD without
+inventing a date part.
 
 ### Python API
 

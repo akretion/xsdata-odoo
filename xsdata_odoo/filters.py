@@ -46,6 +46,13 @@ CHAR_TYPES = (
 DATE_TYPES = ("date", "TData")
 DATETIME_TYPES = ("dateTime", "TDateTimeUTC")
 BOOLEAN_TYPES = "boolean"
+TIME_TYPES = ("time",)
+ANY_TYPES = ("anyType",)
+# Odoo has no Time field and xs:anyType carries arbitrary content, so there is
+# no single right answer for either. The schema author picks, and until then
+# the field is skipped as before, to keep the previous behaviour by default.
+TIME_FIELD_CHOICES = ("Char", "Float")
+ANY_FIELD_CHOICES = ("Text", "Char", "Binary")
 
 # generally it's not interresting to generate mixins for signature
 SIGNATURE_CLASS_SKIP = [
@@ -529,6 +536,23 @@ class OdooFilters(Filters):
                 else:
                     kwargs["digits"] = (16, 4)
 
+    def _opt_in_field(self, env_var: str, choices: tuple) -> str:
+        """Return the Odoo field the schema author picked, or an empty string.
+
+        Types like xs:time and xs:anyType have no obvious Odoo counterpart, so
+        the mapping is a project decision rather than a library one. Without
+        the variable the field keeps being skipped, as before.
+        """
+        value = os.environ.get(env_var, "").strip()
+        if not value:
+            return ""
+        if value not in choices:
+            logger.warning(
+                f"{env_var}={value} is not one of {', '.join(choices)}; ignoring it"
+            )
+            return ""
+        return value
+
     def _simple_field_definition(
         self, obj: Class, attr: Attr, type_names: str, kwargs: OrderedDict
     ):
@@ -548,6 +572,16 @@ class OdooFilters(Filters):
             return f"fields.Float({self.format_arguments(kwargs, 4)})"
         elif python_type in CHAR_TYPES:
             return f"fields.Char({self.format_arguments(kwargs, 4)})"
+        elif python_type in TIME_TYPES and self._opt_in_field(
+            "XSDATA_TIME_FIELD", TIME_FIELD_CHOICES
+        ):
+            field_type = self._opt_in_field("XSDATA_TIME_FIELD", TIME_FIELD_CHOICES)
+            return f"fields.{field_type}({self.format_arguments(kwargs, 4)})"
+        elif python_type in ANY_TYPES and self._opt_in_field(
+            "XSDATA_ANY_FIELD", ANY_FIELD_CHOICES
+        ):
+            field_type = self._opt_in_field("XSDATA_ANY_FIELD", ANY_FIELD_CHOICES)
+            return f"fields.{field_type}({self.format_arguments(kwargs, 4)})"
         elif python_type in BOOLEAN_TYPES:
             return f"fields.Boolean({self.format_arguments(kwargs, 4)})"
         else:
