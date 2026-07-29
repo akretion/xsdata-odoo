@@ -241,7 +241,7 @@ class ClassC(models.AbstractModel):
 
         self.assertIsNone(result.exception)
 
-        if sys.version_info[:2] > (3, 9) and "win" not in sys.platform.lower():
+        if sys.version_info[:2] > (3, 9) and not sys.platform.startswith("win"):
             with open("tests/fixtures/nfe/models.py") as f:
                 expected = f.read()
             with open("generated/nfe/v4_0/models.py") as f:
