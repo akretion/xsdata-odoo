@@ -54,7 +54,7 @@ test = [
 
 # Tool-specific configurations
 [tool.setuptools]
-packages = ["xsdata_odoo"]
+packages = ["xsdata_odoo", "xsdata_odoo.codegen"]
 include-package-data = true
 package-data = { "xsdata_odoo" = ["templates/*.jinja2"] }
 

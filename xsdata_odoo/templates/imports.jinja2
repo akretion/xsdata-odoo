@@ -3,7 +3,7 @@
 {%- if not items[0].name|pattern_skip() %}
 from {{ source | import_module(module)  }} import {{ items[0].name | import_class(alias=items[0].alias) }}
 {%- endif %}
-{% else -%}
+{% else %}
 from {{ source | import_module(module) }} import (
 {%- for item in items %}
 {%- if not item.name|pattern_skip() %}
@@ -11,5 +11,5 @@ from {{ source | import_module(module) }} import (
 {%- endif %}
 {%- endfor %}
 )
-{%- endif -%}
+{% endif -%}
 {%- endfor %}
