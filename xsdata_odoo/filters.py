@@ -344,6 +344,11 @@ class OdooFilters(Filters):
             kwargs["xsd_implicit"] = True
             # kwargs["required"] = True  # FIXME seems it creates ORM issues
             kwargs["ondelete"] = "cascade"
+            # This m2o is the inverse key of a One2many: reading the o2m issues
+            # "WHERE <this column> = X" on the child table. Odoo does not index
+            # Many2one by default and PostgreSQL does not index foreign keys
+            # automatically, so without this every o2m read is a sequential scan.
+            kwargs["index"] = True
             target_field = implicit_many2one_data[1]
             fields.append(
                 f"{target_field} = fields.Many2one({self.format_arguments(kwargs, 4)})"
