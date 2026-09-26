@@ -371,9 +371,16 @@ class OdooFilters(Filters):
             # automatically, so without this every o2m read is a sequential scan.
             kwargs["index"] = True
             target_field = implicit_many2one_data[1]
-            fields.append(
-                f"{target_field} = fields.Many2one({self.format_arguments(kwargs, 4)})"
-            )
+            args = self.format_arguments(kwargs, 4)
+            # Keep the call exploded: ruff format runs at the end of the generation
+            # (with max_line_length=OCA_LINE_LENGTH) and would otherwise collapse it
+            # into a single line when it fits, while every other multi-line field
+            # definition in the generated models keeps one kwarg per line. The magic
+            # trailing comma is what tells ruff format to leave this one exploded.
+            indent = " " * 4
+            if args.endswith(f"\n{indent}"):
+                args = f"{args[: -len(indent) - 1]},\n{indent}"
+            fields.append(f"{target_field} = fields.Many2one({args})")
         return ("\n").join(fields)
 
     def field_name(self, name: str, class_name: str) -> str:
