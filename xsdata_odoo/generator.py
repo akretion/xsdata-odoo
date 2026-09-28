@@ -38,6 +38,12 @@ class OdooGenerator(DataclassGenerator):
     """Odoo generator."""
 
     def __init__(self, config: GeneratorConfig):
+        # The Odoo abstract models carry no annotations at all, so PEP 563
+        # postponed evaluation is useless in this output: drop the
+        # `from __future__ import annotations` import the dataclass
+        # generator adds when config.output.postponed_annotations is set
+        # (inherited from the pure python bindings config).
+        config.output.postponed_annotations = False
         schema = os.environ.get("XSDATA_SCHEMA", "spec")
         version = os.environ.get("XSDATA_VERSION", "10")
         # if field prefix is not set via the config (default is "value")
