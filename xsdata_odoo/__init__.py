@@ -1,4 +1,4 @@
-__version__ = "1.1.0"
+__version__ = "1.1.1"
 
 from xsdata_odoo.config import OdooGeneratorConfig, get_config, reset_config
 
