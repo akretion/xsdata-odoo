@@ -1,4 +1,6 @@
+import datetime
 import os
+import re
 import sys
 from pathlib import Path
 
@@ -19,6 +21,11 @@ def _normalize_code(text):
     Removes 'from __future__ import annotations' and normalizes
     consecutive blank lines to single blank lines.
     """
+    # Normalize the copyright year: the generator defaults it to the
+    # current year, so fixtures must not be pinned to one.
+    text = re.sub(
+        r"^# Copyright \d{4} ", f"# Copyright {datetime.date.today().year} ", text
+    )
     lines = text.splitlines()
     filtered = [
         line for line in lines if not line.strip().startswith("from __future__ import")
@@ -132,6 +139,13 @@ class ClassC(models.AbstractModel):
         # Remove this line and normalize all whitespace for compatibility
         # between xsdata 25.x and 26.x
         def normalize_code(text):
+            # Normalize the copyright year: the generator defaults it to the
+            # current year, so fixtures must not be pinned to one.
+            text = re.sub(
+                r"^# Copyright \d{4} ",
+                f"# Copyright {datetime.date.today().year} ",
+                text,
+            )
             lines = text.splitlines()
             filtered = []
             for line in lines:
