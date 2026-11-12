@@ -54,7 +54,10 @@ class Item(models.AbstractModel):
     _binding_type = "Items.Item"
 
     poxsd10_item_Items_id = fields.Many2one(
-        comodel_name="poxsd.10.items", xsd_implicit=True, ondelete="cascade", index=True
+        comodel_name="poxsd.10.items",
+        xsd_implicit=True,
+        ondelete="cascade",
+        index=True,
     )
     poxsd10_productName = fields.Char(string="productName", xsd_required=True)
 
