@@ -124,20 +124,20 @@ The OCA l10n-brazil uses a proven two-layer architecture:
 
 ### Environment Variables
 
-| Variable                | Description                                                         | Default                                                                                                            |
-| ----------------------- | ------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
-| `XSDATA_SCHEMA`         | Schema name                                                         | `spec`                                                                                                             |
-| `XSDATA_VERSION`        | Schema version                                                      | `10`                                                                                                               |
-| `XSDATA_SKIP`           | Regex patterns to skip (pipe-separated)                             | `[]`                                                                                                               |
-| `XSDATA_LANG`           | Language for text processing                                        | `""`                                                                                                               |
-| `XSDATA_MONETARY_TYPE`  | XSD type to force `fields.Monetary`                                 | `""`                                                                                                               |
-| `XSDATA_NUM_TYPE`       | XSD type for numeric detection                                      | `TDec_[5:7.7:9]`                                                                                                   |
-| `XSDATA_CURRENCY_FIELD` | Currency field name                                                 | `currency_id`                                                                                                      |
-| `XSDATA_TIME_FIELD`     | Odoo field for `xs:time` (`Char`, `Float`)                          | skip the field                                                                                                     |
-| `XSDATA_ANY_FIELD`      | Odoo field for `xs:anyType` (`Text`, `Char`, `Binary`)              | skip the field                                                                                                     |
-| `XSDATA_GENDS`          | GenerateDS compatibility mode                                       | `false`                                                                                                            |
-| `XSDATA_HEADER`         | First line(s) of the generated files header (copyright and license) | `Copyright <current year> Akretion - Raphaël Valyi <raphael.valyi@akretion.com>` + `License LGPL-3.0 or later ...` |
-| `XSDATA_SCHEMA_NOTE`    | Version/note appended to the `# Mapped from <xsd files>` header line | `""`             |
+| Variable                | Description                                                          | Default                                                                                                            |
+| ----------------------- | -------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| `XSDATA_SCHEMA`         | Schema name                                                          | `spec`                                                                                                             |
+| `XSDATA_VERSION`        | Schema version                                                       | `10`                                                                                                               |
+| `XSDATA_SKIP`           | Regex patterns to skip (pipe-separated)                              | `[]`                                                                                                               |
+| `XSDATA_LANG`           | Language for text processing                                         | `""`                                                                                                               |
+| `XSDATA_MONETARY_TYPE`  | XSD type to force `fields.Monetary`                                  | `""`                                                                                                               |
+| `XSDATA_NUM_TYPE`       | XSD type for numeric detection                                       | `TDec_[5:7.7:9]`                                                                                                   |
+| `XSDATA_CURRENCY_FIELD` | Currency field name                                                  | `currency_id`                                                                                                      |
+| `XSDATA_TIME_FIELD`     | Odoo field for `xs:time` (`Char`, `Float`)                           | skip the field                                                                                                     |
+| `XSDATA_ANY_FIELD`      | Odoo field for `xs:anyType` (`Text`, `Char`, `Binary`)               | skip the field                                                                                                     |
+| `XSDATA_GENDS`          | GenerateDS compatibility mode                                        | `false`                                                                                                            |
+| `XSDATA_HEADER`         | First line(s) of the generated files header (copyright and license)  | `Copyright <current year> Akretion - Raphaël Valyi <raphael.valyi@akretion.com>` + `License LGPL-3.0 or later ...` |
+| `XSDATA_SCHEMA_NOTE`    | Version/note appended to the `# Mapped from <xsd files>` header line | `""`                                                                                                               |
 
 Odoo has no `Time` field, and `xs:anyType` carries arbitrary content, so neither has an
 obvious counterpart. Set the variable to pick one; leave it unset and the field is
