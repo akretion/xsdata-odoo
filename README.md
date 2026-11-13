@@ -137,6 +137,7 @@ The OCA l10n-brazil uses a proven two-layer architecture:
 | `XSDATA_ANY_FIELD`      | Odoo field for `xs:anyType` (`Text`, `Char`, `Binary`)              | skip the field                                                                                                     |
 | `XSDATA_GENDS`          | GenerateDS compatibility mode                                       | `false`                                                                                                            |
 | `XSDATA_HEADER`         | First line(s) of the generated files header (copyright and license) | `Copyright <current year> Akretion - Raphaël Valyi <raphael.valyi@akretion.com>` + `License LGPL-3.0 or later ...` |
+| `XSDATA_SCHEMA_NOTE`    | Version/note appended to the `# Mapped from <xsd files>` header line | `""`             |
 
 Odoo has no `Time` field, and `xs:anyType` carries arbitrary content, so neither has an
 obvious counterpart. Set the variable to pick one; leave it unset and the field is

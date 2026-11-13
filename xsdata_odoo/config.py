@@ -41,8 +41,9 @@ class OdooGeneratorConfig:
 
     # Backward compatibility
     gends_mode: bool = field(
-        default_factory=lambda: os.environ.get("XSDATA_GENDS", "").lower()
-        in ("1", "true", "yes")
+        default_factory=lambda: (
+            os.environ.get("XSDATA_GENDS", "").lower() in ("1", "true", "yes")
+        )
     )
 
     def __post_init__(self):

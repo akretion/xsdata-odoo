@@ -9,9 +9,9 @@ from typing import Any
 
 from jinja2 import Environment, FileSystemLoader
 from lxml import etree
+from xsdata.codegen.exceptions import CodegenError
 from xsdata.codegen.models import Class
 from xsdata.codegen.resolver import DependenciesResolver
-from xsdata.codegen.exceptions import CodegenError
 from xsdata.formats.dataclass.generator import DataclassGenerator
 from xsdata.formats.mixins import GeneratorResult
 from xsdata.models.config import GeneratorConfig
@@ -105,11 +105,13 @@ class OdooGenerator(DataclassGenerator):
             test = {
                 k: ""
                 for k in map(
-                    lambda path: len(path.split("|")) > i + 1
-                    and "|".join(path.split("|")[:i] + path.split("|")[i + 1 :])
-                    not in class_names
-                    and "|".join(path.split("|")[:i] + path.split("|")[i + 1 :])
-                    or path,
+                    lambda path: (
+                        len(path.split("|")) > i + 1
+                        and "|".join(path.split("|")[:i] + path.split("|")[i + 1 :])
+                        not in class_names
+                        and "|".join(path.split("|")[:i] + path.split("|")[i + 1 :])
+                        or path
+                    ),
                     names_dict.keys(),
                 )
             }
@@ -263,6 +265,19 @@ class OdooGenerator(DataclassGenerator):
                 continue
 
             package_dirs.add(str(Path(path).parent))
+            # header line naming the source XSD file(s) of this module,
+            # optionally completed by a version/note (XSDATA_SCHEMA_NOTE)
+            source_xsds = sorted(
+                {
+                    os.path.basename(klass.location or "")
+                    for klass in cluster
+                    if klass.location
+                }
+            )
+            self.env.globals["source_xsd"] = ", ".join(source_xsds)
+            self.env.globals["schema_note"] = os.environ.get(
+                "XSDATA_SCHEMA_NOTE", ""
+            ).strip()
             yield GeneratorResult(
                 path=path.with_suffix(".py"),
                 title=cluster[0].target_module,
