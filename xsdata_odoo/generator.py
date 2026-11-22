@@ -80,25 +80,39 @@ class OdooGenerator(DataclassGenerator):
         )
         self.filters.register(self.env)
 
+    def _normalize_path(self, path):
+        """
+        Return the path as it will be rendered: each part goes through the
+        class_name filter. Element names that only differ by case (like comp
+        and Comp in the Brazilian BP-e) end up with the same class name, so
+        they must be compared after this normalization.
+        """
+        return "|".join(self.filters.class_name(part) for part in path.split("|"))
+
     def _find_duplicated_names(self, class_paths):
         duplicates = set()
-        names = set()
+        names: dict[str, str] = {}
 
         for ref, path in class_paths.items():
             path_parts = path.split("|")
             name = path_parts[-1]
-            if name in names:
+            key = self.filters.class_name(name)
+            if key in names:
                 duplicates.add(name)
-            names.add(name)
+                duplicates.add(names[key])
+            else:
+                names[key] = name
 
         return duplicates
 
     def simplify_name_sets(self, names_dict, class_names):
         """
         Find minimal unique name for class. We use dict keys as an ordered set.
+        Uniqueness is checked on the normalized paths (see _normalize_path).
         """
         initial_length = len(names_dict.keys())
         max_positions = max(map(lambda i: len(i.split("|")), names_dict.keys()))
+        normalized_class_names = {self._normalize_path(p) for p in class_names}
         i = max_positions - 2
         while i >= 0:
             # try to remove each path part while ensuring no path collision (shorter len)
@@ -107,8 +121,10 @@ class OdooGenerator(DataclassGenerator):
                 for k in map(
                     lambda path: (
                         len(path.split("|")) > i + 1
-                        and "|".join(path.split("|")[:i] + path.split("|")[i + 1 :])
-                        not in class_names
+                        and self._normalize_path(
+                            "|".join(path.split("|")[:i] + path.split("|")[i + 1 :])
+                        )
+                        not in normalized_class_names
                         and "|".join(path.split("|")[:i] + path.split("|")[i + 1 :])
                         or path
                     ),
@@ -116,7 +132,7 @@ class OdooGenerator(DataclassGenerator):
                 )
             }
             i -= 1
-            if len(test.keys()) == initial_length:
+            if len({self._normalize_path(k) for k in test}) == initial_length:
                 names_dict = test
         return names_dict
 
@@ -126,12 +142,17 @@ class OdooGenerator(DataclassGenerator):
         Minimal unique name is found by prepending the first uncommon parent to class name.
         """
 
-        name = path_parts[-1]
+        name = self.filters.class_name(path_parts[-1])
         orig_path = "|".join(path_parts)
         duplicates = list()
 
         for ref, path in class_paths.items():
-            if path.endswith("|" + name) and path != orig_path:
+            parts = path.split("|")
+            if (
+                len(parts) > 1
+                and self.filters.class_name(parts[-1]) == name
+                and path != orig_path
+            ):
                 duplicates.append(path)  # .split("|"))
 
         res = self.simplify_name_sets(

@@ -163,6 +163,31 @@ class ClassC(models.AbstractModel):
 
         self.assertEqual(expected_normalized, actual_normalized)
 
+    def test_unique_class_names_case_insensitive(self):
+        # Brazilian BP-e: infBPe/comp (buyer) and infBPe/infValorBPe/Comp
+        # (value component) both render as the Comp class, so they must be
+        # handled as duplicates and get distinct names.
+        class_paths = {}
+        for root in ("TBPe", "TBPeTA"):
+            for path in (
+                root,
+                f"{root}|infBPe",
+                f"{root}|infBPe|comp",
+                f"{root}|infBPe|infValorBPe",
+                f"{root}|infBPe|infValorBPe|Comp",
+            ):
+                class_paths[path] = path
+
+        names = self.generator._generate_unique_class_names(class_paths)
+
+        self.assertEqual(len(names), len(set(names.values())))
+        self.assertEqual("Tbpe.Comp", names["Tbpe.InfBpe.Comp"])
+        self.assertEqual("Tbpe.InfValorBpe.Comp", names["Tbpe.InfBpe.InfValorBpe.Comp"])
+        self.assertEqual("TbpeTa.Comp", names["TbpeTa.InfBpe.Comp"])
+        self.assertEqual(
+            "TbpeTa.InfValorBpe.Comp", names["TbpeTa.InfBpe.InfValorBpe.Comp"]
+        )
+
     def test_complete_po(self):
         os.environ["XSDATA_SCHEMA"] = "poxsd"
         if os.environ.get("XSDATA_VERSION"):
